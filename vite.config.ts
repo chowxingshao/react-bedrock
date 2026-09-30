@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath, URL } from 'node:url';
 
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 
@@ -22,7 +23,7 @@ export default defineConfig(({ mode }) => {
   const fs = mode === 'test' ? { deny: ['*.{crt,pem}', '**/.git/**'] } : undefined;
 
   return {
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -40,6 +41,8 @@ export default defineConfig(({ mode }) => {
       setupFiles: ['./src/test/setup.ts'],
       include: ['src/**/*.test.{ts,tsx}'],
       restoreMocks: true,
+      // Vitest blanks every `.css` module by default, `?raw` imports included; tokens.test.ts reads the source.
+      css: { include: [/tokens\.css\?raw/] },
       coverage: {
         provider: 'v8',
         include: ['src/**/*.{ts,tsx}'],

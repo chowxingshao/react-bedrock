@@ -7,10 +7,10 @@ interface ConfigErrorScreenProps {
 /** Full-screen error shown in development when environment validation fails (spec §4). */
 export function ConfigErrorScreen({ issues }: ConfigErrorScreenProps) {
   return (
-    <main className="bg-background text-foreground min-h-screen p-8">
+    <main className="min-h-screen bg-background p-8 text-foreground">
       <div role="alert">
-        <h1 className="text-destructive text-2xl font-semibold">Invalid configuration</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-2xl font-semibold text-destructive">Invalid configuration</h1>
+        <p className="mt-2 text-muted-foreground">
           Fix these variables in <code>.env.local</code> (see <code>.env.example</code>) or in the
           runtime <code>config.js</code>, then reload.
         </p>
