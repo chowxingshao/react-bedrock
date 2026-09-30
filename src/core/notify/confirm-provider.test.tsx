@@ -55,6 +55,21 @@ function RemovableButton() {
   );
 }
 
+/** Opens a confirmation and hands the pending promise to the test. */
+function Opener({ onRequest }: { onRequest: (request: Promise<boolean>) => void }) {
+  const confirm = useConfirm();
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        onRequest(confirm({ title: 'Sure?' }));
+      }}
+    >
+      Open
+    </button>
+  );
+}
+
 const renderWithProvider = (destructive?: boolean) =>
   render(
     <ConfirmProvider>
@@ -164,6 +179,56 @@ describe('useConfirm', () => {
         expect(screen.queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument();
       });
       expect(document.body).toHaveFocus();
+    });
+  });
+
+  describe('description', () => {
+    it('renders without aria-describedby when there is no description', async () => {
+      const user = userEvent.setup();
+      render(
+        <ConfirmProvider>
+          <RemovableButton />
+        </ConfirmProvider>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Remove' }));
+
+      const dialog = await screen.findByRole('alertdialog', { name: 'Remove item?' });
+      expect(dialog).not.toHaveAttribute('aria-describedby');
+    });
+
+    it('describes the dialog with the description when there is one', async () => {
+      const user = userEvent.setup();
+      renderWithProvider();
+
+      await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+      expect(await screen.findByRole('alertdialog')).toHaveAccessibleDescription(
+        'This cannot be undone.',
+      );
+    });
+  });
+
+  it('resolves a pending confirmation with false when the provider unmounts', async () => {
+    const user = userEvent.setup();
+    const settled = vi.fn();
+    const { unmount } = render(
+      <ConfirmProvider>
+        <Opener
+          onRequest={(request) => {
+            void request.then(settled);
+          }}
+        />
+      </ConfirmProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Open' }));
+    await screen.findByRole('alertdialog');
+    expect(settled).not.toHaveBeenCalled();
+    unmount();
+
+    await waitFor(() => {
+      expect(settled).toHaveBeenCalledExactlyOnceWith(false);
     });
   });
 

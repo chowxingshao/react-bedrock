@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -43,6 +43,15 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     setOpen(false);
   }, []);
 
+  // A caller awaiting `confirm()` must not wait forever if the provider goes away.
+  useEffect(
+    () => () => {
+      resolverRef.current?.(false);
+      resolverRef.current = null;
+    },
+    [],
+  );
+
   return (
     <ConfirmContext value={confirm}>
       {children}
@@ -52,9 +61,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           if (!isOpen) settle(false);
         }}
       >
-        {/* With no description, an explicit aria-describedby={undefined} tells Radix that is intentional. */}
         <AlertDialogContent
-          {...(options.description ? {} : { 'aria-describedby': undefined })}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             const opener = returnFocusRef.current;
