@@ -10,10 +10,10 @@ How errors are caught, what the user sees, and where they are logged.
 | Rendering in a suspense subtree  | `AsyncBoundary`                                       | `ErrorState` with **Try again** (resets failed queries)       | root `onCaughtError`                                                                                        |
 | Rendering anywhere else          | `AppErrorBoundary` (outermost, in `App.tsx`)          | Full-page `ErrorState` with **Try again** and **Reload page** | root `onCaughtError` (the boundary's own `onError` logs only when the root has no callbacks, e.g. in tests) |
 | Event handlers, timers, promises | `installGlobalErrorHandlers()` (`main.tsx`)           | Nothing; the flow continues                                   | `window` `error` / `unhandledrejection` listeners                                                           |
-| API calls                        | the HTTP interceptors → `AppError` (planned)          | `QueryState` / toasts                                         | query and mutation caches                                                                                   |
+| API calls                        | the HTTP interceptors → `AppError` (planned)          | `QueryState` / toasts (planned)                               | the query and mutation caches (planned)                                                                     |
 
 - **The root callbacks** (`reactRootErrorHandlers`, passed to `createRoot` in `main.tsx`) log what React reports: an error caught by any boundary (`React error caught by a boundary`), an error no boundary caught (`Uncaught React error`) and an error React recovered from by itself (`React recovered from an error`, a warning).
-- **A render error is logged once.** React runs the root `onCaughtError` before the boundary's `componentDidCatch`, and the logger drops a repeat report of the same error object, so an `onError` that also logs is safe to add.
+- **A render error is logged once.** React runs the root `onCaughtError` before the boundary's `componentDidCatch`, and the logger drops a repeat report of the same error object, so an `onError` that also logs is safe to add (for a thrown `Error` or other object; thrown primitives are not de-duplicated and would be logged twice).
 
 **Fail loudly in dev, gracefully in prod** (spec Principle 7): in development, `ErrorState` shows the stack and the error's properties under **Technical details**. In production it shows only the translated, friendly message.
 

@@ -40,7 +40,20 @@ describe('installGlobalErrorHandlers', () => {
     window.dispatchEvent(new ErrorEvent('error', { error: new Error('After'), message: 'After' }));
     window.removeEventListener('error', observer);
 
+    window.dispatchEvent(
+      Object.assign(new Event('unhandledrejection'), { reason: new Error('Late') }),
+    );
+
     expect(observer).toHaveBeenCalledTimes(1);
     expect(logError).toHaveBeenCalledTimes(2);
+  });
+
+  it('can be uninstalled more than once', () => {
+    const uninstall = installGlobalErrorHandlers();
+
+    uninstall();
+    expect(() => {
+      uninstall();
+    }).not.toThrow();
   });
 });
