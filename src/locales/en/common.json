@@ -1,0 +1,26 @@
+{
+  "actions": {
+    "close": "Close",
+    "more": "More"
+  },
+  "status": {
+    "loading": "Loading"
+  },
+  "pagination": {
+    "label": "Pagination",
+    "previous": "Previous",
+    "next": "Next",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "morePages": "More pages"
+  },
+  "breadcrumb": {
+    "label": "Breadcrumb"
+  },
+  "theme": {
+    "change": "Change theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  }
+}

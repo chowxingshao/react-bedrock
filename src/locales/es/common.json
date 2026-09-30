@@ -1,0 +1,26 @@
+{
+  "actions": {
+    "close": "Cerrar",
+    "more": "Más"
+  },
+  "status": {
+    "loading": "Cargando"
+  },
+  "pagination": {
+    "label": "Paginación",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "previousPage": "Ir a la página anterior",
+    "nextPage": "Ir a la página siguiente",
+    "morePages": "Más páginas"
+  },
+  "breadcrumb": {
+    "label": "Ruta de navegación"
+  },
+  "theme": {
+    "change": "Cambiar tema",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
+  }
+}

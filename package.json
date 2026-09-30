@@ -21,9 +21,11 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "i18next": "^26.4.2",
     "js-cookie": "^3.0.8",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "react-i18next": "^17.0.15",
     "zod": "^4.6.5",
     "zustand": "^5.0.15"
   },
