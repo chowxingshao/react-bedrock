@@ -138,6 +138,7 @@ export function DataTable<TData extends RowData>({
                     >
                       {header.isPlaceholder ? null : canSort ? (
                         <Button
+                          type="button"
                           variant="ghost"
                           size="sm"
                           className="-ml-3"
@@ -194,9 +195,14 @@ function DataTablePagination<TData extends RowData>({
   const labelId = useId();
   const { pageIndex, pageSize } = table.state.pagination;
   const pageCount = Math.max(table.getPageCount(), 1);
+  // The Select renders blank for a value it has no item for (e.g. a URL-driven ?pageSize=25).
+  const sizes = [...new Set([...pageSizeOptions, pageSize])].sort((a, b) => a - b);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+    <nav
+      aria-label={t('pagination.label')}
+      className="flex flex-wrap items-center justify-between gap-3 text-sm"
+    >
       <p className="text-muted-foreground">
         {t('pagination.total', { count: table.getRowCount() })}
       </p>
@@ -215,7 +221,7 @@ function DataTablePagination<TData extends RowData>({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {pageSizeOptions.map((size) => (
+              {sizes.map((size) => (
                 <SelectItem key={size} value={String(size)}>
                   {size}
                 </SelectItem>
@@ -226,6 +232,7 @@ function DataTablePagination<TData extends RowData>({
         <span aria-live="polite">{t('pagination.pageOf', { page: pageIndex + 1, pageCount })}</span>
         <div className="flex items-center gap-1">
           <Button
+            type="button"
             variant="outline"
             size="icon"
             aria-label={t('pagination.firstPage')}
@@ -237,6 +244,7 @@ function DataTablePagination<TData extends RowData>({
             <ChevronsLeftIcon aria-hidden="true" />
           </Button>
           <Button
+            type="button"
             variant="outline"
             size="icon"
             aria-label={t('pagination.previousPage')}
@@ -248,6 +256,7 @@ function DataTablePagination<TData extends RowData>({
             <ChevronLeftIcon aria-hidden="true" />
           </Button>
           <Button
+            type="button"
             variant="outline"
             size="icon"
             aria-label={t('pagination.nextPage')}
@@ -259,6 +268,7 @@ function DataTablePagination<TData extends RowData>({
             <ChevronRightIcon aria-hidden="true" />
           </Button>
           <Button
+            type="button"
             variant="outline"
             size="icon"
             aria-label={t('pagination.lastPage')}
@@ -271,6 +281,6 @@ function DataTablePagination<TData extends RowData>({
           </Button>
         </div>
       </div>
-    </div>
+    </nav>
   );
 }

@@ -2,7 +2,7 @@ import type { PaginationState, SortingState, Updater } from '@tanstack/react-tab
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { render, screen } from '@/test/render';
+import { render, screen, within } from '@/test/render';
 
 import { createDataTableColumnHelper, DataTable } from './data-table';
 
@@ -68,5 +68,88 @@ describe('DataTable', () => {
 
     const update = onChange.mock.calls[0]?.[0];
     expect(update && apply(update, state)).toEqual({ pageIndex: 1, pageSize: 2 });
+  });
+
+  it('exposes the pager as a labelled navigation landmark', () => {
+    const state = { pageIndex: 0, pageSize: 2 };
+    render(
+      <DataTable
+        columns={columns}
+        data={people}
+        pagination={{ state, onChange: vi.fn(), rowCount: 4 }}
+      />,
+    );
+
+    const pager = screen.getByRole('navigation', { name: 'Pagination' });
+    expect(within(pager).getByRole('button', { name: 'Go to next page' })).toBeInTheDocument();
+    expect(within(pager).getByText('Page 1 of 2')).toBeInTheDocument();
+  });
+
+  it('offers the current page size even when it is not one of the options', async () => {
+    const user = userEvent.setup();
+    const state = { pageIndex: 0, pageSize: 25 };
+    render(
+      <DataTable
+        columns={columns}
+        data={people}
+        pagination={{ state, onChange: vi.fn(), rowCount: 100 }}
+      />,
+    );
+
+    const trigger = screen.getByRole('combobox', { name: 'Rows per page' });
+    expect(trigger).toHaveTextContent('25');
+
+    await user.click(trigger);
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      '10',
+      '20',
+      '25',
+      '50',
+    ]);
+  });
+
+  it('sorts the page size options and does not duplicate the current size', async () => {
+    const user = userEvent.setup();
+    const state = { pageIndex: 0, pageSize: 20 };
+    render(
+      <DataTable
+        columns={columns}
+        data={people}
+        pagination={{ state, onChange: vi.fn(), rowCount: 100, pageSizeOptions: [50, 20, 10] }}
+      />,
+    );
+
+    await user.click(screen.getByRole('combobox', { name: 'Rows per page' }));
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      '10',
+      '20',
+      '50',
+    ]);
+  });
+
+  it('never submits an enclosing form from its sort and pager buttons', async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    const state = { pageIndex: 0, pageSize: 2 };
+    render(
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSubmit();
+        }}
+      >
+        <DataTable
+          columns={columns}
+          data={people}
+          sorting={{ state: [], onChange: vi.fn() }}
+          pagination={{ state, onChange: vi.fn(), rowCount: 4 }}
+        />
+      </form>,
+    );
+
+    await user.click(screen.getByRole('button', { name: /Name/ }));
+    await user.click(screen.getByRole('button', { name: 'Go to next page' }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });
