@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { cleanup } from '@testing-library/react';
-import { afterEach } from 'vitest';
+import { afterEach, beforeEach } from 'vitest';
 
 import { i18n } from '@/core/i18n';
 
@@ -43,10 +43,15 @@ for (const method of [
   });
 }
 
-afterEach(async () => {
+// The i18n instance starts in VITE_DEFAULT_LOCALE, which a developer's .env.local may set. Reset it
+// BEFORE each test, so even the first test of a file starts in English whatever the config says.
+beforeEach(async () => {
+  if (i18n.language !== 'en') await i18n.changeLanguage('en');
+});
+
+afterEach(() => {
   // Vitest globals are off, so Testing Library's auto-cleanup is not registered: do it here.
   cleanup();
   window.localStorage.clear();
   window.sessionStorage.clear();
-  if (i18n.language !== 'en') await i18n.changeLanguage('en');
 });
