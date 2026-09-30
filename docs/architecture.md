@@ -42,3 +42,18 @@ More rules:
 
 - `pnpm lint` runs ESLint (type-aware, zero warnings) and then `prettier --check`.
 - `pnpm lint:fix` applies auto-fixes. Import order is auto-fixable.
+
+## Configuration (`src/config/env.ts`)
+
+- Every variable is declared once in a Zod schema, with a safe default. The app starts with no `.env` at all: mocks on, API at `/api`.
+- **Two sources, merged in this order (later wins):**
+  1. build-time `import.meta.env`, from `.env*` files during `pnpm dev` / `pnpm build`
+  2. runtime `window.__APP_CONFIG__`, from `/config.js`, which Docker regenerates at container start from environment variables
+
+  The same variable names work in both, so one built image can point at any API without a rebuild.
+
+- **Validation failure:** development renders a full-screen config error listing each bad variable; production builds throw at startup.
+- **Access:** import `env` from `@/config/env`. Nothing else may read `import.meta.env` or `window.__APP_CONFIG__`, and ESLint enforces this.
+- **Documentation:** every variable is documented in `.env.example`. A unit test fails if a variable is missing from it.
+- **`VITE_*` values are public:** they end up in the browser. Never put secrets in them.
+- **`API_PROXY_TARGET`** is server-side only. When set, `pnpm dev`, `pnpm preview` and the nginx container forward `/api/*` to it, which keeps API calls same-origin: no CORS setup, and httpOnly cookies just work.
