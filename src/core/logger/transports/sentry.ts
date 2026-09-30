@@ -43,7 +43,12 @@ function scrubBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb | null {
 
 function send(sdk: Sdk, entry: LogEntry): void {
   if (entry.level === 'warn') {
-    sdk.addBreadcrumb({ level: 'warning', message: entry.message, data: entry.context });
+    const { route, requestId } = entry.meta;
+    sdk.addBreadcrumb({
+      level: 'warning',
+      message: entry.message,
+      data: { ...entry.context, route, ...(requestId ? { requestId } : {}) },
+    });
     return;
   }
   sdk.withScope((scope) => {

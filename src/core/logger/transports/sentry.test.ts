@@ -74,6 +74,32 @@ describe('sentry transport', () => {
     expect(Sentry.captureException).toHaveBeenCalledWith(error);
   });
 
+  it('keeps the route and request id on a warning breadcrumb', async () => {
+    const transport = await startTransport();
+
+    transport.log({ ...base, level: 'warn', message: 'Slow', context: { durationMs: 900 } });
+
+    expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
+      level: 'warning',
+      message: 'Slow',
+      data: { durationMs: 900, route: '/items', requestId: 'req-1' },
+    });
+  });
+
+  it('leaves the request id off a warning breadcrumb when there is none', async () => {
+    const transport = await startTransport();
+
+    transport.log({
+      ...base,
+      level: 'warn',
+      message: 'Slow',
+      meta: { ...base.meta, requestId: undefined },
+    });
+
+    const breadcrumb = vi.mocked(Sentry.addBreadcrumb).mock.calls[0]?.[0];
+    expect(breadcrumb?.data).toStrictEqual({ route: '/items' });
+  });
+
   it('switches off every Sentry data collection flag this template does not use', async () => {
     await startTransport();
 
