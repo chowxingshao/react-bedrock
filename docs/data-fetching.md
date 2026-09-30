@@ -26,3 +26,15 @@ Every async view handles loading, empty, error and success (spec Principle 4). `
 - **No skeleton flash:** loading UI appears only after 200 ms (`SKELETON_DELAY_MS`), so fast responses never flash a skeleton.
 - **Cached data wins:** if a background refetch fails while data is cached, the cached data stays on screen; the global error handler reports the failure.
 - **Custom error slot:** pass `error={(err, retry) => …}` to take over the error view.
+
+## Suspense style: `AsyncBoundary`
+
+For `useSuspenseQuery` (or lazy components), wrap the subtree once:
+
+```tsx
+<AsyncBoundary loading={<DetailSkeleton />}>
+  <ItemDetails id={id} /> {/* calls useSuspenseQuery inside */}
+</AsyncBoundary>
+```
+
+`AsyncBoundary` combines `Suspense`, an error boundary and TanStack Query's `QueryErrorResetBoundary`, so **Try again** also refetches the failed queries. Use `resetKeys={[id]}` to clear the error automatically when the input changes.
