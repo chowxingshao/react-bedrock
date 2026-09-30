@@ -11,3 +11,9 @@
 
 - `cookies` from `@/core/storage` wraps js-cookie with secure defaults: `SameSite=Lax`, `Path=/`, and `Secure` whenever the page is served over HTTPS.
 - The auth session cookie is set by the server as `HttpOnly; Secure; SameSite=Lax`. The frontend never reads or writes it.
+
+## Logging and privacy
+
+- Log user **ids** only, never names, emails or other personal data. `logger.setUser()` accepts an id.
+- The logger redacts sensitive keys automatically (docs/error-handling-and-logging.md), but don't log secrets on purpose.
+- The Sentry transport turns off Sentry's collection of cookies, headers, request bodies, query parameters and user info.
