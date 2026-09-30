@@ -1,7 +1,9 @@
 {
   "actions": {
     "close": "Close",
-    "more": "More"
+    "more": "More",
+    "retry": "Try again",
+    "reload": "Reload page"
   },
   "status": {
     "loading": "Loading"
@@ -22,5 +24,11 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "states": {
+    "empty": {
+      "title": "Nothing here yet",
+      "description": "When there is something to show, it will appear here."
+    }
   }
 }

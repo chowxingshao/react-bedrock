@@ -7,3 +7,6 @@ export const GIT_SHA = __GIT_SHA__;
 /** Locales with bundled translations in src/locales/<locale>/. */
 export const SUPPORTED_LOCALES = ['en', 'es'] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
+
+/** Loading indicators wait this long before appearing, so fast responses never flash a skeleton. */
+export const SKELETON_DELAY_MS = 200;

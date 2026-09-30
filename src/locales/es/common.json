@@ -1,7 +1,9 @@
 {
   "actions": {
     "close": "Cerrar",
-    "more": "Más"
+    "more": "Más",
+    "retry": "Reintentar",
+    "reload": "Recargar la página"
   },
   "status": {
     "loading": "Cargando"
@@ -22,5 +24,11 @@
     "light": "Claro",
     "dark": "Oscuro",
     "system": "Sistema"
+  },
+  "states": {
+    "empty": {
+      "title": "Aún no hay nada aquí",
+      "description": "Cuando haya algo que mostrar, aparecerá aquí."
+    }
   }
 }
