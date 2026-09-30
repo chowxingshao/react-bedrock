@@ -49,6 +49,10 @@ const REPLACEMENTS = [
   [/bg-black\/50/g, 'bg-overlay'],
   [/bg-destructive text-white/g, 'bg-destructive text-destructive-foreground'],
   [/ dark:bg-destructive\/60/g, ''],
+  // Invalid fields keep a full-strength focus ring (in the error colour). shadcn's translucent
+  // /20 and /40 rings only show while focused, where they replace `ring-ring` at ~1.2:1 contrast.
+  [/ dark:aria-invalid:ring-destructive\/40/g, ''],
+  [/aria-invalid:ring-destructive\/20/g, 'aria-invalid:focus-visible:ring-destructive'],
   [/rounded-\[4px\]/g, 'rounded-sm'],
   [/rounded-\[2px\]/g, 'rounded-xs'],
 ];
