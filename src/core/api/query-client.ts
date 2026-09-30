@@ -1,27 +1,50 @@
-import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
+import { CancelledError, MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 
 import { QUERY_STALE_TIME_MS } from '@/config/constants';
 import { logger } from '@/core/logger';
 import { notify } from '@/core/notify';
 
-import { type AppError, getErrorMessage, isAppError } from './errors';
+import { type AppError, getErrorMessage, isAppError, toAppError } from './errors';
 
 declare module '@tanstack/react-query' {
   interface Register {
     defaultError: AppError;
     queryMeta: {
-      /** Don't log this query's failures (they are expected, e.g. an existence check). */
+      /**
+       * Skip the query cache's own `Query failed` log for this query. An error that came from `http`
+       * is still logged by the HTTP interceptor, which this does not silence.
+       */
       silent?: boolean;
     };
     mutationMeta: {
-      /** Don't show the global error toast; the caller handles it (e.g. by mapping field errors). */
+      /**
+       * Don't show the global error toast; the caller handles it (e.g. by mapping field errors).
+       * The failure is still logged.
+       */
       silent?: boolean;
     };
   }
 }
 
-const isClientError = (error: unknown) =>
-  isAppError(error) && error.status >= 400 && error.status < 500;
+/**
+ * What the cache handlers and the retry policy need to know about a failure. `defaultError` is only
+ * a type: a `queryFn` or `mutationFn` that does not go through `http` can throw anything (a raw
+ * Axios error, a `ZodError`, a `TypeError`), so the thrown value is normalised first.
+ */
+function inspectFailure(error: unknown) {
+  // The same object when it already is an AppError, so the logger can de-duplicate against the
+  // interceptor's log of it.
+  const appError = toAppError(error);
+  return {
+    appError,
+    // Nothing went wrong: the caller aborted the request, which is not logged, toasted or retried.
+    cancelled: error instanceof CancelledError || appError.code === 'CANCELLED',
+    // Not an AppError: a bug, or a service that bypasses `http`. Production must see it.
+    unexpected: !isAppError(error),
+  };
+}
+
+const isClientError = (error: AppError) => error.status >= 400 && error.status < 500;
 
 export interface QueryClientOptions {
   refetchOnWindowFocus?: boolean;
@@ -35,29 +58,37 @@ export function createQueryClient({
     queryCache: new QueryCache({
       onError: (error, query) => {
         if (query.meta?.silent) return;
-        logger.warn('Query failed', {
-          error,
+        const { appError, cancelled, unexpected } = inspectFailure(error);
+        if (cancelled) return;
+        logger[unexpected ? 'error' : 'warn']('Query failed', {
+          error: appError,
           queryKey: query.queryKey,
-          requestId: error.requestId,
+          requestId: appError.requestId,
         });
       },
     }),
     mutationCache: new MutationCache({
       onError: (error, _variables, _onMutateResult, mutation) => {
-        logger.warn('Mutation failed', {
-          error,
+        const { appError, cancelled, unexpected } = inspectFailure(error);
+        if (cancelled) return;
+        logger[unexpected ? 'error' : 'warn']('Mutation failed', {
+          error: appError,
           mutationKey: mutation.options.mutationKey,
-          requestId: error.requestId,
+          requestId: appError.requestId,
         });
-        if (!mutation.meta?.silent) notify.error(getErrorMessage(error));
+        if (!mutation.meta?.silent) notify.error(getErrorMessage(appError));
       },
     }),
     defaultOptions: {
       queries: {
         staleTime: QUERY_STALE_TIME_MS,
         refetchOnWindowFocus,
-        // One retry for network or server trouble; a 4xx will not change by asking again.
-        retry: (failureCount, error) => !isClientError(error) && failureCount < 1,
+        // One retry for network or server trouble; a 4xx will not change by asking again, and a
+        // cancelled request was abandoned on purpose.
+        retry: (failureCount, error) => {
+          const { appError, cancelled } = inspectFailure(error);
+          return !cancelled && !isClientError(appError) && failureCount < 1;
+        },
       },
       mutations: { retry: 0 },
     },

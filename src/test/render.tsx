@@ -44,7 +44,10 @@ export interface ProviderOptions extends Omit<RenderOptions, 'wrapper'> {
   queryClient?: QueryClient;
 }
 
-/** Renders `ui` inside the app providers (spec §10.2). Routing and auth options come in Phase 7. */
+/**
+ * Renders `ui` inside the app providers (spec §10.2).
+ * Routing and auth options are added with the auth layer.
+ */
 export function render(
   ui: ReactElement,
   { queryClient = createTestQueryClient(), ...options }: ProviderOptions = {},
