@@ -1,7 +1,13 @@
 import { MonitorIcon, MoonIcon, SunIcon, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { THEME_MODES, type ThemeMode, useSetThemeMode, useThemeMode } from '@/stores/theme-store';
+import {
+  isThemeMode,
+  THEME_MODES,
+  type ThemeMode,
+  useSetThemeMode,
+  useThemeMode,
+} from '@/stores/theme-store';
 
 import { Button } from './button';
 import {
@@ -16,10 +22,6 @@ const ICONS = { light: SunIcon, dark: MoonIcon, system: MonitorIcon } satisfies 
   ThemeMode,
   LucideIcon
 >;
-
-function isThemeMode(value: string): value is ThemeMode {
-  return (THEME_MODES as readonly string[]).includes(value);
-}
 
 /** Light / dark / system switcher (spec §5.2). The choice persists via the theme store. */
 export function ThemeToggle() {

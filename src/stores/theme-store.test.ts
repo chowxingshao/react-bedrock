@@ -24,6 +24,25 @@ describe('theme store', () => {
     expect(localStore.get(STORAGE_KEYS.theme)).toEqual({ state: { mode: 'dark' }, version: 0 });
   });
 
+  it('restores a saved mode from storage', async () => {
+    localStore.set(STORAGE_KEYS.theme, { state: { mode: 'dark' }, version: 0 });
+
+    await useThemeStore.persist.rehydrate();
+
+    expect(useThemeStore.getState().mode).toBe('dark');
+  });
+
+  it.each(['sepia', 42, null, undefined])(
+    'ignores a saved mode it does not know (%s) and stays on system',
+    async (mode) => {
+      localStore.set(STORAGE_KEYS.theme, { state: { mode }, version: 0 });
+
+      await useThemeStore.persist.rehydrate();
+
+      expect(useThemeStore.getState().mode).toBe('system');
+    },
+  );
+
   it('resolves system mode from the OS preference', () => {
     expect(resolveTheme('system', true)).toBe('dark');
     expect(resolveTheme('system', false)).toBe('light');

@@ -9,6 +9,10 @@ export const THEME_MODES = ['light', 'dark', 'system'] as const;
 export type ThemeMode = (typeof THEME_MODES)[number];
 export type ResolvedTheme = 'light' | 'dark';
 
+export function isThemeMode(value: unknown): value is ThemeMode {
+  return (THEME_MODES as readonly unknown[]).includes(value);
+}
+
 interface ThemeState {
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
@@ -33,6 +37,11 @@ export const useThemeStore = create<ThemeState>()(
         name: STORAGE_KEYS.theme,
         storage: createZustandStorage<PersistedTheme>(localStore),
         partialize: (state): PersistedTheme => ({ mode: state.mode }),
+        // Storage is user-editable and outlives releases: never trust a stored mode blindly.
+        merge: (persisted, current) => {
+          const mode = (persisted as Partial<PersistedTheme> | undefined)?.mode;
+          return isThemeMode(mode) ? { ...current, mode } : current;
+        },
       },
     ),
     { name: 'theme-store', enabled: env.isDev && !env.isTest },

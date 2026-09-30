@@ -3,8 +3,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import indexHtml from '/index.html?raw';
 
-import { env } from '@/config/env';
-import { createTypedStorage, STORAGE_KEYS, type StorageKey } from '@/core/storage';
+import { env, envSchema } from '@/config/env';
+import {
+  createTypedStorage,
+  localStore,
+  STORAGE_KEYS,
+  type StorageKey,
+  toStoragePrefix,
+} from '@/core/storage';
 
 import { useThemeStore } from './theme-store';
 
@@ -49,14 +55,24 @@ describe('index.html theme bootstrap', () => {
   });
 
   it('falls back to the default app name when the placeholder was never substituted', () => {
-    // Explicit default-name storage, independent of the configured VITE_APP_NAME.
+    // Explicit default-name storage, independent of the configured VITE_APP_NAME. The prefix comes
+    // from the schema default, so a change of the default app name must be mirrored in index.html.
     const defaultNameStore = createTypedStorage<StorageKey>(
       () => window.localStorage,
-      'react-bedrock:',
+      toStoragePrefix(envSchema.parse({}).VITE_APP_NAME),
     );
     defaultNameStore.set(STORAGE_KEYS.theme, { state: { mode: 'dark' }, version: 0 });
 
     runThemeBootstrap({ substitute: false });
+
+    expect(document.documentElement).toHaveClass('dark');
+  });
+
+  it('treats a saved mode it does not know as system', () => {
+    localStore.set(STORAGE_KEYS.theme, { state: { mode: 'sepia' }, version: 0 });
+    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true } as MediaQueryList);
+
+    runThemeBootstrap();
 
     expect(document.documentElement).toHaveClass('dark');
   });

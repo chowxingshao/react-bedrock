@@ -27,7 +27,10 @@
         var mode = 'system';
         try {
           var saved = JSON.parse(window.localStorage.getItem((slug || 'app') + ':theme') || 'null');
-          if (saved && saved.v && saved.v.state && saved.v.state.mode) mode = saved.v.state.mode;
+          var savedMode = saved && saved.v && saved.v.state && saved.v.state.mode;
+          if (savedMode === 'light' || savedMode === 'dark' || savedMode === 'system') {
+            mode = savedMode;
+          }
         } catch (e) {}
         var dark =
           mode === 'dark' ||
