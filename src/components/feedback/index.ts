@@ -9,3 +9,5 @@ export {
   ListSkeleton,
   TableSkeleton,
 } from './skeleton-presets';
+export { EmptyState, type EmptyStateProps } from './empty-state';
+export { ErrorState, type ErrorStateProps } from './error-state';
