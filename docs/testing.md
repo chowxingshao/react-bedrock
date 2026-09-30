@@ -17,7 +17,7 @@
 - Import `describe`, `it`, `expect` and `vi` from `vitest`. Globals are off, so every file says where its test APIs come from.
 - Query the DOM the way users do: `getByRole`, `getByLabelText`, `getByText`. Use `data-testid` only as a last resort.
 - Mocks are cleared and restored after every test (`clearMocks` is on by default in Vitest 5, and `restoreMocks: true` is set).
-- `src/test/setup.ts` runs before every test file. It registers the jest-dom matchers and stubs the browser APIs jsdom lacks but Radix primitives and the theme code use (`ResizeObserver`, `matchMedia`, the pointer-capture methods and `scrollIntoView`). Before each test it resets the i18n language to `en`, because the app starts in `VITE_DEFAULT_LOCALE` and Vitest loads your `.env.local`; a test therefore never depends on that setting. After each test it unmounts rendered trees and clears `localStorage` / `sessionStorage`, so a test may change any of them without cleaning up.
+- `src/test/setup.ts` runs before every test file. It registers the jest-dom matchers and stubs the browser APIs jsdom lacks but Radix primitives and the theme code use (`ResizeObserver`, `matchMedia`, the pointer-capture methods and `scrollIntoView`). Before each test it resets the i18n language to `en`, because the app starts in `VITE_DEFAULT_LOCALE` and Vitest loads your `.env.local`; a test therefore never depends on that setting. After each test it unmounts rendered trees and clears `localStorage` / `sessionStorage`, so a test may change any of them without cleaning up. It also starts the MSW server before a file's tests, resets any handlers a test added after each test, and closes the server afterwards (see "Mocking the API with MSW" below).
 
 ## The provider-aware `render`
 
@@ -30,3 +30,28 @@ const { queryClient } = render(<ItemsPage />); // wrapped in QueryClientProvider
 ```
 
 `createTestQueryClient()` gives you a client with retries off and no garbage collection, for tests that need one directly.
+
+## Mocking the API with MSW
+
+The same handlers (`src/mocks/handlers.ts`) power three things:
+
+| Where                                                         | How                                                                                             |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `pnpm dev`, and the Docker demo when `VITE_ENABLE_MOCKS=true` | `src/mocks/browser.ts` (service worker, started in `main.tsx`)                                  |
+| Vitest                                                        | `src/mocks/server.ts`, started in `src/test/setup.ts`. **Any unmocked request fails the test.** |
+| Playwright E2E                                                | the preview build runs with mocks on                                                            |
+
+Override a handler for one test (it is reset after each test):
+
+```ts
+import { http, HttpResponse } from 'msw';
+
+import { apiUrl } from '@/mocks/api-url';
+import { server } from '@/mocks/server';
+
+server.use(
+  http.get(apiUrl('/items'), () => HttpResponse.json({ code: 'SERVER_ERROR' }, { status: 500 })),
+);
+```
+
+Always build handler URLs with `apiUrl()`: it resolves paths the same way the shared HTTP client does, whatever `VITE_API_BASE_URL` is. After upgrading `msw`, run `pnpm exec msw init public` to refresh `public/mockServiceWorker.js`.
