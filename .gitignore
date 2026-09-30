@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+storybook-static/
+stats.html
+
+# tests
+coverage/
+.vitest/
+playwright-report/
+test-results/
+blob-report/
+
+# env files (the example is committed)
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+
+# editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# TypeScript incremental build info
+*.tsbuildinfo
