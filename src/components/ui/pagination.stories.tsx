@@ -10,6 +10,8 @@ import {
   PaginationPrevious,
 } from './pagination';
 
+const SIZES = ['sm', 'md', 'lg', 'icon'] as const;
+
 const meta = { title: 'UI/Pagination', component: Pagination } satisfies Meta<typeof Pagination>;
 
 export default meta;
@@ -39,6 +41,23 @@ export const Default: Story = {
         <PaginationItem>
           <PaginationNext href="/?page=3" />
         </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  ),
+};
+
+/** `PaginationLink` takes the Button sizes; the default is `icon`. */
+export const Sizes: Story = {
+  render: (args) => (
+    <Pagination {...args}>
+      <PaginationContent>
+        {SIZES.map((size) => (
+          <PaginationItem key={size}>
+            <PaginationLink href="/?page=1" size={size}>
+              {size === 'icon' ? '1' : size}
+            </PaginationLink>
+          </PaginationItem>
+        ))}
       </PaginationContent>
     </Pagination>
   ),

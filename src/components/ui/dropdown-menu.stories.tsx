@@ -52,3 +52,26 @@ export const Default: Story = {
     </DropdownMenu>
   ),
 };
+
+/** `inset` aligns labels, items and sub-menu triggers with items that have a leading check or icon. */
+export const Inset: Story = {
+  render: (args) => (
+    <DropdownMenu {...args}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">Open menu</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56">
+        <DropdownMenuLabel inset>Inset label</DropdownMenuLabel>
+        <DropdownMenuCheckboxItem checked>Checked item</DropdownMenuCheckboxItem>
+        <DropdownMenuItem inset>Inset item</DropdownMenuItem>
+        <DropdownMenuItem>Regular item</DropdownMenuItem>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger inset>Inset sub-menu</DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuItem>Archive</DropdownMenuItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ),
+};

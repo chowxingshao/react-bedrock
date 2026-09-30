@@ -44,3 +44,21 @@ export const Default: Story = {
     </Dialog>
   ),
 };
+
+/** `showCloseButton={false}` drops the corner "x"; `DialogFooter showCloseButton` adds a Close button. */
+export const FooterCloseButton: Story = {
+  render: (args) => (
+    <Dialog {...args}>
+      <DialogTrigger asChild>
+        <Button variant="outline">Open dialog</Button>
+      </DialogTrigger>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>Terms of service</DialogTitle>
+          <DialogDescription>Read the terms, then close this dialog.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter showCloseButton />
+      </DialogContent>
+    </Dialog>
+  ),
+};

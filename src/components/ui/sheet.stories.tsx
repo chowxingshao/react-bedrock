@@ -45,3 +45,25 @@ export const Sides: Story = {
     </div>
   ),
 };
+
+/** `showCloseButton={false}` drops the corner "x"; close with the footer button or Escape. */
+export const WithoutCloseButton: Story = {
+  render: () => (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="outline">Open sheet</Button>
+      </SheetTrigger>
+      <SheetContent showCloseButton={false}>
+        <SheetHeader>
+          <SheetTitle>No corner button</SheetTitle>
+          <SheetDescription>Close this sheet with the button below.</SheetDescription>
+        </SheetHeader>
+        <SheetFooter>
+          <SheetClose asChild>
+            <Button>Done</Button>
+          </SheetClose>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  ),
+};

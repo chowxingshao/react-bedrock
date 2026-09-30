@@ -39,3 +39,24 @@ export const Destructive: Story = {
     </AlertDialog>
   ),
 };
+
+/** `size="sm"` gives a narrow, centred dialog whose footer buttons share one row. */
+export const Small: Story = {
+  render: (args) => (
+    <AlertDialog {...args}>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline">Discard draft</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent size="sm">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Discard draft?</AlertDialogTitle>
+          <AlertDialogDescription>Your changes will be lost.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep editing</AlertDialogCancel>
+          <AlertDialogAction variant="destructive">Discard</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  ),
+};
