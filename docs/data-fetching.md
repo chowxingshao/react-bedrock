@@ -31,6 +31,36 @@ Requests time out after `HTTP_TIMEOUT_MS` (30 s, `src/config/constants.ts`) with
 
 **Cross-origin APIs:** `X-Request-Id` is a custom header, so browsers send a CORS preflight. The backend must allow it (`Access-Control-Allow-Headers: X-Request-Id, Accept-Language, Content-Type`) and may expose `X-Request-Id` in its responses. The same-origin `/api` proxy avoids all of this (docs/docker.md).
 
+## Server state with TanStack Query
+
+All API data goes through TanStack Query (spec Principle 3). The client (`src/core/api/query-client.ts`) sets:
+
+| Setting                | Value                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `staleTime`            | 30 s (`QUERY_STALE_TIME_MS`)                                                                                                                                                                                                                                                                                                                                                                         |
+| Query retries          | 1, but none for 4xx responses                                                                                                                                                                                                                                                                                                                                                                        |
+| Mutation retries       | 0                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `refetchOnWindowFocus` | off (turn it on per query, or with `createQueryClient({ refetchOnWindowFocus: true })`)                                                                                                                                                                                                                                                                                                              |
+| Failed query           | Logged. An error that came from `http` is logged by the HTTP interceptor with the request id (a warning for 4xx, an error for network errors, timeouts and 5xx); any other error is logged by the query cache as a `Query failed` warning with the query key. `meta: { silent: true }` skips the query-cache log only, so it does not silence the interceptor.                                       |
+| Failed mutation        | Logged the same way, **and toasted**. `meta: { silent: true }` skips the toast and the mutation-cache log: add it when you handle the error yourself, e.g. when mapping field errors with `applyServerErrors`. It does not affect the interceptor, which still logs an HTTP error and toasts a 403, an offline or a timeout error (the request flag `{ silent: true }` skips that toast, see above). |
+| Errors                 | Typed as `AppError` everywhere (`Register.defaultError`). Services built on `http` already throw one; for any other `queryFn` or `mutationFn`, throw `toAppError(error)`.                                                                                                                                                                                                                            |
+
+React Query Devtools appear in development only (bottom-left button); they are not part of the production bundle.
+
+### Query keys: one factory per feature
+
+```ts
+export const itemKeys = {
+  all: ['items'] as const,
+  lists: () => [...itemKeys.all, 'list'] as const,
+  list: (filters: ItemFilters) => [...itemKeys.lists(), filters] as const,
+  details: () => [...itemKeys.all, 'detail'] as const,
+  detail: (id: string) => [...itemKeys.details(), id] as const,
+};
+```
+
+Invalidate broadly (`itemKeys.lists()`) after mutations. The reference feature (`src/features/example`, planned) will show the full pattern, including optimistic updates.
+
 ## Rendering async state: `QueryState`
 
 Every async view handles loading, empty, error and success (spec Principle 4). `QueryState` does it for you:
@@ -55,7 +85,7 @@ Every async view handles loading, empty, error and success (spec Principle 4). `
   | error   | `ErrorState` with **Try again** → `query.refetch()` |
 
 - **No skeleton flash:** loading UI appears only after 200 ms (`SKELETON_DELAY_MS`), so fast responses never flash a skeleton.
-- **Cached data wins:** if a background refetch fails while data is cached, the cached data stays on screen; the global error handler reports the failure.
+- **Cached data wins:** if a background refetch fails while data is cached, the cached data stays on screen and the failure is logged: a warning for a 4xx, an error for network errors, timeouts and 5xx (in production the console shows errors only, and Sentry gets a breadcrumb for each warning).
 - **Custom error slot:** pass `error={(err, retry) => …}` to take over the error view.
 
 ## Suspense style: `AsyncBoundary`

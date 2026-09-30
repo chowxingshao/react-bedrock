@@ -29,7 +29,9 @@ import { render, screen } from '@/test/render';
 const { queryClient } = render(<ItemsPage />); // wrapped in QueryClientProvider (retries off) and ConfirmProvider
 ```
 
-`createTestQueryClient()` gives you a client with retries off and no garbage collection, for tests that need one directly.
+`@/test/render` also exports a `renderHook` that wraps the hook in the same providers; pass `{ queryClient }` to either function to use your own client.
+
+`createTestQueryClient()` gives you the app's client (`createQueryClient()`, so the same global error handling) with retries off and no garbage collection, for tests that need one directly. Its `staleTime` stays 30 s: a test that remounts a component and expects a refetch must set `staleTime: 0`.
 
 ## Mocking the API with MSW
 

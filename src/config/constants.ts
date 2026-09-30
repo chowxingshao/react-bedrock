@@ -26,3 +26,6 @@ export const TOAST_DEDUPE_WINDOW_MS = 2_000;
 
 /** Default timeout for API requests. */
 export const HTTP_TIMEOUT_MS = 30_000;
+
+/** Default TanStack Query stale time: data younger than this is served without refetching. */
+export const QUERY_STALE_TIME_MS = 30_000;
