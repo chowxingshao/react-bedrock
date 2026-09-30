@@ -12,7 +12,7 @@ export interface SessionUser {
   permissions: readonly Permission[];
 }
 
-/** `unknown` until the bootstrap `/auth/me` call settles. */
+/** Starts `unknown`; the auth layer's bootstrap `/auth/me` call is meant to settle it. */
 export type SessionStatus = 'unknown' | 'authenticated' | 'anonymous';
 
 interface SessionState {
@@ -23,9 +23,10 @@ interface SessionState {
 }
 
 /**
- * Session identity (spec §6.4): who is signed in and what they may do. The auth layer sets it after
- * `/auth/me` or login and clears it on logout or expiry. It lives in memory only; on reload the
- * httpOnly session cookie restores it through `/auth/me`. This is session state, not cached query data.
+ * Session identity (spec §6.4): who is signed in and what they may do. Once the auth layer exists it
+ * is meant to set this after `/auth/me` or login and clear it on logout or expiry. It lives in
+ * memory only; on reload the httpOnly session cookie is meant to restore it through `/auth/me`.
+ * This is session state, not cached query data.
  */
 export const useSessionStore = create<SessionState>()(
   devtools(

@@ -40,4 +40,31 @@ describe('session store', () => {
     expect(result.current).toBe(first);
     expect(result.current).toEqual([]);
   });
+
+  it('returns the very same permissions array the signed-in user carries', () => {
+    act(() => {
+      useSessionStore.getState().setUser(user);
+    });
+
+    const { result, rerender } = renderHook(() => usePermissions());
+    const first = result.current;
+    rerender();
+
+    expect(result.current).toBe(first);
+    expect(result.current).toBe(user.permissions);
+  });
+
+  it('exposes no permissions again once the session is cleared', () => {
+    act(() => {
+      useSessionStore.getState().setUser(user);
+    });
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current).toEqual(['items.read']);
+
+    act(() => {
+      useSessionStore.getState().clear();
+    });
+
+    expect(result.current).toEqual([]);
+  });
 });

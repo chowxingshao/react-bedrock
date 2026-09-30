@@ -2,13 +2,13 @@
 
 Pick the home for a piece of state with this table (spec Principle 3):
 
-| Kind of state                              | Where it lives                                                | Examples                                      |
-| ------------------------------------------ | ------------------------------------------------------------- | --------------------------------------------- |
-| Server data                                | **TanStack Query** (docs/data-fetching.md)                    | lists, details, anything from the API         |
-| View state someone might bookmark or share | **The URL**: `useUrlState`, `usePagination` (docs/routing.md) | filters, search, page, sort, active tab       |
-| App-wide UI and session state              | **Zustand**, in `src/stores/`                                 | theme, sidebar collapsed, the signed-in user  |
-| Form state                                 | **React Hook Form** (docs/forms.md)                           | field values, dirty and touched state, errors |
-| Everything else                            | `useState` / `useReducer` in the component                    | open/closed, hover, a local draft             |
+| Kind of state                              | Where it lives                                                                          | Examples                                      |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Server data                                | **TanStack Query** (docs/data-fetching.md)                                              | lists, details, anything from the API         |
+| View state someone might bookmark or share | **The URL**: `useUrlState`, `usePagination` (planned, with the router; docs/routing.md) | filters, search, page, sort, active tab       |
+| App-wide UI and session state              | **Zustand**, in `src/stores/`                                                           | theme, sidebar collapsed, the signed-in user  |
+| Form state                                 | **React Hook Form** (planned; docs/forms.md)                                            | field values, dirty and touched state, errors |
+| Everything else                            | `useState` / `useReducer` in the component                                              | open/closed, hover, a local draft             |
 
 ## Rules
 
@@ -27,7 +27,7 @@ Pick the home for a piece of state with this table (spec Principle 3):
 | `ui-store`      | sidebar collapsed, mobile nav open                                                         | only `sidebarCollapsed` (`ui`) |
 | `session-store` | status (`unknown` / `authenticated` / `anonymous`) and the signed-in user with permissions | **no**                         |
 
-**Why the user lives in a store:** it is the identity of the current session, set by the auth layer after `/auth/me` or login, not cached server data. Guards and `hasPermission()` read it synchronously. On reload, the httpOnly cookie plus `/auth/me` rebuild it, so it never touches browser storage.
+**Why the user lives in a store:** it is the identity of the current session, not cached server data. Once the auth layer lands (planned), it will set the store after `/auth/me` or login; route guards and `hasPermission()` (from `useAuth()`) will read it synchronously. On reload, the httpOnly cookie plus `/auth/me` will rebuild it, so it never touches browser storage.
 
 ## Permissions
 
@@ -35,4 +35,4 @@ Pick the home for a piece of state with this table (spec Principle 3):
 
 ## Adding a store
 
-Run `pnpm gen store` (docs/generators.md). It creates the store with selectors and a test.
+Once the generators land (planned), run `pnpm gen store` (docs/generators.md): it will create the store with selectors and a test. Until then, copy an existing store and its test (`src/stores/ui-store.ts`) and add the new store to the reset list in `src/test/setup.ts`.
