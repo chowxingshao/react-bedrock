@@ -1,0 +1,11 @@
+dist
+coverage
+.vitest
+storybook-static
+playwright-report
+test-results
+pnpm-lock.yaml
+public/mockServiceWorker.js
+src/api/generated
+plop/templates
+docs/superpowers

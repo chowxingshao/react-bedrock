@@ -1,15 +1,15 @@
 # Testing
 
-| Layer | Tool | Location |
-|---|---|---|
+| Layer                        | Tool                             | Location                                           |
+| ---------------------------- | -------------------------------- | -------------------------------------------------- |
 | Unit, component, integration | Vitest + Testing Library (jsdom) | `src/**/*.test.ts(x)`, next to the code under test |
 
 ## Commands
 
-| Command | What it does |
-|---|---|
-| `pnpm test` | Run all unit/component tests once |
-| `pnpm test:watch` | Re-run affected tests on save |
+| Command              | What it does                                        |
+| -------------------- | --------------------------------------------------- |
+| `pnpm test`          | Run all unit/component tests once                   |
+| `pnpm test:watch`    | Re-run affected tests on save                       |
 | `pnpm test:coverage` | Run once and write a coverage report to `coverage/` |
 
 ## Conventions
