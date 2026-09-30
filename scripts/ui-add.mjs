@@ -2,7 +2,7 @@
  * Adds shadcn/ui components and normalises them to this repo's rules (docs/design-system.md).
  *
  *   pnpm ui:add dialog button            # add
- *   pnpm ui:add button --overwrite       # re-fetch an existing component
+ *   pnpm ui:add button --overwrite       # re-fetch (discards hand fixes: docs/design-system.md)
  *
  * Afterwards run `pnpm lint:fix && pnpm test`, and fix what they still report by hand
  * (hard-coded English strings → t('…'), any remaining raw values the token guard flags).

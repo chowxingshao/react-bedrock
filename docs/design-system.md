@@ -56,34 +56,38 @@ Use the token utilities above. For a justified one-off, add the comment `design-
 
 ## UI primitives (`src/components/ui/`)
 
-These are shadcn/ui components (Radix primitives, `new-york` style) that **we own**: edit them freely. Each one uses `cva` for variants and `cn()` (`src/lib/cn.ts`, clsx + tailwind-merge) to merge classes.
+These are shadcn/ui components (Radix primitives, `new-york` style) that **we own**: edit them freely. Button, Badge and Tabs define their variants with `cva`; the other options (the sizes of Avatar, Switch, SelectTrigger and AlertDialogContent, DropdownMenuItem's `variant`, Sheet's `side`) are data attributes or conditional classes. All of them merge classes with `cn()` (`src/lib/cn.ts`, clsx + tailwind-merge).
 
 Included: Button, Input, Textarea, Label, Select, Checkbox, RadioGroup, Switch, Card, Badge, Dialog, AlertDialog, Sheet, DropdownMenu, Popover, Tooltip, Tabs, Table, Avatar, Separator, Skeleton, Spinner, Pagination, Breadcrumb and Form (React Hook Form). DataTable and DatePicker are composites built on top of these.
 
 ### Adding another shadcn component
 
 ```bash
-pnpm ui:add accordion            # or several at once; add --overwrite to re-fetch
+pnpm ui:add accordion            # or several at once
 pnpm lint:fix && pnpm test       # repairs import order, then reports what is still left to fix
 ```
 
+**Do not run `--overwrite` on a component that already exists.** It re-fetches stock shadcn output and discards this repo's hand fixes (translated labels, token utilities instead of raw values, Button's `md` size, Badge's extra variants, Tooltip providing its own `TooltipProvider`, …); the script below only redoes the mechanical fixes. These files carry hand fixes: button, badge, dialog, alert-dialog, sheet, pagination, breadcrumb, spinner, form, table, tabs, avatar and tooltip. The invalid-field focus ring in button, input, textarea, checkbox, select and radio-group is reapplied by the script. If you must re-fetch one, review `git diff` afterwards and restore what was lost.
+
 `scripts/ui-add.mjs` makes these fixes automatically:
 
-| shadcn output                            | Rewritten to                                              |
-| ---------------------------------------- | --------------------------------------------------------- |
-| `import { cn } from "cn"`                | `@/lib/cn` (the `cn` package is removed)                  |
-| `import … from "@/components/ui/button"` | `./button` (relative imports inside a folder)             |
-| `ring-[3px]`                             | `ring-3`                                                  |
-| `ring-ring/50`                           | `ring-ring` (full-strength focus rings, for 3:1 contrast) |
-| `bg-black/50`                            | `bg-overlay`                                              |
-| `text-white` on the destructive colour   | `text-destructive-foreground`                             |
-| `z-50`                                   | `z-modal` (dialog/sheet) or `z-dropdown`                  |
-| `duration-150`, `-200`, `-300`, `-500`   | `duration-fast`, `-normal`, `-slow`, `-slow`              |
-| `rounded-[4px]`, `rounded-[2px]`         | `rounded-sm`, `rounded-xs`                                |
+| shadcn output                             | Rewritten to                                              |
+| ----------------------------------------- | --------------------------------------------------------- |
+| `import { cn } from "cn"`                 | `@/lib/cn` (the `cn` package is removed)                  |
+| `import … from "@/components/ui/button"`  | `./button` (relative imports inside a folder)             |
+| `ring-[3px]`                              | `ring-3`                                                  |
+| `ring-ring/50`                            | `ring-ring` (full-strength focus rings, for 3:1 contrast) |
+| `aria-invalid:ring-destructive/20`, `/40` | `aria-invalid:focus-visible:ring-destructive`             |
+| `bg-black/50`                             | `bg-overlay`                                              |
+| `text-white` on the destructive colour    | `text-destructive-foreground`                             |
+| `z-50`                                    | `z-modal` (dialog/sheet) or `z-dropdown`                  |
+| `duration-150`, `-200`, `-300`, `-500`    | `duration-fast`, `-normal`, `-slow`, `-slow`              |
+| `rounded-[4px]`, `rounded-[2px]`          | `rounded-sm`, `rounded-xs`                                |
 
 Things that are fixed by hand:
 
 - **English strings** (sr-only labels, `aria-label`): use `t('…')` from `react-i18next`, and add the keys to every locale.
+- **Tooltip**: stock shadcn's `Tooltip` needs a `TooltipProvider` higher up and Radix throws without one. Ours wraps itself, so a lone `<Tooltip>` works anywhere; keep that if the file is ever re-fetched.
 - **Button sizes**: shadcn's `size="default"` is `size="md"` here (`sm | md | lg | icon`).
 - **Pixel offsets**: use the spacing scale (`translate-y-0.5`, `p-0.75`) or `--spacing(n)` inside `calc()` (`h-[calc(100%_-_--spacing(0.25))]`), never `[2px]`.
 - **Raw layers**: another `z-10` becomes a layer from `tokens.css` (`z-sticky`, `z-dropdown`, `z-modal`, `z-toast`).

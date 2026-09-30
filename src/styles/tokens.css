@@ -17,7 +17,7 @@
  *    globals.css: bg-primary, text-muted-foreground, border-border, rounded-md,
  *    shadow-sm, z-modal, duration-fast, font-sans, ...
  *  - Components never use raw colours or pixel values
- *    (src/test/design-tokens.guard.test.ts fails the build if they do).
+ *    (src/test/design-tokens.guard.test.ts fails `pnpm test` if they do).
  * =============================================================================
  */
 
