@@ -2,6 +2,14 @@
 @import 'tw-animate-css';
 @import './tokens.css';
 
+/*
+ * Tailwind scans every file it does not know to be ignored for class names. The docs and scripts
+ * quote banned utilities (raw palette colours, z-index numbers, pixel values) as examples: keep
+ * them out of the scan, or those classes end up in the production CSS.
+ */
+@source not '../../docs';
+@source not '../../scripts';
+
 /* Class-based dark mode: <html class="dark">, set before first paint by index.html. */
 @custom-variant dark (&:where(.dark, .dark *));
 
