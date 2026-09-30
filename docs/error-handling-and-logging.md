@@ -52,8 +52,8 @@ logger.error('Payment failed', { error, requestId }); // pass the thrown value a
 ```
 
 - **Levels:** `debug < info < warn < error`. The threshold is `VITE_LOG_LEVEL`, defaulting to `debug` in development and `warn` in production builds.
-- **Context attached automatically:** app version, git SHA, environment, current route, the current user **id** (set with `logger.setUser(id)` by the auth layer; never names or emails), and `requestId` when you pass one.
-- **Redaction:** keys containing `password`, `token`, `authorization`, `cookie`, `secret` or `apiKey` (in any case, with or without `-`/`_`) are replaced with `[REDACTED]` at any depth. The exported `logger` is configured in `src/core/logger/index.ts`: change the list there. `createLogger({ redactKeys })` builds a separate logger with its own list.
+- **Context attached automatically:** app version, git SHA, environment, current route, the current user **id** (call `logger.setUser(id)` on sign-in and `logger.setUser(null)` on sign-out; the auth provider will do it once the auth layer arrives, planned; never names or emails), and `requestId` when you pass one.
+- **Redaction:** keys containing `password`, `token`, `authorization`, `cookie`, `secret` or `apiKey` (in any case, with or without `-`/`_`) are replaced with `[REDACTED]` at any depth. The exported `logger` is configured in `src/core/logger/index.ts`: pass `redactKeys` there to change the list. `createLogger({ redactKeys })` builds a separate logger with its own list. A list you pass **replaces** the defaults rather than adding to them, so extend them: `redactKeys: [...DEFAULT_REDACT_KEYS, 'ssn']` (`DEFAULT_REDACT_KEYS` is exported from `@/core/logger`).
 - **De-duplication:** per error object and severity. The same error object reaches the logger once per severity, even if a boundary, a React root callback and a global handler all see it: an error already reported at the same or a higher severity is not reported again, while a later report at a higher severity (a warning, then a boundary catching the same object) still goes through.
 - **Serialising entries:** a transport that serialises an entry must use `entry.context`, which is redacted, and never `entry.error`, which is the raw thrown value. Don't log DOM nodes or events; they serialise to very large or circular structures.
 - **A bad context doesn't make logging throw.** If the context can't be read or redacted (a getter or proxy that throws), the entry is still logged with the context `{ '[unserialisable context]': true }`, keeping `error` and `requestId` when they can be read.
@@ -83,7 +83,7 @@ logger.addTransport({
 
 ### Web Vitals (optional, not wired)
 
-To report Core Web Vitals, add the `web-vitals` package and log each metric with `logger.info('web-vital', { name, value, rating })` behind a production check. The template doesn't ship it, so weigh the extra dependency first.
+To report Core Web Vitals, add the `web-vitals` package and log each metric with `logger.info('web-vital', { name, value, rating })` behind a production check. In production that `info` entry is dropped: the level threshold defaults to `warn`, the console transport prints errors only and Sentry takes `warn` and above, so no shipped transport accepts it. Add a custom transport with `minLevel: 'info'` (like the `http` one above) and set `VITE_LOG_LEVEL=info`. The template doesn't ship it, so weigh the extra dependency first.
 
 ## User feedback: toasts and confirmations (`@/core/notify`)
 
@@ -91,7 +91,7 @@ To report Core Web Vitals, add the `web-vitals` package and log each metric with
 import { notify, useConfirm } from '@/core/notify';
 
 notify.success(t('items:toast.created'));
-notify.error(getErrorMessage(error));
+notify.error(getErrorMessage(error)); // getErrorMessage arrives with the data layer (@/core/api, planned)
 await notify.promise(save(), { loading: t('…saving'), success: t('…saved'), error: t('…failed') });
 
 const confirm = useConfirm();
