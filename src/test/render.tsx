@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render as rtlRender, type RenderOptions } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
 
+import { ConfirmProvider } from '@/core/notify';
+
 export {
   act,
   fireEvent,
@@ -32,7 +34,11 @@ export function render(
   { queryClient = createTestQueryClient(), ...options }: ProviderOptions = {},
 ) {
   function Providers({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ConfirmProvider>{children}</ConfirmProvider>
+      </QueryClientProvider>
+    );
   }
   return { queryClient, ...rtlRender(ui, { wrapper: Providers, ...options }) };
 }

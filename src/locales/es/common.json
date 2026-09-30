@@ -3,7 +3,9 @@
     "close": "Cerrar",
     "more": "Más",
     "retry": "Reintentar",
-    "reload": "Recargar la página"
+    "reload": "Recargar la página",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar"
   },
   "status": {
     "loading": "Cargando"
@@ -35,5 +37,8 @@
       "title": "Aún no hay nada aquí",
       "description": "Cuando haya algo que mostrar, aparecerá aquí."
     }
+  },
+  "notifications": {
+    "label": "Notificaciones"
   }
 }

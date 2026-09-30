@@ -21,12 +21,12 @@
 
 ## The provider-aware `render`
 
-Prefer `@/test/render` when the component needs providers (it wraps a `QueryClientProvider`). Earlier tests import Testing Library directly, and that stays valid for components that need no providers:
+Prefer `@/test/render` when the component needs providers (it wraps a `QueryClientProvider` and a `ConfirmProvider`, so components that call `useConfirm()` work). Earlier tests import Testing Library directly, and that stays valid for components that need no providers:
 
 ```tsx
 import { render, screen } from '@/test/render';
 
-const { queryClient } = render(<ItemsPage />); // wrapped in QueryClientProvider (retries off)
+const { queryClient } = render(<ItemsPage />); // wrapped in QueryClientProvider (retries off) and ConfirmProvider
 ```
 
 `createTestQueryClient()` gives you a client with retries off and no garbage collection, for tests that need one directly.

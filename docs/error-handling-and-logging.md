@@ -63,3 +63,21 @@ logger.addTransport({
 ### Web Vitals (optional, not wired)
 
 To report Core Web Vitals, add the `web-vitals` package and log each metric with `logger.info('web-vital', { name, value, rating })` behind a production check. The template doesn't ship it, so weigh the extra dependency first.
+
+## User feedback: toasts and confirmations (`@/core/notify`)
+
+```ts
+import { notify, useConfirm } from '@/core/notify';
+
+notify.success(t('items:toast.created'));
+notify.error(getErrorMessage(error));
+await notify.promise(save(), { loading: t('…saving'), success: t('…saved'), error: t('…failed') });
+
+const confirm = useConfirm();
+if (await confirm({ title: t('items:delete.title'), destructive: true })) remove(id);
+```
+
+- `<Toaster />` is mounted once in `src/app/providers.tsx` and styled with design tokens. Don't mount another.
+- **De-duplication:** an identical toast (same kind and text) fired again within 2 s is dropped, and a repeat updates the visible toast rather than stacking. So 20 parallel requests failing offline produce one "offline" toast.
+- `useConfirm()` returns a promise that resolves `true` or `false`. Escape and Cancel both resolve `false`. Only one confirmation is open at a time.
+- Never import `sonner` directly (ESLint enforces this).

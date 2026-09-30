@@ -20,3 +20,6 @@ export const SUSPENSE_FALLBACK_DELAY_MS = 350;
 /** DataTable pagination defaults (`DEFAULT_PAGE_SIZE` must be one of `PAGE_SIZE_OPTIONS`). */
 export const DEFAULT_PAGE_SIZE = 10;
 export const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+
+/** Identical toasts fired within this window are shown once (e.g. many parallel requests failing). */
+export const TOAST_DEDUPE_WINDOW_MS = 2_000;
