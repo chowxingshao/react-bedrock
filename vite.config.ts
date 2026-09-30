@@ -41,6 +41,9 @@ export default defineConfig(({ mode }) => {
       setupFiles: ['./src/test/setup.ts'],
       include: ['src/**/*.test.{ts,tsx}'],
       restoreMocks: true,
+      // Tests must not depend on a developer's VITE_API_BASE_URL: an absolute one makes every request
+      // cross-origin, and jsdom then sends CORS preflights that the MSW handlers do not answer.
+      env: { VITE_API_BASE_URL: '/api' },
       // Vitest blanks every `.css` module by default, `?raw` imports included; tokens.test.ts reads the source.
       css: { include: [/tokens\.css\?raw/] },
       coverage: {
