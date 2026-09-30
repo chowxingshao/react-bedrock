@@ -11,6 +11,12 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
 /** Loading indicators wait this long before appearing, so fast responses never flash a skeleton. */
 export const SKELETON_DELAY_MS = 200;
 
+/**
+ * Suspense fallbacks wait this long. React holds a Suspense reveal ~300 ms after the fallback mounts,
+ * so the delay must exceed that for fast responses never to flash a loader.
+ */
+export const SUSPENSE_FALLBACK_DELAY_MS = 350;
+
 /** DataTable pagination defaults (`DEFAULT_PAGE_SIZE` must be one of `PAGE_SIZE_OPTIONS`). */
 export const DEFAULT_PAGE_SIZE = 10;
 export const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;

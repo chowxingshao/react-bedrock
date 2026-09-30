@@ -38,3 +38,5 @@ For `useSuspenseQuery` (or lazy components), wrap the subtree once:
 ```
 
 `AsyncBoundary` combines `Suspense`, an error boundary and TanStack Query's `QueryErrorResetBoundary`, so **Try again** also refetches the failed queries. Use `resetKeys={[id]}` to clear the error automatically when the input changes.
+
+The `Suspense` fallback waits `SUSPENSE_FALLBACK_DELAY_MS` (350 ms) before it appears. That is longer than the 200 ms of `QueryState` because React holds a Suspense reveal for about 300 ms after the fallback mounts, so a shorter delay would still flash the loader on fast responses. A custom `loading` node is delayed the same way, and `loading={null}` renders nothing while suspended.

@@ -1,14 +1,19 @@
 import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { type ReactNode, Suspense } from 'react';
 
+import { SUSPENSE_FALLBACK_DELAY_MS } from '@/config/constants';
 import { ErrorBoundary, type ErrorBoundaryFallbackProps } from '@/core/errors';
 
+import { Delayed } from './delayed';
 import { ErrorState } from './error-state';
 import { PageLoader } from './page-loader';
 
 export interface AsyncBoundaryProps {
   children: ReactNode;
-  /** Suspense fallback. Default: <PageLoader />. */
+  /**
+   * Suspense fallback, shown after SUSPENSE_FALLBACK_DELAY_MS. Default: <PageLoader />.
+   * Pass `null` to render nothing while suspended.
+   */
   loading?: ReactNode;
   /** Error fallback. Default: <ErrorState /> whose "Try again" also resets failed queries. */
   error?: (props: ErrorBoundaryFallbackProps) => ReactNode;
@@ -30,7 +35,15 @@ export function AsyncBoundary({
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary onReset={reset} resetKeys={resetKeys} fallback={error}>
-          <Suspense fallback={loading ?? <PageLoader />}>{children}</Suspense>
+          <Suspense
+            fallback={
+              <Delayed delayMs={SUSPENSE_FALLBACK_DELAY_MS}>
+                {loading === undefined ? <PageLoader delayMs={0} /> : loading}
+              </Delayed>
+            }
+          >
+            {children}
+          </Suspense>
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>
