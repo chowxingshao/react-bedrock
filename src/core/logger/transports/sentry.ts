@@ -12,6 +12,9 @@ export interface SentryTransportOptions {
 
 type Sdk = typeof SentrySdk;
 
+/** Entries kept while the SDK chunk loads; beyond this the oldest are dropped. */
+const MAX_QUEUED_ENTRIES = 100;
+
 // `dataCollection` does not gate URLs or console output: Sentry puts `location.href` on every event,
 // records navigation and request URLs in breadcrumbs, and copies raw console arguments into console
 // breadcrumbs. Reset-password, invite and OAuth tokens often sit in a query string or fragment.
@@ -92,7 +95,13 @@ export function createSentryTransport({
         beforeBreadcrumb: scrubBreadcrumb,
       });
       sdk = module;
-      for (const entry of queue.splice(0)) send(module, entry);
+      for (const entry of queue.splice(0)) {
+        try {
+          send(module, entry);
+        } catch {
+          // One entry the SDK chokes on must not drop the ones queued behind it.
+        }
+      }
     })
     .catch(() => {
       // Blocked or offline: monitoring is best-effort and must never break the app.
@@ -102,8 +111,13 @@ export function createSentryTransport({
     name: 'sentry',
     minLevel: 'warn',
     log(entry) {
-      if (sdk) send(sdk, entry);
-      else queue.push(entry);
+      if (sdk) {
+        send(sdk, entry);
+        return;
+      }
+      queue.push(entry);
+      // If the SDK never loads (blocked, offline), the queue must not grow for the life of the page.
+      if (queue.length > MAX_QUEUED_ENTRIES) queue.shift();
     },
   };
 }

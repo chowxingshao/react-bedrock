@@ -74,6 +74,36 @@ describe('sentry transport', () => {
     expect(Sentry.captureException).toHaveBeenCalledWith(error);
   });
 
+  describe('the queue of entries logged before the SDK loads', () => {
+    it('keeps sending when one queued entry makes the SDK throw', async () => {
+      vi.mocked(Sentry.captureException).mockImplementationOnce(() => {
+        throw new Error('sdk down');
+      });
+      const transport = createSentryTransport(OPTIONS);
+      const errors = [new Error('one'), new Error('two'), new Error('three')];
+
+      for (const error of errors) transport.log({ ...base, level: 'error', message: 'x', error });
+      await vi.dynamicImportSettled();
+
+      expect(Sentry.captureException).toHaveBeenCalledTimes(3);
+      expect(Sentry.captureException).toHaveBeenLastCalledWith(errors[2]);
+    });
+
+    it('holds at most 100 entries and drops the oldest, so a failed load cannot grow it', async () => {
+      const transport = createSentryTransport(OPTIONS);
+
+      for (let index = 0; index < 105; index += 1) {
+        transport.log({ ...base, level: 'warn', message: `entry ${String(index)}` });
+      }
+      await vi.dynamicImportSettled();
+
+      const messages = vi.mocked(Sentry.addBreadcrumb).mock.calls.map(([crumb]) => crumb.message);
+      expect(messages).toHaveLength(100);
+      expect(messages[0]).toBe('entry 5');
+      expect(messages[99]).toBe('entry 104');
+    });
+  });
+
   it('keeps the route and request id on a warning breadcrumb', async () => {
     const transport = await startTransport();
 
