@@ -99,5 +99,5 @@ if (await confirm({ title: t('items:delete.title'), destructive: true })) remove
 
 - `<Toaster />` is mounted once in `src/app/providers.tsx` and styled with design tokens. Don't mount another.
 - **De-duplication:** an identical toast (same kind and text) fired again within 2 s is dropped, and a repeat updates the visible toast rather than stacking. So 20 parallel requests failing offline produce one "offline" toast.
-- `useConfirm()` returns a promise that resolves `true` or `false`. Escape and Cancel both resolve `false`. Only one confirmation is open at a time.
+- `useConfirm()` returns a promise that resolves `true` or `false`. Escape and Cancel both resolve `false`. Only one confirmation is open at a time. When it closes, focus goes back to the element that was focused when you called `confirm()`; if confirming removes that element (a deleted table row, say), move focus somewhere sensible yourself.
 - Never import `sonner` directly (ESLint enforces this).

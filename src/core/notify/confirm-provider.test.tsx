@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -6,7 +6,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { ConfirmProvider } from './confirm-provider';
 import { useConfirm } from './use-confirm';
 
-function DeleteButton({ destructive = true }: { destructive?: boolean }) {
+function DeleteButton({
+  destructive = true,
+  label = 'Delete',
+}: {
+  destructive?: boolean;
+  label?: string;
+}) {
   const confirm = useConfirm();
   const [result, setResult] = useState('pending');
   return (
@@ -23,10 +29,29 @@ function DeleteButton({ destructive = true }: { destructive?: boolean }) {
           });
         }}
       >
-        Delete
+        {label}
       </button>
       <output>{result}</output>
     </>
+  );
+}
+
+/** A button that removes itself once the user confirms, like a delete action on a table row. */
+function RemovableButton() {
+  const confirm = useConfirm();
+  const [removed, setRemoved] = useState(false);
+  if (removed) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        void confirm({ title: 'Remove item?' }).then((ok) => {
+          if (ok) setRemoved(true);
+        });
+      }}
+    >
+      Remove
+    </button>
   );
 }
 
@@ -80,6 +105,66 @@ describe('useConfirm', () => {
       'data-variant',
       'default',
     );
+  });
+
+  describe('focus', () => {
+    it.each(['Cancel', 'Confirm', 'Escape'])(
+      'returns to the button that opened the dialog after %s',
+      async (action) => {
+        const user = userEvent.setup();
+        renderWithProvider();
+        const trigger = screen.getByRole('button', { name: 'Delete' });
+
+        await user.click(trigger);
+        await screen.findByRole('alertdialog');
+        if (action === 'Escape') await user.keyboard('{Escape}');
+        else await user.click(screen.getByRole('button', { name: action }));
+
+        await waitFor(() => {
+          expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+          expect(trigger).toHaveFocus();
+        });
+      },
+    );
+
+    it('keeps the first opener when a second request replaces a pending one', async () => {
+      const user = userEvent.setup();
+      render(
+        <ConfirmProvider>
+          <DeleteButton />
+          <DeleteButton label="Archive" />
+        </ConfirmProvider>,
+      );
+      const first = screen.getByRole('button', { name: 'Delete' });
+
+      await user.click(first);
+      await screen.findByRole('alertdialog');
+      // The dialog makes the page inert, so a real user cannot do this; a script can.
+      fireEvent.click(screen.getByRole('button', { name: 'Archive', hidden: true }));
+      await user.click(await screen.findByRole('button', { name: 'Cancel' }));
+
+      await waitFor(() => {
+        expect(first).toHaveFocus();
+      });
+    });
+
+    it('does not fail when the opener is gone by the time the dialog closes', async () => {
+      const user = userEvent.setup();
+      render(
+        <ConfirmProvider>
+          <RemovableButton />
+        </ConfirmProvider>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Remove' }));
+      await user.click(await screen.findByRole('button', { name: 'Confirm' }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument();
+      });
+      expect(document.body).toHaveFocus();
+    });
   });
 
   it('fails loudly outside the provider', () => {

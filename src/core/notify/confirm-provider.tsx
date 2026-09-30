@@ -20,9 +20,16 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState<ConfirmOptions>({ title: '' });
   const resolverRef = useRef<((confirmed: boolean) => void) | null>(null);
+  // The dialog has no Trigger, so Radix cannot return focus on its own (WCAG 2.4.3).
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const confirm = useCallback<ConfirmFn>((next) => {
-    resolverRef.current?.(false); // a newer request cancels any pending one
+    // A newer request cancels any pending one, and keeps the original opener: while a dialog is
+    // open, the focused element is inside it and is about to be removed.
+    if (resolverRef.current) resolverRef.current(false);
+    else
+      returnFocusRef.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setOptions(next);
     setOpen(true);
     return new Promise<boolean>((resolve) => {
@@ -46,7 +53,15 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
         }}
       >
         {/* With no description, an explicit aria-describedby={undefined} tells Radix that is intentional. */}
-        <AlertDialogContent {...(options.description ? {} : { 'aria-describedby': undefined })}>
+        <AlertDialogContent
+          {...(options.description ? {} : { 'aria-describedby': undefined })}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            const opener = returnFocusRef.current;
+            returnFocusRef.current = null;
+            if (opener?.isConnected) opener.focus(); // a confirmed delete may have removed it
+          }}
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>{options.title}</AlertDialogTitle>
             {options.description ? (
