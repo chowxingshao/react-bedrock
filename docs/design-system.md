@@ -106,4 +106,46 @@ Button sizes are `sm | md | lg | icon` (default `md`). Button variants are `defa
 - `pnpm storybook` runs it at http://localhost:6006; `pnpm storybook:build` writes a static site to `storybook-static/`.
 - Every primitive has a story in `src/components/ui/<name>.stories.tsx` that shows all its variants. Add or update the story whenever you add a component or variant.
 - The toolbar switches **Theme** (light/dark) and **Locale** (en/es). The **Accessibility** panel runs axe on the current story.
-- Stories are CSF3 (`satisfies Meta<typeof Component>`), titled `UI/<Name>`. Demo copy in stories may be plain English, because stories are not shipped to users.
+- Stories are CSF3 (`satisfies Meta<typeof Component>`), titled `UI/<Name>` (or `Feedback/<Name>` for feedback components in `src/components/feedback/`). Demo copy in stories may be plain English, because stories are not shipped to users.
+
+## Async state components (`@/components/feedback`)
+
+| Component                                                                         | Use it for                                                                      |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `Spinner`                                                                         | Inline loading (buttons, small areas)                                           |
+| `PageLoader`                                                                      | Full-page (`variant="page"`) or section loading; the lazy-route fallback        |
+| `Skeleton`                                                                        | A base shimmer block                                                            |
+| `TableSkeleton`, `CardSkeleton`, `ListSkeleton`, `FormSkeleton`, `DetailSkeleton` | Ready-made skeletons                                                            |
+| `EmptyState`                                                                      | Icon, title, description and an optional action                                 |
+| `ErrorState`                                                                      | Friendly message and **Try again**. Technical details show in development only. |
+| `QueryState`, `AsyncBoundary`                                                     | Pick the right state automatically (docs/data-fetching.md)                      |
+
+`PageLoader` and `QueryState` wait 200 ms (`SKELETON_DELAY_MS`) before showing a loading indicator, so fast responses never flash a skeleton. The `DataTable` skeleton (`isLoading`) shows immediately: render the table inside `QueryState`, or drive `isLoading` from a delayed flag, to keep that behaviour.
+
+## DataTable
+
+`DataTable` (`@/components/ui/data-table`) wraps TanStack Table v9 with sorting, pagination, and loading and empty states. It is **server-driven**: the caller owns `sorting` and `pagination` state (usually synced to the URL) and fetches the matching page.
+
+```tsx
+const column = createDataTableColumnHelper<Item>();
+const columns = column.columns([
+  column.accessor('name', { header: () => t('items:fields.name') }),
+  column.accessor('price', {
+    header: () => t('items:fields.price'),
+    cell: (c) => formatCurrency(c.getValue()),
+  }),
+]); // define outside render or wrap in useMemo
+
+<QueryState query={query} isEmpty={(data) => data.items.length === 0}>
+  {(data) => (
+    <DataTable
+      columns={columns}
+      data={data.items}
+      sorting={{ state: sorting, onChange: setSorting }}
+      pagination={{ state: pagination, onChange: setPagination, rowCount: data.total }}
+    />
+  )}
+</QueryState>;
+```
+
+`QueryState` supplies the loading, empty and error states (including **Try again**); a failed query must never fall through to the table's "Nothing here yet". Omit `sorting` to disable sorting, or `pagination` to hide the pager. The table keeps `pageIndex` when the sort changes, so reset it in your `onChange` if the sort should return to page 1. For small static tables, use the plain `Table` primitive.

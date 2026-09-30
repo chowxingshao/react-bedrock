@@ -14,7 +14,12 @@
     "next": "Next",
     "previousPage": "Go to previous page",
     "nextPage": "Go to next page",
-    "morePages": "More pages"
+    "morePages": "More pages",
+    "firstPage": "Go to first page",
+    "lastPage": "Go to last page",
+    "pageOf": "Page {{page}} of {{pageCount}}",
+    "rowsPerPage": "Rows per page",
+    "total": "{{count}} total"
   },
   "breadcrumb": {
     "label": "Breadcrumb"

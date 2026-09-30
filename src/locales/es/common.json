@@ -14,7 +14,12 @@
     "next": "Siguiente",
     "previousPage": "Ir a la página anterior",
     "nextPage": "Ir a la página siguiente",
-    "morePages": "Más páginas"
+    "morePages": "Más páginas",
+    "firstPage": "Ir a la primera página",
+    "lastPage": "Ir a la última página",
+    "pageOf": "Página {{page}} de {{pageCount}}",
+    "rowsPerPage": "Filas por página",
+    "total": "{{count}} en total"
   },
   "breadcrumb": {
     "label": "Ruta de navegación"

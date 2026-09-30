@@ -10,3 +10,7 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
 /** Loading indicators wait this long before appearing, so fast responses never flash a skeleton. */
 export const SKELETON_DELAY_MS = 200;
+
+/** DataTable pagination defaults (`DEFAULT_PAGE_SIZE` must be one of `PAGE_SIZE_OPTIONS`). */
+export const DEFAULT_PAGE_SIZE = 10;
+export const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
