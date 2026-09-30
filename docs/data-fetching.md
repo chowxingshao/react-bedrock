@@ -1,5 +1,36 @@
 # Data fetching
 
+## HTTP client (`@/core/api`)
+
+There is **one** Axios instance: `http`. Hand-written services and Orval-generated hooks both use it, so every call gets the same behaviour. Never import `axios` directly (ESLint enforces this).
+
+```ts
+import { http } from '@/core/api';
+
+export async function getItem(id: string, signal?: AbortSignal) {
+  const { data } = await http.get<Item>(`/items/${id}`, { signal }); // TanStack Query passes `signal` for cancellation
+  return data;
+}
+```
+
+| Interceptor       | What it does                                                                                                                                                                                                                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Request           | Sets `Accept-Language` (current locale) and `X-Request-Id` (a UUID for tracing), lets the auth strategy add credentials, and logs at debug level                                                                                                                                                                                                 |
+| 401               | Once the auth layer registers its adapter: calls `POST /auth/refresh` **once**, even for concurrent requests, then retries each request once. If that fails, the adapter's `onSessionExpired` runs (the session is cleared and the guards redirect to login). Until an adapter is registered, a 401 is logged and rejected like any other error. |
+| 403               | Shows a "no permission" toast                                                                                                                                                                                                                                                                                                                    |
+| Offline / timeout | Shows a connectivity toast (de-duplicated)                                                                                                                                                                                                                                                                                                       |
+| Every failure     | Rejects with an `AppError` `{ code, message, status, details?, requestId?, userMessage? }` and logs it with the request id                                                                                                                                                                                                                       |
+
+Per-request flags: `{ skipAuthRefresh: true }` (used by login, logout and refresh) and `{ silent: true }` (no global toast; it does not silence logging).
+
+Requests time out after `HTTP_TIMEOUT_MS` (30 s, `src/config/constants.ts`) with code `TIMEOUT`; pass `{ timeout }` to change it for one call. Cancelling through an `AbortSignal` rejects with code `CANCELLED` and is not logged.
+
+**Logged URLs carry no query string or fragment:** queries often hold tokens or personal data (`?token=…`), so the interceptor logs `/lookup`, never `/lookup?token=…`. It does not log request `params`, headers or bodies either. Still keep secrets out of URLs: browsers, proxies and servers record them.
+
+**Errors for users:** `getErrorMessage(error)` returns a translated message. Add `errors:codes.<YOUR_CODE>` to the locale files to translate backend-specific error codes; server codes must be UPPER_SNAKE_CASE, any other code is never used as a translation key.
+
+**Cross-origin APIs:** `X-Request-Id` is a custom header, so browsers send a CORS preflight. The backend must allow it (`Access-Control-Allow-Headers: X-Request-Id, Accept-Language, Content-Type`) and may expose `X-Request-Id` in its responses. The same-origin `/api` proxy avoids all of this (docs/docker.md).
+
 ## Rendering async state: `QueryState`
 
 Every async view handles loading, empty, error and success (spec Principle 4). `QueryState` does it for you:

@@ -9,3 +9,5 @@ export {
   type KnownErrorCode,
 } from './errors';
 export { applyServerErrors } from './form-errors';
+export { registerHttpAuth, type HttpAuthAdapter } from './auth-bridge';
+export { http } from './http';
