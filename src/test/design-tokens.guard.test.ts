@@ -42,6 +42,11 @@ const RULES = [
     pattern: /\bz-\d+\b/,
     hint: 'Use the layers from tokens.css: z-sticky, z-dropdown, z-modal, z-toast.',
   },
+  {
+    name: 'raw duration',
+    pattern: /\bduration-\d+\b/,
+    hint: 'Use the durations from tokens.css: duration-fast, duration-normal, duration-slow.',
+  },
 ];
 
 describe('design-token guard (spec Principle 1)', () => {

@@ -53,6 +53,11 @@ const REPLACEMENTS = [
   // /20 and /40 rings only show while focused, where they replace `ring-ring` at ~1.2:1 contrast.
   [/ dark:aria-invalid:ring-destructive\/40/g, ''],
   [/aria-invalid:ring-destructive\/20/g, 'aria-invalid:focus-visible:ring-destructive'],
+  // Raw durations become the token utilities (tokens.css); other values are left for the guard.
+  [/\bduration-150\b/g, 'duration-fast'],
+  [/\bduration-200\b/g, 'duration-normal'],
+  [/\bduration-300\b/g, 'duration-slow'],
+  [/\bduration-500\b/g, 'duration-slow'],
   [/rounded-\[4px\]/g, 'rounded-sm'],
   [/rounded-\[2px\]/g, 'rounded-xs'],
 ];

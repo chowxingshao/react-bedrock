@@ -15,6 +15,8 @@ All colours, radii, fonts, shadows, z-index layers and animation durations are d
 
 Colours use **OKLCH** (`oklch(lightness chroma hue)`), so shades with the same lightness look equally bright.
 
+Durations reach a component only through a `duration-fast`, `duration-normal` or `duration-slow` utility (Dialog, AlertDialog and Sheet use them). An enter/exit animation with no duration utility, such as the Popover, DropdownMenu, Select and Tooltip fades, uses tw-animate-css's own 150 ms default, which is not a token.
+
 ### How to rebrand
 
 1. Edit `src/styles/tokens.css` only. Change `--primary` / `--primary-foreground` in the light (`:root`) and dark (`.dark`) blocks, and copy the dark values into the `prefers-color-scheme` fallback block (a test checks they match).
@@ -30,6 +32,7 @@ Colours use **OKLCH** (`oklch(lightness chroma hue)`), so shades with the same l
 - Tailwind palette colours (`bg-white`, `text-red-500`)
 - arbitrary pixel values (`w-[13px]`)
 - raw z-index numbers (`z-50`)
+- raw durations (`duration-300`)
 
 Use the token utilities above. For a justified one-off, add the comment `design-tokens-guard-ignore` on that line and explain why.
 
@@ -75,6 +78,7 @@ pnpm lint:fix && pnpm test       # repairs import order, then reports what is st
 | `bg-black/50`                            | `bg-overlay`                                              |
 | `text-white` on the destructive colour   | `text-destructive-foreground`                             |
 | `z-50`                                   | `z-modal` (dialog/sheet) or `z-dropdown`                  |
+| `duration-150`, `-200`, `-300`, `-500`   | `duration-fast`, `-normal`, `-slow`, `-slow`              |
 | `rounded-[4px]`, `rounded-[2px]`         | `rounded-sm`, `rounded-xs`                                |
 
 Things that are fixed by hand:
