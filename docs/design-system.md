@@ -127,6 +127,9 @@ Button sizes are `sm | md | lg | icon` (default `md`). Button variants are `defa
 `DataTable` (`@/components/ui/data-table`) wraps TanStack Table v9 with sorting, pagination, and loading and empty states. It is **server-driven**: the caller owns `sorting` and `pagination` state (usually synced to the URL) and fetches the matching page.
 
 ```tsx
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import type { PaginationState, SortingState } from '@tanstack/react-table';
+
 const column = createDataTableColumnHelper<Item>();
 const columns = column.columns([
   column.accessor('name', { header: () => t('items:fields.name') }),
@@ -136,16 +139,33 @@ const columns = column.columns([
   }),
 ]); // define outside render or wrap in useMemo
 
-<QueryState query={query} isEmpty={(data) => data.items.length === 0}>
-  {(data) => (
-    <DataTable
-      columns={columns}
-      data={data.items}
-      sorting={{ state: sorting, onChange: setSorting }}
-      pagination={{ state: pagination, onChange: setPagination, rowCount: data.total }}
-    />
-  )}
-</QueryState>;
+function ItemsTable() {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: DEFAULT_PAGE_SIZE,
+  });
+  const query = useQuery({
+    queryKey: ['items', sorting, pagination],
+    queryFn: () => fetchItems({ sorting, pagination }),
+    placeholderData: keepPreviousData,
+  });
+
+  return (
+    <QueryState query={query} isEmpty={(data) => data.items.length === 0}>
+      {(data) => (
+        <DataTable
+          columns={columns}
+          data={data.items}
+          sorting={{ state: sorting, onChange: setSorting }}
+          pagination={{ state: pagination, onChange: setPagination, rowCount: data.total }}
+        />
+      )}
+    </QueryState>
+  );
+}
 ```
+
+`placeholderData: keepPreviousData` keeps the previous page on screen while the next one loads. That keeps the table and its pager mounted, so keyboard focus and scroll position survive page and sort changes. Without it, every page or sort change is a new query with no data yet, `QueryState` swaps the table for its loader, and focus falls back to the page.
 
 `QueryState` supplies the loading, empty and error states (including **Try again**); a failed query must never fall through to the table's "Nothing here yet". Omit `sorting` to disable sorting, or `pagination` to hide the pager. The table keeps `pageIndex` when the sort changes, so reset it in your `onChange` if the sort should return to page 1. For small static tables, use the plain `Table` primitive.
