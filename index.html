@@ -3,10 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="application-name" content="%VITE_APP_NAME%" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>React Bedrock</title>
     <!-- Runtime config (spec §4): defines window.__APP_CONFIG__ before the app bundle runs. -->
     <script src="/config.js"></script>
+    <!--
+      Theme bootstrap (spec §5.2): applies the saved theme before first paint, so there is no flash.
+      Mirrors src/core/storage/prefix.ts, src/stores/theme-store.ts and the VITE_APP_NAME default in
+      src/config/env.ts. Guarded by src/stores/theme-bootstrap.test.ts.
+    -->
+    <script id="theme-bootstrap">
+      (function () {
+        var cfg = window.__APP_CONFIG__ || {};
+        var meta = document.querySelector('meta[name="application-name"]');
+        var built = ((meta && meta.getAttribute('content')) || '').trim();
+        if (built.charAt(0) === '%') built = '';
+        var name = String(cfg.VITE_APP_NAME || '').trim() || built || 'React Bedrock';
+        var slug = name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        var mode = 'system';
+        try {
+          var saved = JSON.parse(window.localStorage.getItem((slug || 'app') + ':theme') || 'null');
+          if (saved && saved.v && saved.v.state && saved.v.state.mode) mode = saved.v.state.mode;
+        } catch (e) {}
+        var dark =
+          mode === 'dark' ||
+          (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.add(dark ? 'dark' : 'light');
+        document.title = name;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

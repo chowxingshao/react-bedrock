@@ -1,3 +1,9 @@
+import { AppProviders } from './providers';
+
 export function App() {
-  return <main id="main-content" />;
+  return (
+    <AppProviders>
+      <main id="main-content" />
+    </AppProviders>
+  );
 }

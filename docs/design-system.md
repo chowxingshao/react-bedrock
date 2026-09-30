@@ -39,6 +39,18 @@ Use the token utilities above. For a justified one-off, add the comment `design-
 - The `dark:` variant is available. An inline script in `index.html` applies the saved theme **before first paint**, so there is no flash.
 - The theme store (`src/stores/theme-store.ts`) keeps it in sync afterwards.
 
+### Theme switching
+
+- `ThemeToggle` (`src/components/ui/theme-toggle.tsx`) offers Light, Dark and System. The choice is stored under the `theme` storage key, e.g. `react-bedrock:theme`.
+- Read or change the theme anywhere through the selector hooks:
+
+  ```ts
+  const mode = useThemeMode(); // 'light' | 'dark' | 'system'
+  const setMode = useSetThemeMode();
+  ```
+
+- **No flash:** `<script id="theme-bootstrap">` in `index.html` reads the saved preference and sets the class on `<html>` before first paint. It duplicates a little logic: the storage prefix, the stored format and the default app name. `src/stores/theme-bootstrap.test.ts` runs the real script against the real store, so any drift fails the test suite.
+
 ## UI primitives (`src/components/ui/`)
 
 These are shadcn/ui components (Radix primitives, `new-york` style) that **we own**: edit them freely. Each one uses `cva` for variants and `cn()` (`src/lib/cn.ts`, clsx + tailwind-merge) to merge classes.
