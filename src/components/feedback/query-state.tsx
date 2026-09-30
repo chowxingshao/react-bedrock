@@ -20,14 +20,14 @@ export interface QueryStateProps<TData, TError> {
   loading?: ReactNode;
   /** Shown when `isEmpty(data)` is true. Default: <EmptyState />. */
   empty?: ReactNode;
-  /** Default: null or undefined data, or an empty array. */
+  /** Default: null data or an empty array. */
   isEmpty?: (data: TData) => boolean;
   /** Replaces the default <ErrorState />, whose "Try again" calls `query.refetch()`. */
   error?: ReactNode | ((error: TError, retry: () => void) => ReactNode);
 }
 
 function defaultIsEmpty(data: unknown): boolean {
-  return data === null || data === undefined || (Array.isArray(data) && data.length === 0);
+  return data === null || (Array.isArray(data) && data.length === 0);
 }
 
 /**
