@@ -35,11 +35,13 @@ const { queryClient } = render(<ItemsPage />); // wrapped in QueryClientProvider
 
 The same handlers (`src/mocks/handlers.ts`) power three things:
 
-| Where                                                         | How                                                                                             |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `pnpm dev`, and the Docker demo when `VITE_ENABLE_MOCKS=true` | `src/mocks/browser.ts` (service worker, started in `main.tsx`)                                  |
-| Vitest                                                        | `src/mocks/server.ts`, started in `src/test/setup.ts`. **Any unmocked request fails the test.** |
-| Playwright E2E                                                | the preview build runs with mocks on                                                            |
+| Where                                                                   | How                                                                                                               |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`, and the Docker demo (planned) when `VITE_ENABLE_MOCKS=true` | `src/mocks/browser.ts` (service worker, started in `main.tsx`)                                                    |
+| Vitest                                                                  | `src/mocks/server.ts`, started in `src/test/setup.ts`. **An unmocked request is rejected and its URL is logged.** |
+| Playwright E2E (planned)                                                | the preview build runs with mocks on                                                                              |
+
+An unmocked request makes MSW reject it (`onUnhandledFrame: 'error'`) and log its URL. A test fails only if that rejection reaches it, so a component that catches the error can still pass, with a console error.
 
 Override a handler for one test (it is reset after each test):
 

@@ -44,7 +44,8 @@ for (const method of [
   });
 }
 
-// Every request in a test must be mocked: an unhandled one fails the test.
+// Every request in a test must be mocked: MSW rejects an unhandled one and logs its URL. The test
+// fails only if that rejection reaches it (a component that catches the error would still pass).
 beforeAll(() => {
   server.listen({ onUnhandledFrame: 'error' });
 });

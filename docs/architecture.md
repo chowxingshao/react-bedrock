@@ -19,7 +19,7 @@ An arrow means "may be imported by everything to its right". These rules are enf
 | `src/components`          | Design system (`ui`), async states (`feedback`), layout (`layout`)   | anything except `features` and `app`                                                                                                                                              |
 | `src/hooks`, `src/stores` | Shared hooks; Zustand stores (UI/session state only)                 | anything except `features` and `app`                                                                                                                                              |
 | `src/features/<name>`     | Business features                                                    | anything except `app` and **other features' internals**                                                                                                                           |
-| `src/mocks`               | Mock API handlers, MSW server and worker; never import in components | `config`, `lib`                                                                                                                                                                   |
+| `src/mocks`               | Mock API handlers, MSW server and worker                             | anything except `app`                                                                                                                                                             |
 | `src/app`                 | Providers, router, route pages                                       | everything                                                                                                                                                                        |
 
 More rules:
@@ -38,6 +38,7 @@ More rules:
 
 - **Browser globals** — `localStorage`, `sessionStorage`, `document.cookie`, `console`, `import.meta.env` and `window.__APP_CONFIG__` — are only touched by their wrappers.
 - **User-facing text** is never a JSX literal (`react/jsx-no-literals`). Use `t('…')`.
+- **Components never import `@/mocks`.** This is a convention and is not enforced by ESLint: the mock handlers and MSW are for `main.tsx` (which loads the worker lazily) and tests only, and a component importing them would pull MSW into the main bundle.
 
 ## Tooling
 
