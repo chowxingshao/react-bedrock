@@ -1,6 +1,8 @@
 import type * as SentrySdk from '@sentry/react';
+import type { Breadcrumb, ErrorEvent } from '@sentry/react';
 
 import type { LogEntry, LogTransport } from '../types';
+import { stripUrl } from './strip-url';
 
 export interface SentryTransportOptions {
   dsn: string;
@@ -9,6 +11,35 @@ export interface SentryTransportOptions {
 }
 
 type Sdk = typeof SentrySdk;
+
+// `dataCollection` does not gate URLs or console output: Sentry puts `location.href` on every event,
+// records navigation and request URLs in breadcrumbs, and copies raw console arguments into console
+// breadcrumbs. Reset-password, invite and OAuth tokens often sit in a query string or fragment.
+
+/** Keeps the page URL in an event, without its query string or fragment. */
+function scrubEvent(event: ErrorEvent): ErrorEvent {
+  if (event.request) {
+    if (event.request.url) event.request.url = stripUrl(event.request.url);
+    delete event.request.query_string;
+  }
+  if (event.transaction) event.transaction = stripUrl(event.transaction);
+  return event;
+}
+
+const URL_DATA_KEYS = ['url', 'from', 'to'] as const;
+
+/** Drops console breadcrumbs and strips query strings and fragments from the URLs in the others. */
+function scrubBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb | null {
+  if (breadcrumb.category === 'console') return null; // the logger sends its own warnings and errors
+  const { data } = breadcrumb;
+  if (!data) return breadcrumb;
+  const scrubbed: Record<string, unknown> = { ...data };
+  for (const key of URL_DATA_KEYS) {
+    const value = scrubbed[key];
+    if (typeof value === 'string') scrubbed[key] = stripUrl(value);
+  }
+  return { ...breadcrumb, data: scrubbed };
+}
 
 function send(sdk: Sdk, entry: LogEntry): void {
   if (entry.level === 'warn') {
@@ -51,6 +82,8 @@ export function createSentryTransport({
           httpBodies: [],
           urlQueryParams: false,
         },
+        beforeSend: scrubEvent,
+        beforeBreadcrumb: scrubBreadcrumb,
       });
       sdk = module;
       for (const entry of queue.splice(0)) send(module, entry);

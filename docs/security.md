@@ -16,4 +16,5 @@
 
 - Log user **ids** only, never names, emails or other personal data. `logger.setUser()` accepts an id.
 - The logger redacts sensitive keys automatically (docs/error-handling-and-logging.md), but don't log secrets on purpose.
-- The Sentry transport turns off Sentry's collection of cookies, headers, request bodies, query parameters and user info.
+- The Sentry transport turns off Sentry's collection of cookies, headers, request bodies and IP addresses, and it strips the query string and fragment from the page and request URLs in events and breadcrumbs. It drops console breadcrumbs, which carry raw arguments the redactor never sees. Nothing else is collected automatically beyond a normal crash report (the error, its stack trace, browser and OS, and the URL path), plus the log context you pass, with sensitive keys redacted. URL paths are sent, so keep secrets and personal data out of them.
+- The only user info Sentry receives is the id passed to `logger.setUser()`.

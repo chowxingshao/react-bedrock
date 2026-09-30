@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/react';
-import { describe, expect, it, vi } from 'vitest';
+import type { Breadcrumb, ErrorEvent } from '@sentry/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { LogEntry } from '../types';
 import { createSentryTransport } from './sentry';
@@ -29,6 +30,32 @@ const base: Omit<LogEntry, 'level' | 'message'> = {
   },
 };
 
+const OPTIONS = { dsn: 'https://key@example.com/1', environment: 'production', release: '1' };
+
+/** Creates the transport and waits until the (mocked) SDK chunk has loaded and `init` has run. */
+async function startTransport() {
+  const transport = createSentryTransport(OPTIONS);
+  await vi.dynamicImportSettled();
+  return transport;
+}
+
+/** The options the transport passed to the most recent `Sentry.init` call. */
+function initOptions() {
+  const options = vi.mocked(Sentry.init).mock.calls.at(-1)?.[0];
+  if (!options) throw new Error('Sentry.init was not called');
+  return options;
+}
+
+function scrubbers() {
+  const { beforeSend, beforeBreadcrumb } = initOptions();
+  if (!beforeSend || !beforeBreadcrumb) throw new Error('The privacy hooks are not configured');
+  return { beforeSend, beforeBreadcrumb };
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 describe('sentry transport', () => {
   it('initialises lazily with privacy-safe options and captures errors', async () => {
     const transport = createSentryTransport({
@@ -42,12 +69,106 @@ describe('sentry transport', () => {
     await vi.dynamicImportSettled();
 
     expect(Sentry.init).toHaveBeenCalledWith(
-      expect.objectContaining({
-        dsn: 'https://key@example.com/1',
-        dataCollection: expect.objectContaining({ userInfo: false, cookies: false }) as unknown,
-      }),
+      expect.objectContaining({ dsn: 'https://key@example.com/1' }),
     );
     expect(Sentry.captureException).toHaveBeenCalledWith(error);
+  });
+
+  it('switches off every Sentry data collection flag this template does not use', async () => {
+    await startTransport();
+
+    expect(initOptions().dataCollection).toStrictEqual({
+      userInfo: false,
+      cookies: false,
+      httpHeaders: false,
+      httpBodies: [],
+      urlQueryParams: false,
+    });
+  });
+
+  describe('privacy hooks', () => {
+    it('strips the query string and fragment from the URLs of an event', async () => {
+      await startTransport();
+      const event: ErrorEvent = {
+        type: undefined,
+        message: 'Boom',
+        transaction: '/next?invite=SECRET456',
+        request: {
+          method: 'GET',
+          url: 'http://localhost:3000/next?invite=SECRET456#frag',
+          query_string: 'invite=SECRET456',
+        },
+      };
+
+      const result = await scrubbers().beforeSend(event, {});
+
+      expect(result).toStrictEqual({
+        type: undefined,
+        message: 'Boom',
+        transaction: '/next',
+        request: { method: 'GET', url: 'http://localhost:3000/next' },
+      });
+    });
+
+    it('passes an event without request data through', async () => {
+      await startTransport();
+      const event: ErrorEvent = { type: undefined, message: 'Boom' };
+
+      expect(await scrubbers().beforeSend(event, {})).toStrictEqual(event);
+    });
+
+    it('drops console breadcrumbs, which carry raw arguments the redactor never sees', async () => {
+      await startTransport();
+      const breadcrumb: Breadcrumb = {
+        category: 'console',
+        level: 'log',
+        message: 'login {"password":"raw"}',
+        data: { arguments: [{ password: 'raw' }] },
+      };
+
+      expect(scrubbers().beforeBreadcrumb(breadcrumb)).toBeNull();
+    });
+
+    it('strips the query string and fragment from navigation and request breadcrumbs', async () => {
+      await startTransport();
+      const { beforeBreadcrumb } = scrubbers();
+      const navigation: Breadcrumb = {
+        category: 'navigation',
+        data: { from: '/', to: '/reset-password?token=SECRET123#frag' },
+      };
+      const request: Breadcrumb = {
+        category: 'fetch',
+        data: { method: 'GET', status_code: 200, url: '/api/items?email=a@b.c' },
+      };
+
+      expect(beforeBreadcrumb(navigation)).toStrictEqual({
+        category: 'navigation',
+        data: { from: '/', to: '/reset-password' },
+      });
+      expect(beforeBreadcrumb(request)).toStrictEqual({
+        category: 'fetch',
+        data: { method: 'GET', status_code: 200, url: '/api/items' },
+      });
+    });
+
+    it('does not mutate the breadcrumb it is given', async () => {
+      await startTransport();
+      const breadcrumb: Breadcrumb = {
+        category: 'navigation',
+        data: { to: '/reset-password?token=SECRET123' },
+      };
+
+      scrubbers().beforeBreadcrumb(breadcrumb);
+
+      expect(breadcrumb.data).toStrictEqual({ to: '/reset-password?token=SECRET123' });
+    });
+
+    it('keeps breadcrumbs without data as they are', async () => {
+      await startTransport();
+      const breadcrumb: Breadcrumb = { category: 'ui.click', message: 'button.save' };
+
+      expect(scrubbers().beforeBreadcrumb(breadcrumb)).toStrictEqual(breadcrumb);
+    });
   });
 
   it('turns warnings into breadcrumbs', async () => {
