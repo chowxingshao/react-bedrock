@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { env } from '@/config/env';
+import { getErrorMessage } from '@/core/api';
 import { cn } from '@/lib/cn';
 import { describeError } from '@/lib/describe-error';
 
@@ -46,7 +47,8 @@ export function ErrorState({
       <div className="grid gap-1">
         <h2 className="text-lg font-semibold">{title ?? t('errors:generic.title')}</h2>
         <p className="text-sm text-muted-foreground">
-          {description ?? t('errors:generic.description')}
+          {description ??
+            (error === undefined ? t('errors:generic.description') : getErrorMessage(error))}
         </p>
       </div>
       {onRetry ? (

@@ -45,4 +45,47 @@ describe('createRedactor', () => {
       password: 'kept',
     });
   });
+
+  it('keeps only the name, message, code and status of an error cause', () => {
+    const cause = Object.assign(new Error('Request failed with status code 401'), {
+      name: 'AxiosError',
+      code: 'ERR_BAD_REQUEST',
+      status: 401,
+      config: {
+        url: '/auth/login?token=abc',
+        data: '{"email":"a@b.c","password":"hunter2"}',
+        headers: { Authorization: 'Bearer t', Accept: 'json' },
+      },
+      response: { data: { user: 'a@b.c' } },
+    });
+
+    const result = redact({ error: new Error('Wrapped', { cause }) }) as {
+      error: { cause: unknown };
+    };
+
+    expect(result.error.cause).toEqual({
+      name: 'AxiosError',
+      message: 'Request failed with status code 401',
+      code: 'ERR_BAD_REQUEST',
+      status: 401,
+    });
+    for (const secret of ['hunter2', 'Bearer', 'token=abc', 'a@b.c']) {
+      expect(JSON.stringify(result)).not.toContain(secret);
+    }
+  });
+
+  it('summarises a cause that is an own enumerable property, and keeps a non-object cause', () => {
+    const cause = Object.assign(new Error('Request failed'), {
+      config: { data: '{"password":"hunter2"}' },
+    });
+
+    const result = redact({
+      error: Object.assign(new Error('Wrapped'), { cause }),
+      other: new Error('Also wrapped', { cause: 'socket closed' }),
+    }) as { error: { cause: unknown }; other: { cause: unknown } };
+
+    expect(result.error.cause).toEqual({ name: 'Error', message: 'Request failed' });
+    expect(JSON.stringify(result)).not.toContain('hunter2');
+    expect(result.other.cause).toBe('socket closed');
+  });
 });

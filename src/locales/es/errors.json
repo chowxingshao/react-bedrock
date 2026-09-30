@@ -3,5 +3,18 @@
     "title": "Algo salió mal",
     "description": "Se produjo un error inesperado. Inténtalo de nuevo."
   },
-  "details": "Detalles técnicos"
+  "details": "Detalles técnicos",
+  "codes": {
+    "NETWORK_ERROR": "Parece que no tienes conexión. Compruébala e inténtalo de nuevo.",
+    "TIMEOUT": "El servidor tardó demasiado en responder. Inténtalo de nuevo.",
+    "CANCELLED": "La solicitud se canceló.",
+    "UNAUTHORIZED": "Tu sesión ha caducado. Vuelve a iniciar sesión.",
+    "FORBIDDEN": "No tienes permiso para hacer eso.",
+    "NOT_FOUND": "No encontramos lo que buscabas.",
+    "VALIDATION_ERROR": "Algunos campos necesitan tu atención.",
+    "CONFLICT": "Esto se modificó en otro lugar. Actualiza e inténtalo de nuevo.",
+    "RATE_LIMITED": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+    "SERVER_ERROR": "El servidor tuvo un problema. Inténtalo más tarde.",
+    "UNKNOWN": "Algo salió mal. Inténtalo de nuevo."
+  }
 }

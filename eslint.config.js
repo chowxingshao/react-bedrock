@@ -104,6 +104,12 @@ const LAYER_ZONES = [
     message: 'core/ must stay extractable: no feature or layout imports.',
   },
   {
+    target: './src/core/api',
+    from: ['./src/components', './src/core/errors'],
+    message:
+      'core/api is imported by components (feedback) and core/errors: importing them back would create a cycle.',
+  },
+  {
     target: ['./src/components', './src/hooks', './src/stores'],
     from: './src/features',
     message: 'Shared code must not depend on features.',

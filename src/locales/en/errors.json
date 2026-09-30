@@ -3,5 +3,18 @@
     "title": "Something went wrong",
     "description": "An unexpected error occurred. Please try again."
   },
-  "details": "Technical details"
+  "details": "Technical details",
+  "codes": {
+    "NETWORK_ERROR": "You appear to be offline. Check your connection and try again.",
+    "TIMEOUT": "The server took too long to respond. Please try again.",
+    "CANCELLED": "The request was cancelled.",
+    "UNAUTHORIZED": "Your session has expired. Please sign in again.",
+    "FORBIDDEN": "You don't have permission to do that.",
+    "NOT_FOUND": "We couldn't find what you were looking for.",
+    "VALIDATION_ERROR": "Some fields need your attention.",
+    "CONFLICT": "This was changed elsewhere. Refresh and try again.",
+    "RATE_LIMITED": "Too many requests. Please wait a moment and try again.",
+    "SERVER_ERROR": "The server ran into a problem. Please try again later.",
+    "UNKNOWN": "Something went wrong. Please try again."
+  }
 }

@@ -38,7 +38,7 @@ How errors are caught, what the user sees, and where they are logged.
 - `AppErrorBoundary` is the app-root boundary: `App.tsx` already wraps everything in it, so you don't add another. Its fallback is a full-page `ErrorState` with **Try again** and **Reload page**.
 - For data fetched with suspense, use `AsyncBoundary`, which also resets failed queries (docs/data-fetching.md).
 
-`describeError(error)` (`@/lib/describe-error`) builds the text `ErrorState` shows under **Technical details** in development: for an `Error`, its stack (with a `name: message` header when the engine's stack lists frames only) followed by its extra own properties as JSON; a string as is; anything else as JSON.
+`describeError(error)` (`@/lib/describe-error`) builds the text `ErrorState` shows under **Technical details** in development: for an `Error`, its stack (with a `name: message` header when the engine's stack lists frames only) followed by its extra own properties as JSON, then one `Caused by: name: message (code, status)` line when the error has a `cause`; a string as is; anything else as JSON. The cause is always a one-line summary: a cause such as an Axios error carries the request (body, URL query, credentials), which is never printed.
 
 ## Logging (`@/core/logger`)
 
@@ -53,7 +53,7 @@ logger.error('Payment failed', { error, requestId }); // pass the thrown value a
 
 - **Levels:** `debug < info < warn < error`. The threshold is `VITE_LOG_LEVEL`, defaulting to `debug` in development and `warn` in production builds.
 - **Context attached automatically:** app version, git SHA, environment, current route, the current user **id** (call `logger.setUser(id)` on sign-in and `logger.setUser(null)` on sign-out; the auth provider will do it once the auth layer arrives, planned; never names or emails), and `requestId` when you pass one.
-- **Redaction:** keys containing `password`, `token`, `authorization`, `cookie`, `secret` or `apiKey` (in any case, with or without `-`/`_`) are replaced with `[REDACTED]` at any depth. The exported `logger` is configured in `src/core/logger/index.ts`: pass `redactKeys` there to change the list. `createLogger({ redactKeys })` builds a separate logger with its own list. A list you pass **replaces** the defaults rather than adding to them, so extend them: `redactKeys: [...DEFAULT_REDACT_KEYS, 'ssn']` (`DEFAULT_REDACT_KEYS` is exported from `@/core/logger`).
+- **Redaction:** keys containing `password`, `token`, `authorization`, `cookie`, `secret` or `apiKey` (in any case, with or without `-`/`_`) are replaced with `[REDACTED]` at any depth. The exported `logger` is configured in `src/core/logger/index.ts`: pass `redactKeys` there to change the list. `createLogger({ redactKeys })` builds a separate logger with its own list. A list you pass **replaces** the defaults rather than adding to them, so extend them: `redactKeys: [...DEFAULT_REDACT_KEYS, 'ssn']` (`DEFAULT_REDACT_KEYS` is exported from `@/core/logger`). An error's `cause` is logged as a summary only (`name`, `message`, `code`, `status`), never copied whole: a cause such as an Axios error holds the request body as a string and the URL query, and key-based redaction can't see inside those.
 - **De-duplication:** per error object and severity. The same error object reaches the logger once per severity, even if a boundary, a React root callback and a global handler all see it: an error already reported at the same or a higher severity is not reported again, while a later report at a higher severity (a warning, then a boundary catching the same object) still goes through.
 - **Serialising entries:** a transport that serialises an entry must use `entry.context`, which is redacted, and never `entry.error`, which is the raw thrown value. Don't log DOM nodes or events; they serialise to very large or circular structures.
 - **A bad context doesn't make logging throw.** If the context can't be read or redacted (a getter or proxy that throws), the entry is still logged with the context `{ '[unserialisable context]': true }`, keeping `error` and `requestId` when they can be read.
@@ -88,16 +88,18 @@ To report Core Web Vitals, add the `web-vitals` package and log each metric with
 ## User feedback: toasts and confirmations (`@/core/notify`)
 
 ```ts
+import { getErrorMessage } from '@/core/api';
 import { notify, useConfirm } from '@/core/notify';
 
 notify.success(t('items:toast.created'));
-notify.error(getErrorMessage(error)); // getErrorMessage arrives with the data layer (@/core/api, planned)
+notify.error(getErrorMessage(error)); // a translated, user-friendly message for any thrown value
 await notify.promise(save(), { loading: t('…saving'), success: t('…saved'), error: t('…failed') });
 
 const confirm = useConfirm();
 if (await confirm({ title: t('items:delete.title'), destructive: true })) remove(id);
 ```
 
+- `getErrorMessage(error)` (`@/core/api`) picks the text in this order: the translation `errors:codes.<CODE>` (codes are UPPER_SNAKE_CASE; add a key to every locale for each backend-specific code), then the server's own message for a 4xx response, then a generic translated message. The message of a 5xx response is never shown. A code that isn't UPPER_SNAKE_CASE is never used as a translation key, because the code comes from the server.
 - `<Toaster />` is mounted once in `src/app/providers.tsx` and styled with design tokens. Don't mount another.
 - **De-duplication:** an identical toast (same kind and text) fired again within 2 s is dropped, and a repeat updates the visible toast rather than stacking. So 20 parallel requests failing offline produce one "offline" toast.
 - `useConfirm()` returns a promise that resolves `true` or `false`. Escape and Cancel both resolve `false`. Only one confirmation is open at a time. When it closes, focus goes back to the element that was focused when you called `confirm()`; if confirming removes that element (a deleted table row, say), move focus somewhere sensible yourself.

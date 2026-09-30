@@ -13,6 +13,21 @@ const REDACTED = '[REDACTED]';
 
 const normalise = (key: string) => key.toLowerCase().replace(/[^a-z0-9]/g, '');
 
+/**
+ * The `cause` of an error, reduced to name, message, code and status. A cause such as an Axios error
+ * carries the request (headers, body, URL query), and a body is a string that key-based redaction
+ * cannot look into, so nothing else is ever copied.
+ */
+function summariseCause(cause: unknown): unknown {
+  if (typeof cause !== 'object' || cause === null) return cause;
+  const { name, message, code, status } = cause as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.entries({ name, message, code, status }).filter(
+      ([, value]) => typeof value === 'string' || typeof value === 'number',
+    ),
+  );
+}
+
 /** Returns a function that deep-copies a value with sensitive keys replaced by "[REDACTED]". */
 export function createRedactor(keys: readonly string[] = DEFAULT_REDACT_KEYS) {
   const needles = keys.map(normalise);
@@ -44,6 +59,7 @@ export function createRedactor(keys: readonly string[] = DEFAULT_REDACT_KEYS) {
           message: value.message,
           stack: value.stack,
           ...redactEntries(value, depth, ancestors),
+          ...(value.cause === undefined ? {} : { cause: summariseCause(value.cause) }),
         };
       }
       if (Array.isArray(value))

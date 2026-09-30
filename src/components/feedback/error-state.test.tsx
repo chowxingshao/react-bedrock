@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import type { SyntheticEvent } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { AppError } from '@/core/api';
 import { i18n } from '@/core/i18n';
 
 import { ErrorState } from './error-state';
@@ -50,6 +51,17 @@ describe('ErrorState', () => {
   it('hides technical details in production', () => {
     render(<ErrorState error={new Error('Kaboom')} showDetails={false} />);
     expect(screen.queryByText(/Kaboom/)).not.toBeInTheDocument();
+  });
+
+  it('explains API errors in plain language', () => {
+    render(
+      <ErrorState
+        error={new AppError({ code: 'NOT_FOUND', message: 'GET /items/9 404', status: 404 })}
+      />,
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      "We couldn't find what you were looking for.",
+    );
   });
 
   it('is translated', async () => {

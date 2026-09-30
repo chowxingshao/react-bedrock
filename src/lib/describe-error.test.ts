@@ -37,3 +37,44 @@ describe('describeError', () => {
     expect(describeError(circular)).toBe('[object Object]');
   });
 });
+
+describe('describeError causes', () => {
+  it('names the cause with its code and status, and nothing else', () => {
+    const cause = Object.assign(new Error('Request failed with status code 401'), {
+      name: 'AxiosError',
+      code: 'ERR_BAD_REQUEST',
+      status: 401,
+      config: {
+        url: '/auth/login?token=abc',
+        data: '{"email":"a@b.c","password":"hunter2"}',
+        headers: { Authorization: 'Bearer t' },
+      },
+    });
+
+    const text = describeError(new Error('Wrapped', { cause }));
+
+    expect(text).toContain(
+      'Caused by: AxiosError: Request failed with status code 401 (code ERR_BAD_REQUEST, status 401)',
+    );
+    for (const secret of ['hunter2', 'Bearer', 'token=abc', 'a@b.c']) {
+      expect(text).not.toContain(secret);
+    }
+  });
+
+  it('summarises a cause that is an own enumerable property too', () => {
+    const cause = Object.assign(new Error('Request failed'), {
+      config: { data: '{"password":"hunter2"}' },
+    });
+
+    const text = describeError(Object.assign(new Error('Wrapped'), { cause }));
+
+    expect(text).toContain('Caused by: Error: Request failed');
+    expect(text).not.toContain('hunter2');
+  });
+
+  it('describes a non-error cause', () => {
+    expect(describeError(new Error('Wrapped', { cause: 'socket closed' }))).toContain(
+      'Caused by: socket closed',
+    );
+  });
+});
