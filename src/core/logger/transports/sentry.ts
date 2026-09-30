@@ -1,7 +1,7 @@
-import type * as SentrySdk from '@sentry/react';
 import type { Breadcrumb, ErrorEvent } from '@sentry/react';
 
 import type { LogEntry, LogTransport } from '../types';
+import type * as SentrySdk from './sentry-sdk';
 import { stripUrl } from './strip-url';
 
 export interface SentryTransportOptions {
@@ -58,7 +58,8 @@ function send(sdk: Sdk, entry: LogEntry): void {
 
 /**
  * Sends warnings (as breadcrumbs) and errors to Sentry (spec §7.4). Registered only when VITE_SENTRY_DSN is set.
- * The SDK is loaded on demand, so it stays out of the main bundle; entries logged before it loads are queued.
+ * The SDK lives in its own chunk, which the browser fetches at startup without blocking it (it is not
+ * loaded on demand): it stays out of the main bundle, and entries logged before it arrives are queued.
  */
 export function createSentryTransport({
   dsn,
@@ -68,7 +69,7 @@ export function createSentryTransport({
   let sdk: Sdk | undefined;
   const queue: LogEntry[] = [];
 
-  void import('@sentry/react')
+  void import('./sentry-sdk')
     .then((module) => {
       module.init({
         dsn,
