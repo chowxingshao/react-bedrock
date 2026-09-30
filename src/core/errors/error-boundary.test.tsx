@@ -28,6 +28,7 @@ describe('ErrorBoundary', () => {
     );
 
     expect(screen.getByText('Caught: Kaboom')).toBeInTheDocument();
+    expect(onError).toHaveBeenCalledTimes(1);
     expect(onError).toHaveBeenCalledWith(
       expect.any(Error),
       expect.objectContaining({ componentStack: expect.stringContaining('Bomb') as unknown }),
@@ -81,5 +82,84 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>,
     );
     expect(screen.getByText('Safe')).toBeInTheDocument();
+  });
+
+  it('does not reset when a reset key change makes healthy children throw', () => {
+    const onError = vi.fn();
+    const onReset = vi.fn();
+    const fallback = () => <p>Fallback</p>;
+    const { rerender } = render(
+      <ErrorBoundary resetKeys={['/a']} onError={onError} onReset={onReset} fallback={fallback}>
+        <Bomb explode={false} />
+      </ErrorBoundary>,
+    );
+    expect(screen.getByText('Safe')).toBeInTheDocument();
+
+    rerender(
+      <ErrorBoundary resetKeys={['/b']} onError={onError} onReset={onReset} fallback={fallback}>
+        <Bomb explode />
+      </ErrorBoundary>,
+    );
+
+    expect(screen.getByText('Fallback')).toBeInTheDocument();
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onReset).not.toHaveBeenCalled();
+  });
+
+  it('keeps the fallback when it rerenders with unchanged reset keys', () => {
+    const fallback = () => <p>Fallback</p>;
+    const { rerender } = render(
+      <ErrorBoundary resetKeys={['/a']} fallback={fallback}>
+        <Bomb explode />
+      </ErrorBoundary>,
+    );
+    expect(screen.getByText('Fallback')).toBeInTheDocument();
+
+    rerender(
+      <ErrorBoundary resetKeys={['/a']} fallback={fallback}>
+        <Bomb explode={false} />
+      </ErrorBoundary>,
+    );
+
+    expect(screen.getByText('Fallback')).toBeInTheDocument();
+    expect(screen.queryByText('Safe')).not.toBeInTheDocument();
+  });
+
+  it('resets itself when the number of reset keys changes', () => {
+    const fallback = () => <p>Fallback</p>;
+    const { rerender } = render(
+      <ErrorBoundary resetKeys={['/a']} fallback={fallback}>
+        <Bomb explode />
+      </ErrorBoundary>,
+    );
+    expect(screen.getByText('Fallback')).toBeInTheDocument();
+
+    rerender(
+      <ErrorBoundary resetKeys={['/a', '/b']} fallback={fallback}>
+        <Bomb explode={false} />
+      </ErrorBoundary>,
+    );
+
+    expect(screen.getByText('Safe')).toBeInTheDocument();
+  });
+
+  it('calls onReset when it resets itself after a reset key change', () => {
+    const onReset = vi.fn();
+    const fallback = () => <p>Fallback</p>;
+    const { rerender } = render(
+      <ErrorBoundary resetKeys={['/a']} onReset={onReset} fallback={fallback}>
+        <Bomb explode />
+      </ErrorBoundary>,
+    );
+    expect(onReset).not.toHaveBeenCalled();
+
+    rerender(
+      <ErrorBoundary resetKeys={['/b']} onReset={onReset} fallback={fallback}>
+        <Bomb explode={false} />
+      </ErrorBoundary>,
+    );
+
+    expect(screen.getByText('Safe')).toBeInTheDocument();
+    expect(onReset).toHaveBeenCalledTimes(1);
   });
 });

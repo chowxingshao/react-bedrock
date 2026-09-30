@@ -36,8 +36,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     this.props.onError?.(error, info);
   }
 
-  override componentDidUpdate(previous: ErrorBoundaryProps): void {
-    if (this.state.hasError && changed(previous.resetKeys, this.props.resetKeys)) this.reset();
+  override componentDidUpdate(
+    previous: ErrorBoundaryProps,
+    previousState: ErrorBoundaryState,
+  ): void {
+    // Only an error that was already showing may be cleared by a key change; an error thrown by
+    // this same render (healthy -> broken) must not be reset straight away.
+    if (
+      this.state.hasError &&
+      previousState.hasError &&
+      changed(previous.resetKeys, this.props.resetKeys)
+    ) {
+      this.reset();
+    }
   }
 
   reset = (): void => {
