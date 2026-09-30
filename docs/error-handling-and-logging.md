@@ -1,5 +1,22 @@
 # Error handling and logging
 
+How errors are caught, what the user sees, and where they are logged.
+
+## Error flow
+
+| Where the error happens          | Who catches it                                        | What the user sees                                            | Logged by                                                                                                   |
+| -------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Rendering inside a route         | The route's `errorElement` (planned, with the router) | Route error page, with the app shell still usable             | root `onCaughtError`                                                                                        |
+| Rendering in a suspense subtree  | `AsyncBoundary`                                       | `ErrorState` with **Try again** (resets failed queries)       | root `onCaughtError`                                                                                        |
+| Rendering anywhere else          | `AppErrorBoundary` (outermost, in `App.tsx`)          | Full-page `ErrorState` with **Try again** and **Reload page** | root `onCaughtError` (the boundary's own `onError` logs only when the root has no callbacks, e.g. in tests) |
+| Event handlers, timers, promises | `installGlobalErrorHandlers()` (`main.tsx`)           | Nothing; the flow continues                                   | `window` `error` / `unhandledrejection` listeners                                                           |
+| API calls                        | the HTTP interceptors → `AppError` (planned)          | `QueryState` / toasts                                         | query and mutation caches                                                                                   |
+
+- **The root callbacks** (`reactRootErrorHandlers`, passed to `createRoot` in `main.tsx`) log what React reports: an error caught by any boundary (`React error caught by a boundary`), an error no boundary caught (`Uncaught React error`) and an error React recovered from by itself (`React recovered from an error`, a warning).
+- **A render error is logged once.** React runs the root `onCaughtError` before the boundary's `componentDidCatch`, and the logger drops a repeat report of the same error object, so an `onError` that also logs is safe to add.
+
+**Fail loudly in dev, gracefully in prod** (spec Principle 7): in development, `ErrorState` shows the stack and the error's properties under **Technical details**. In production it shows only the translated, friendly message.
+
 ## Error boundaries
 
 `ErrorBoundary` (`@/core/errors`) catches render errors in its subtree and renders a fallback:
@@ -8,17 +25,20 @@
 <ErrorBoundary
   fallback={({ error, reset }) => <ErrorState error={error} onRetry={reset} />}
   onError={(error, info) => {
-    /* report */
+    logger.error('Render error', { error, componentStack: info.componentStack });
   }}
-  resetKeys={[location.pathname]}
+  resetKeys={[useLocation().pathname]} // useLocation comes from react-router, which arrives with the router
 >
   {children}
 </ErrorBoundary>
 ```
 
 - `reset()` clears the error and renders the children again.
-- `resetKeys` does the same automatically when a key changes, for example on navigation.
+- `resetKeys` does the same automatically when a key changes, for example on navigation. Auto-reset clears only an error that was already showing before the key change; an error thrown by the same render is kept.
+- `AppErrorBoundary` is the app-root boundary: `App.tsx` already wraps everything in it, so you don't add another. Its fallback is a full-page `ErrorState` with **Try again** and **Reload page**.
 - For data fetched with suspense, use `AsyncBoundary`, which also resets failed queries (docs/data-fetching.md).
+
+`describeError(error)` (`@/lib/describe-error`) builds the text `ErrorState` shows under **Technical details** in development: for an `Error`, its stack (with a `name: message` header when the engine's stack lists frames only) followed by its extra own properties as JSON; a string as is; anything else as JSON.
 
 ## Logging (`@/core/logger`)
 
