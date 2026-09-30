@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { SyntheticEvent } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { i18n } from '@/core/i18n';
@@ -20,6 +21,24 @@ describe('ErrorState', () => {
     await user.click(screen.getByRole('button', { name: 'Try again' }));
 
     expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not submit an enclosing form when retrying', async () => {
+    const onRetry = vi.fn();
+    const onSubmit = vi.fn((event: SyntheticEvent) => {
+      event.preventDefault();
+    });
+    const user = userEvent.setup();
+    render(
+      <form onSubmit={onSubmit}>
+        <ErrorState onRetry={onRetry} />
+      </form>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(onRetry).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('shows technical details when asked (the default in development)', () => {

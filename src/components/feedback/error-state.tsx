@@ -50,7 +50,7 @@ export function ErrorState({
         </p>
       </div>
       {onRetry ? (
-        <Button variant="outline" onClick={onRetry}>
+        <Button type="button" variant="outline" onClick={onRetry}>
           <RotateCwIcon aria-hidden="true" />
           {retryLabel ?? t('actions.retry')}
         </Button>
