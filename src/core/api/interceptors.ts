@@ -16,8 +16,26 @@ export interface InterceptorDeps {
 
 const GLOBALLY_NOTIFIED = new Set(['FORBIDDEN', 'NETWORK_ERROR', 'TIMEOUT']);
 
-/** A URL or path without its query string and fragment: queries often carry tokens (`?token=...`). */
-const withoutQuery = (url: string | undefined): string | undefined => url?.replace(/[?#].*$/, '');
+/**
+ * A URL or path cut at its first `?` or `#`: queries often carry tokens (`?token=...`). It cuts instead of
+ * using a `.*` regex, because `.` does not match line breaks and a query can hold them (unencoded text).
+ */
+function withoutQuery(url: string | undefined): string | undefined {
+  if (url === undefined) return undefined;
+  const end = url.search(/[?#]/);
+  return end === -1 ? url : url.slice(0, end);
+}
+
+/** What every log entry about a request carries. The URL has no query string or fragment. */
+function requestContext(appError: AppError, config: InternalAxiosRequestConfig | undefined) {
+  return {
+    requestId: appError.requestId,
+    status: appError.status,
+    code: appError.code,
+    method: config?.method,
+    url: withoutQuery(config?.url),
+  };
+}
 
 /** Installs the request/response interceptors (spec §6.1) on an Axios instance. */
 export function installInterceptors(instance: AxiosInstance, deps: InterceptorDeps): void {
@@ -47,6 +65,10 @@ export function installInterceptors(instance: AxiosInstance, deps: InterceptorDe
 
     if (appError.status === 401 && config && auth && !config.skipAuthRefresh) {
       if (config._retried) {
+        deps.logger.warn('HTTP request still unauthorised after refreshing the session', {
+          error: appError,
+          ...requestContext(appError, config),
+        });
         auth.onSessionExpired(); // still unauthorised after a successful refresh
         throw appError;
       }
@@ -55,10 +77,20 @@ export function installInterceptors(instance: AxiosInstance, deps: InterceptorDe
           refreshing = null;
         });
         await refreshing;
-      } catch {
+      } catch (refreshError) {
+        // `toAppError`, never the raw error: an Axios error carries the request (URL query, body strings).
+        deps.logger.warn('HTTP session refresh failed', {
+          error: appError,
+          ...requestContext(appError, config),
+          refreshError: toAppError(refreshError),
+        });
         auth.onSessionExpired();
         throw appError;
       }
+      deps.logger.debug(
+        'HTTP request unauthorised, retrying after refreshing the session',
+        requestContext(appError, config),
+      );
       return instance({ ...config, _retried: true });
     }
 
@@ -66,11 +98,7 @@ export function installInterceptors(instance: AxiosInstance, deps: InterceptorDe
       const level = appError.status === 0 || appError.status >= 500 ? 'error' : 'warn';
       deps.logger[level]('HTTP request failed', {
         error: appError,
-        requestId: appError.requestId,
-        status: appError.status,
-        code: appError.code,
-        method: config?.method,
-        url: withoutQuery(config?.url),
+        ...requestContext(appError, config),
       });
     }
     if (!config?.silent && GLOBALLY_NOTIFIED.has(appError.code)) deps.notifyError(appError);

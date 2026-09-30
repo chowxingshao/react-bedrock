@@ -7,7 +7,10 @@ import type { InternalAxiosRequestConfig } from 'axios';
 export interface HttpAuthAdapter {
   /** Adds credentials to an outgoing request (cookie strategy: `withCredentials`; token strategy: a header). */
   prepareRequest: (config: InternalAxiosRequestConfig) => InternalAxiosRequestConfig;
-  /** Renews the session; rejects when it cannot be renewed. */
+  /**
+   * Renews the session; rejects when it cannot be renewed. Requests it makes through `http` must pass
+   * `skipAuthRefresh: true`: otherwise their own 401 would wait for this very refresh and never settle.
+   */
   refresh: () => Promise<void>;
   /** Called when a request is still unauthorised after refreshing, or refreshing failed. */
   onSessionExpired: () => void;

@@ -161,6 +161,36 @@ describe('http', () => {
     }
   });
 
+  it('retries an unauthorised request only once, even when the refresh succeeds', async () => {
+    let hits = 0;
+    server.use(
+      mock.get(apiUrl('/forbidden-forever'), () => {
+        hits += 1;
+        // Always 401. The 500 is only a safety net, so a missing guard fails fast instead of looping.
+        return new HttpResponse(null, { status: hits > 4 ? 500 : 401 });
+      }),
+    );
+    const refresh = vi.fn(() => Promise.resolve());
+    const onSessionExpired = vi.fn();
+    const unregister = registerHttpAuth({
+      prepareRequest: (config) => config,
+      refresh,
+      onSessionExpired,
+    });
+
+    try {
+      await expect(http.get('/forbidden-forever')).rejects.toMatchObject({
+        code: 'UNAUTHORIZED',
+        status: 401,
+      });
+      expect(refresh).toHaveBeenCalledTimes(1);
+      expect(onSessionExpired).toHaveBeenCalledTimes(1);
+      expect(hits).toBe(2); // the original request and its single retry
+    } finally {
+      unregister();
+    }
+  });
+
   it('lets the auth adapter prepare every request', async () => {
     let seen: string | null = null;
     server.use(
@@ -202,45 +232,58 @@ describe('http', () => {
   });
 
   describe('logging', () => {
-    it('never logs the query string of a failed request', async () => {
-      const entries: LogEntry[] = [];
-      const removeTransport = logger.addTransport({
-        name: 'memory',
-        log: (entry) => entries.push(entry),
-      });
-      server.use(mock.get(apiUrl('/lookup'), () => new HttpResponse(null, { status: 500 })));
+    // A query built from unencoded text (a textarea, say) can hold line breaks, which `.` does not match.
+    const QUERIES = [
+      ['a plain query', '?token=s3cret&email=a@b.c'],
+      ['a query with a line feed', '?token=s3cret\nemail=a@b.c'],
+      ['a query with a carriage return and line feed', '?token=s3cret\r\nemail=a@b.c'],
+    ] as const;
 
-      try {
-        await expect(http.get('/lookup?token=s3cret&email=a@b.c')).rejects.toMatchObject({
-          code: 'SERVER_ERROR',
-          status: 500,
+    it.each(QUERIES)(
+      'never logs the query string of a failed request: %s',
+      async (_name, query) => {
+        const entries: LogEntry[] = [];
+        const removeTransport = logger.addTransport({
+          name: 'memory',
+          log: (entry) => entries.push(entry),
         });
-      } finally {
-        removeTransport();
-      }
+        server.use(mock.get(apiUrl('/lookup'), () => new HttpResponse(null, { status: 500 })));
 
-      // A transport may serialise the message, the context and the meta (`entry.error` is the raw value).
-      const logged = JSON.stringify(
-        entries.map(({ message, context, meta }) => ({ message, context, meta })),
-      );
-      expect(logged).not.toContain('s3cret');
-      expect(logged).not.toContain('a@b.c');
-      expect(
-        entries.find((entry) => entry.message === 'HTTP request failed')?.context,
-      ).toMatchObject({ url: '/lookup', status: 500, code: 'SERVER_ERROR' });
-    });
+        try {
+          await expect(http.get(`/lookup${query}`)).rejects.toMatchObject({
+            code: 'SERVER_ERROR',
+            status: 500,
+          });
+        } finally {
+          removeTransport();
+        }
 
-    it('never puts the query string or fragment in the debug line', async () => {
-      const debug = vi.spyOn(logger, 'debug'); // called whatever VITE_LOG_LEVEL is
-      server.use(mock.get(apiUrl('/lookup'), () => HttpResponse.json({})));
+        // A transport may serialise the message, the context and the meta (`entry.error` is the raw value).
+        const logged = JSON.stringify(
+          entries.map(({ message, context, meta }) => ({ message, context, meta })),
+        );
+        expect(logged).not.toContain('s3cret');
+        expect(logged).not.toContain('a@b.c');
+        expect(
+          entries.find((entry) => entry.message === 'HTTP request failed')?.context,
+        ).toMatchObject({ url: '/lookup', status: 500, code: 'SERVER_ERROR' });
+      },
+    );
 
-      await http.get('/lookup?token=s3cret&email=a@b.c#access_token=frag');
+    it.each(QUERIES)(
+      'never puts the query string or fragment in the debug line: %s',
+      async (_name, query) => {
+        const debug = vi.spyOn(logger, 'debug'); // called whatever VITE_LOG_LEVEL is
+        server.use(mock.get(apiUrl('/lookup'), () => HttpResponse.json({})));
 
-      expect(debug).toHaveBeenCalledWith('HTTP GET /lookup', {
-        requestId: expect.stringMatching(UUID) as unknown,
-      });
-      expect(JSON.stringify(debug.mock.calls)).not.toMatch(/s3cret|a@b\.c|frag/);
-    });
+        await http.get(`/lookup${query}#access_token=frag`);
+
+        expect(debug).toHaveBeenCalledWith('HTTP GET /lookup', {
+          requestId: expect.stringMatching(UUID) as unknown,
+        });
+        expect(JSON.stringify(debug.mock.calls)).not.toMatch(/s3cret|a@b\.c|frag/);
+      },
+    );
 
     it('logs a silent failure too: silent only skips the toast', async () => {
       const error = vi.spyOn(logger, 'error');
