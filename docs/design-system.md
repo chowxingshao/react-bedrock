@@ -38,3 +38,45 @@ Use the token utilities above. For a justified one-off, add the comment `design-
 - Class-based: `<html class="dark">` or `<html class="light">`.
 - The `dark:` variant is available. An inline script in `index.html` applies the saved theme **before first paint**, so there is no flash.
 - The theme store (`src/stores/theme-store.ts`) keeps it in sync afterwards.
+
+## UI primitives (`src/components/ui/`)
+
+These are shadcn/ui components (Radix primitives, `new-york` style) that **we own**: edit them freely. Each one uses `cva` for variants and `cn()` (`src/lib/cn.ts`, clsx + tailwind-merge) to merge classes.
+
+Included: Button, Input, Textarea, Label, Select, Checkbox, RadioGroup, Switch, Card, Badge, Dialog, AlertDialog, Sheet, DropdownMenu, Popover, Tooltip, Tabs, Table, Avatar, Separator, Skeleton, Spinner, Pagination, Breadcrumb and Form (React Hook Form). DataTable and DatePicker are composites built on top of these.
+
+### Adding another shadcn component
+
+```bash
+pnpm ui:add accordion            # or several at once; add --overwrite to re-fetch
+pnpm lint:fix && pnpm test       # repairs import order, then reports what is still left to fix
+```
+
+`scripts/ui-add.mjs` makes these fixes automatically:
+
+| shadcn output                            | Rewritten to                                              |
+| ---------------------------------------- | --------------------------------------------------------- |
+| `import { cn } from "cn"`                | `@/lib/cn` (the `cn` package is removed)                  |
+| `import … from "@/components/ui/button"` | `./button` (relative imports inside a folder)             |
+| `ring-[3px]`                             | `ring-3`                                                  |
+| `ring-ring/50`                           | `ring-ring` (full-strength focus rings, for 3:1 contrast) |
+| `bg-black/50`                            | `bg-overlay`                                              |
+| `text-white` on the destructive colour   | `text-destructive-foreground`                             |
+| `z-50`                                   | `z-modal` (dialog/sheet) or `z-dropdown`                  |
+| `rounded-[4px]`, `rounded-[2px]`         | `rounded-sm`, `rounded-xs`                                |
+
+Things that are fixed by hand:
+
+- **English strings** (sr-only labels, `aria-label`): use `t('…')` from `react-i18next`, and add the keys to every locale.
+- **Button sizes**: shadcn's `size="default"` is `size="md"` here (`sm | md | lg | icon`).
+- **Pixel offsets**: use the spacing scale (`translate-y-0.5`, `p-0.75`) or `--spacing(n)` inside `calc()` (`h-[calc(100%_-_--spacing(0.25))]`), never `[2px]`.
+- **Raw layers**: another `z-10` becomes a layer from `tokens.css` (`z-sticky`, `z-dropdown`, `z-modal`, `z-toast`).
+- **Anything else the token guard or ESLint reports.**
+
+The shadcn CLI does not install `lucide-react` (only its `init` command does), so it is a regular dependency of this template.
+
+### Adding or changing a variant
+
+Variants live in the component's `cva()` call, for example `buttonVariants` in `button.tsx`. Add an entry built only from token utilities, such as `success: 'bg-success text-success-foreground hover:bg-success/90'`. Every usage of the component can then pick it, and TypeScript autocompletes the new name. Add the variant to the component's story too.
+
+Button sizes are `sm | md | lg | icon` (default `md`). Button variants are `default | secondary | outline | ghost | destructive | link`. Badge adds `success | warning | info`.
