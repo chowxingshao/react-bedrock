@@ -56,6 +56,7 @@ logger.error('Payment failed', { error, requestId }); // pass the thrown value a
 - **Redaction:** keys containing `password`, `token`, `authorization`, `cookie`, `secret` or `apiKey` (in any case, with or without `-`/`_`) are replaced with `[REDACTED]` at any depth. The exported `logger` is configured in `src/core/logger/index.ts`: change the list there. `createLogger({ redactKeys })` builds a separate logger with its own list.
 - **De-duplication:** per error object and severity. The same error object reaches the logger once per severity, even if a boundary, a React root callback and a global handler all see it: an error already reported at the same or a higher severity is not reported again, while a later report at a higher severity (a warning, then a boundary catching the same object) still goes through.
 - **Serialising entries:** a transport that serialises an entry must use `entry.context`, which is redacted, and never `entry.error`, which is the raw thrown value. Don't log DOM nodes or events; they serialise to very large or circular structures.
+- **A bad context doesn't make logging throw.** If the context can't be read or redacted (a getter or proxy that throws), the entry is still logged with the context `{ '[unserialisable context]': true }`, keeping `error` and `requestId` when they can be read.
 
 ### Transports
 
