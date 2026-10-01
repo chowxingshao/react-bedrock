@@ -47,5 +47,14 @@
       "en": "English",
       "es": "Español"
     }
+  },
+  "datePicker": {
+    "placeholder": "Elige una fecha",
+    "dialog": "Selector de fecha",
+    "previousMonth": "Ir al mes anterior",
+    "nextMonth": "Ir al mes siguiente",
+    "navigation": "Navegación por meses",
+    "today": "Hoy",
+    "selected": "seleccionado"
   }
 }

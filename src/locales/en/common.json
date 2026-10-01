@@ -47,5 +47,14 @@
       "en": "English",
       "es": "Español"
     }
+  },
+  "datePicker": {
+    "placeholder": "Pick a date",
+    "dialog": "Date picker",
+    "previousMonth": "Go to previous month",
+    "nextMonth": "Go to next month",
+    "navigation": "Month navigation",
+    "today": "Today",
+    "selected": "selected"
   }
 }

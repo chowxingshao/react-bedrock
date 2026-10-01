@@ -58,7 +58,7 @@ Use the token utilities above. For a justified one-off, add the comment `design-
 
 These are shadcn/ui components (Radix primitives, `new-york` style) that **we own**: edit them freely. Button, Badge and Tabs define their variants with `cva`; the other options (the sizes of Avatar, Switch, SelectTrigger and AlertDialogContent, DropdownMenuItem's `variant`, Sheet's `side`) are data attributes or conditional classes. All of them merge classes with `cn()` (`src/lib/cn.ts`, clsx + tailwind-merge).
 
-Included: Button, Input, Textarea, Label, Select, Checkbox, RadioGroup, Switch, Card, Badge, Dialog, AlertDialog, Sheet, DropdownMenu, Popover, Tooltip, Tabs, Table, Avatar, Separator, Skeleton, Spinner, Pagination, Breadcrumb and Form (React Hook Form). DataTable and DatePicker are composites built on top of these.
+Included: Button, Input, Textarea, Label, Select, Checkbox, RadioGroup, Switch, Card, Badge, Dialog, AlertDialog, Sheet, DropdownMenu, Popover, Tooltip, Tabs, Table, Avatar, Separator, Skeleton, Spinner, Pagination, Breadcrumb, Calendar and Form (React Hook Form). DataTable and DatePicker are composites built on top of these.
 
 ### Adding another shadcn component
 
@@ -67,7 +67,9 @@ pnpm ui:add accordion            # or several at once
 pnpm lint:fix && pnpm test       # repairs import order, then reports what is still left to fix
 ```
 
-**Do not run `--overwrite` on a component that already exists.** It re-fetches stock shadcn output and discards this repo's hand fixes (translated labels, token utilities instead of raw values, Button's `md` size, Badge's extra variants, Tooltip providing its own `TooltipProvider`, …); the script below only redoes the mechanical fixes. These files carry hand fixes: button, badge, dialog, alert-dialog, sheet, pagination, breadcrumb, spinner, form, table, tabs, avatar and tooltip. The invalid-field focus ring in button, input, textarea, checkbox, select and radio-group is reapplied by the script. If you must re-fetch one, review `git diff` afterwards and restore what was lost.
+A component may depend on one you already have (`calendar` needs `button`). The CLI then asks `The file button.tsx already exists. Would you like to overwrite?`: answer **n**, because ours carries hand fixes (see below). Without a terminal, give the answer through the pipe: `printf 'n\n' | pnpm ui:add calendar`. If nobody answers, the CLI writes nothing and still exits 0.
+
+**Do not run `--overwrite` on a component that already exists.** It re-fetches stock shadcn output and discards this repo's hand fixes (translated labels, token utilities instead of raw values, Button's `md` size, Badge's extra variants, Tooltip providing its own `TooltipProvider`, …); the script below only redoes the mechanical fixes. These files carry hand fixes: button, badge, dialog, alert-dialog, sheet, pagination, breadcrumb, spinner, form, table, tabs, avatar, tooltip and calendar (`z-10` became `z-sticky`). The invalid-field focus ring in button, input, textarea, checkbox, select and radio-group is reapplied by the script. If you must re-fetch one, review `git diff` afterwards and restore what was lost.
 
 `scripts/ui-add.mjs` makes these fixes automatically:
 
@@ -100,6 +102,12 @@ The shadcn CLI does not install `lucide-react` (only its `init` command does), s
 Variants live in the component's `cva()` call, for example `buttonVariants` in `button.tsx`. Add an entry built only from token utilities, such as `success: 'bg-success text-success-foreground hover:bg-success/90'`. Every usage of the component can then pick it, and TypeScript autocompletes the new name. Add the variant to the component's story too.
 
 Button sizes are `sm | md | lg | icon` (default `md`). Button variants are `default | secondary | outline | ghost | destructive | link`. Badge adds `success | warning | info`.
+
+**DatePicker** (`@/components/ui/date-picker`) composes Popover and Calendar (react-day-picker).
+
+- It formats with `formatDate` and localises the calendar through the current UI language.
+- Inside a form: wrap it in `<FormControl>` and pass `field.value` / `field.onChange`.
+- The bare `Calendar` primitive has English labels unless you pass `labels` (see DatePicker). Its `captionLayout="dropdown"` is not localised either (shadcn formats the month in the browser language, and react-day-picker's dropdown labels are English), so it has no story: translate those labels before you use it.
 
 ## Storybook: the visual catalogue
 
