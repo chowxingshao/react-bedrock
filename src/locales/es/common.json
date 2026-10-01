@@ -5,7 +5,8 @@
     "retry": "Reintentar",
     "reload": "Recargar la página",
     "cancel": "Cancelar",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "backToDashboard": "Volver al panel"
   },
   "status": {
     "loading": "Cargando",
@@ -37,6 +38,14 @@
     "empty": {
       "title": "Aún no hay nada aquí",
       "description": "Cuando haya algo que mostrar, aparecerá aquí."
+    },
+    "forbidden": {
+      "title": "No tienes acceso a esta página",
+      "description": "Pide a un administrador el permiso que necesitas."
+    },
+    "notFound": {
+      "title": "No encontramos esa página",
+      "description": "Revisa la dirección o vuelve al panel."
     }
   },
   "notifications": {

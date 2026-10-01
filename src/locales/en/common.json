@@ -5,7 +5,8 @@
     "retry": "Try again",
     "reload": "Reload page",
     "cancel": "Cancel",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "backToDashboard": "Back to dashboard"
   },
   "status": {
     "loading": "Loading",
@@ -37,6 +38,14 @@
     "empty": {
       "title": "Nothing here yet",
       "description": "When there is something to show, it will appear here."
+    },
+    "forbidden": {
+      "title": "You don't have access to this page",
+      "description": "Ask an administrator for the permission you need."
+    },
+    "notFound": {
+      "title": "We couldn't find that page",
+      "description": "Check the address, or go back to the dashboard."
     }
   },
   "notifications": {

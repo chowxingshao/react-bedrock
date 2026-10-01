@@ -47,10 +47,15 @@ function requestContext(appError: AppError, config: InternalAxiosRequestConfig |
 
 /** Installs the request/response interceptors (spec §6.1) on an Axios instance. */
 export function installInterceptors(instance: AxiosInstance, deps: InterceptorDeps): void {
+  // How many refreshes have completed. A request sent before the latest one carries the old session:
+  // its 401 is expected and it only needs retrying, not another refresh.
+  let refreshEpoch = 0;
+
   instance.interceptors.request.use((config) => {
     config.headers.set('Accept-Language', deps.getLocale());
     if (!config.headers.has('X-Request-Id'))
       config.headers.set('X-Request-Id', deps.createRequestId());
+    config._refreshEpoch = refreshEpoch;
     const prepared = deps.getHttpAuth()?.prepareRequest(config) ?? config;
     deps.logger.debug(
       `HTTP ${(prepared.method ?? 'get').toUpperCase()} ${withoutQuery(prepared.url) ?? ''}`,
@@ -81,9 +86,16 @@ export function installInterceptors(instance: AxiosInstance, deps: InterceptorDe
         throw appError;
       }
       try {
-        refreshing ??= auth.refresh().finally(() => {
-          refreshing = null;
-        });
+        if ((config._refreshEpoch ?? refreshEpoch) >= refreshEpoch) {
+          refreshing ??= auth
+            .refresh()
+            .then(() => {
+              refreshEpoch += 1;
+            })
+            .finally(() => {
+              refreshing = null;
+            });
+        }
         await refreshing;
       } catch (refreshError) {
         // `toAppError`, never the raw error: an Axios error carries the request (URL query, body strings).

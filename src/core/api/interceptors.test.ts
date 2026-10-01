@@ -332,3 +332,34 @@ describe('installInterceptors: a failed refresh', () => {
     expect(auth.onSessionExpired).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('installInterceptors: a 401 from before the latest refresh', () => {
+  it('is retried without starting a second refresh', async () => {
+    const calls = { fast: 0, slow: 0 };
+    server.use(
+      mock.get(apiUrl('/fast'), () => {
+        calls.fast += 1;
+        return calls.fast === 1
+          ? new HttpResponse(null, { status: 401 })
+          : HttpResponse.json({ ok: true });
+      }),
+      mock.get(apiUrl('/slow'), async () => {
+        calls.slow += 1;
+        if (calls.slow > 1) return HttpResponse.json({ ok: true });
+        // Sent before the refresh, answered after it: this 401 belongs to the old session.
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        return new HttpResponse(null, { status: 401 });
+      }),
+    );
+    const refresh = vi.fn(() => new Promise<void>((resolve) => setTimeout(resolve, 10)));
+    const auth = adapter({ refresh });
+    const { instance } = setup(auth);
+
+    const [slow, fast] = await Promise.all([instance.get('/slow'), instance.get('/fast')]);
+
+    expect(slow.data).toEqual({ ok: true });
+    expect(fast.data).toEqual({ ok: true });
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(auth.onSessionExpired).not.toHaveBeenCalled();
+  });
+});

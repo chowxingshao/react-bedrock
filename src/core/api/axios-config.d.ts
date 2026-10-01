@@ -11,5 +11,7 @@ declare module 'axios' {
     silent?: boolean;
     /** Internal: marks the single retry after a successful refresh. */
     _retried?: boolean;
+    /** Internal: how many session refreshes had completed when the request was sent. */
+    _refreshEpoch?: number;
   }
 }
