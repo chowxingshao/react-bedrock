@@ -54,8 +54,9 @@ beforeAll(() => {
   server.listen({ onUnhandledFrame: 'error' });
 });
 
-// The i18n instance starts in VITE_DEFAULT_LOCALE, which a developer's .env.local may set. Reset it
-// BEFORE each test, so even the first test of a file starts in English whatever the config says.
+// A test may switch the language (changeLocale, i18n.changeLanguage), and the instance starts in the
+// detected one (saved choice, then browser, then VITE_DEFAULT_LOCALE). Reset it BEFORE each test, so
+// every test, the first of a file included, starts in English.
 beforeEach(async () => {
   if (i18n.language !== 'en') await i18n.changeLanguage('en');
 });
