@@ -48,6 +48,8 @@ export default defineConfig(({ mode }) => {
         // Nor on their VITE_LOG_LEVEL: above `debug` the logger drops entries before it de-duplicates
         // them, so a test of the de-duplication would pass without testing anything.
         VITE_LOG_LEVEL: 'debug',
+        // Dates in tests are written in UTC: do not depend on the developer's or CI's time zone.
+        TZ: 'UTC',
       },
       // Vitest blanks every `.css` module by default, `?raw` imports included; tokens.test.ts reads the source.
       css: { include: [/tokens\.css\?raw/] },

@@ -8,6 +8,10 @@ export const GIT_SHA = __GIT_SHA__;
 export const SUPPORTED_LOCALES = ['en', 'es'] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
+/** Narrows any value to a bundled locale code. */
+export const isLocale = (value: unknown): value is Locale =>
+  (SUPPORTED_LOCALES as readonly unknown[]).includes(value);
+
 /** Loading indicators wait this long before appearing, so fast responses never flash a skeleton. */
 export const SKELETON_DELAY_MS = 200;
 
