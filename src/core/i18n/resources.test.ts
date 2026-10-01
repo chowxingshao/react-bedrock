@@ -34,3 +34,14 @@ describe('translation resources', () => {
     }
   }
 });
+
+describe('the generic error copy', () => {
+  it.each(SUPPORTED_LOCALES)(
+    '%s: the message for unknown errors does not repeat the error title above it',
+    (locale) => {
+      const { generic, codes } = resources[locale].errors;
+
+      expect(codes.UNKNOWN.toLowerCase()).not.toContain(generic.title.toLowerCase());
+    },
+  );
+});

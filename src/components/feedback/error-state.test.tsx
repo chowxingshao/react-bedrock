@@ -15,6 +15,24 @@ describe('ErrorState', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong');
   });
 
+  it('does not repeat its title in the message for an error that is not an API error', () => {
+    render(<ErrorState error={new Error('Kaboom')} showDetails={false} />);
+
+    expect(screen.getByRole('heading', { name: 'Something went wrong' })).toBeInTheDocument();
+    const message = screen.getByText('An unexpected error occurred. Please try again.');
+    expect(message).not.toHaveTextContent('Something went wrong');
+  });
+
+  it('does not repeat its title in the Spanish message either', async () => {
+    await i18n.changeLanguage('es');
+    render(<ErrorState error={new Error('Kaboom')} showDetails={false} />);
+
+    expect(screen.getByRole('heading', { name: 'Algo salió mal' })).toBeInTheDocument();
+    expect(
+      screen.getByText('Se produjo un error inesperado. Inténtalo de nuevo.'),
+    ).toBeInTheDocument();
+  });
+
   it('calls onRetry from its "Try again" button', async () => {
     const onRetry = vi.fn();
     const user = userEvent.setup();
@@ -79,7 +97,7 @@ describe('ErrorState with a hostile thrown value', () => {
       render(<ErrorState error={make()} showDetails={false} />);
 
       expect(screen.getByRole('alert')).toHaveTextContent(
-        'Something went wrong. Please try again.',
+        'An unexpected error occurred. Please try again.',
       );
       expect(screen.queryByText('Technical details')).not.toBeInTheDocument();
     },
@@ -91,7 +109,7 @@ describe('ErrorState with a hostile thrown value', () => {
       render(<ErrorState error={make()} showDetails />);
 
       expect(screen.getByRole('alert')).toHaveTextContent(
-        'Something went wrong. Please try again.',
+        'An unexpected error occurred. Please try again.',
       );
       expect(screen.getByText('Technical details')).toBeInTheDocument();
     },

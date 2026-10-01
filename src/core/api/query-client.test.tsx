@@ -285,7 +285,7 @@ describe('createQueryClient', () => {
         expect.objectContaining({ mutationKey: ['broken'] }),
       );
       expect(warn).not.toHaveBeenCalled();
-      expect(toast).toHaveBeenCalledWith('Something went wrong. Please try again.');
+      expect(toast).toHaveBeenCalledWith('An unexpected error occurred. Please try again.');
     });
   });
 
@@ -359,7 +359,7 @@ describe('a thrown value that is hostile to error handling', () => {
         'Mutation failed',
         expect.objectContaining({ mutationKey: ['hostile'] }),
       );
-      expect(toast).toHaveBeenCalledWith('Something went wrong. Please try again.');
+      expect(toast).toHaveBeenCalledWith('An unexpected error occurred. Please try again.');
     },
   );
 

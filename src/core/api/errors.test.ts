@@ -176,7 +176,7 @@ describe('hostile thrown values', () => {
   });
 
   it.each(HOSTILE_VALUES)('getErrorMessage gives the generic message for %s', (_name, make) => {
-    expect(getErrorMessage(make())).toBe('Something went wrong. Please try again.');
+    expect(getErrorMessage(make())).toBe('An unexpected error occurred. Please try again.');
   });
 
   it.each(HOSTILE_VALUES)('isAppError and getFieldErrors do not throw for %s', (_name, make) => {
