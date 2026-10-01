@@ -52,6 +52,27 @@ describe('guards', () => {
     expect(await screen.findByText('Items page')).toBeInTheDocument();
   });
 
+  it.each([
+    ['a protocol-relative URL', '%2F%2Fevil.example'],
+    ['a path with a tab that browsers drop', '%2F%09%2Fevil.example'],
+  ])(
+    'RequireGuest never sends signed-in users off-site, even with %s as returnTo',
+    async (_name, returnTo) => {
+      render(
+        <RequireGuest>
+          <p>Login form</p>
+        </RequireGuest>,
+        {
+          auth: 'admin',
+          path: '/login',
+          route: `/login?returnTo=${returnTo}`,
+          routes: [{ path: '/dashboard', element: <p>Dashboard page</p> }],
+        },
+      );
+      expect(await screen.findByText('Dashboard page')).toBeInTheDocument();
+    },
+  );
+
   it('RequirePermission shows the 403 state without the permission', async () => {
     render(
       <RequirePermission permission="items.create">

@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
 import type { StoreApi } from 'zustand';
 
@@ -10,6 +10,8 @@ import { server } from '@/mocks/server';
 import { useSessionStore } from '@/stores/session-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { useUiStore } from '@/stores/ui-store';
+
+configure({ asyncUtilTimeout: 3_000 }); // the first import of a lazy route chunk can be slow
 
 // jsdom gaps that Radix primitives and the theme code rely on.
 class ResizeObserverStub {
@@ -35,6 +37,12 @@ Object.defineProperty(window, 'matchMedia', {
     removeListener() {},
     dispatchEvent: () => false,
   }),
+});
+// ScrollRestoration (React Router) scrolls on every navigation; jsdom only prints "not implemented".
+Object.defineProperty(window, 'scrollTo', {
+  configurable: true,
+  writable: true,
+  value: () => undefined,
 });
 for (const method of [
   'hasPointerCapture',

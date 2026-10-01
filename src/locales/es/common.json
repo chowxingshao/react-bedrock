@@ -87,12 +87,29 @@
     "skipToContent": "Saltar al contenido principal"
   },
   "auth": {
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "title": "Iniciar sesión",
+    "description": "Introduce tu correo y tu contraseña para continuar.",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "signIn": "Iniciar sesión",
+    "demoHint": "Cuentas de demostración de la API simulada: {{admin}} (todos los permisos) o {{viewer}} (solo lectura). Contraseña: {{password}}"
   },
   "userMenu": {
     "open": "Abrir menú de usuario de {{name}}"
   },
   "about": {
     "version": "Versión {{version}} ({{sha}})"
+  },
+  "pages": {
+    "login": "Iniciar sesión",
+    "dashboard": "Panel",
+    "forbidden": "Acceso denegado",
+    "notFound": "Página no encontrada"
+  },
+  "dashboard": {
+    "welcome": "Hola de nuevo, {{name}}.",
+    "emptyTitle": "Tu panel está vacío",
+    "emptyDescription": "Añade widgets con las cifras que le importan a tu equipo."
   }
 }

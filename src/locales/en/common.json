@@ -87,12 +87,29 @@
     "skipToContent": "Skip to main content"
   },
   "auth": {
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "title": "Sign in",
+    "description": "Enter your email and password to continue.",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "demoHint": "Mock API demo accounts: {{admin}} (every permission) or {{viewer}} (read-only). Password: {{password}}"
   },
   "userMenu": {
     "open": "Open user menu for {{name}}"
   },
   "about": {
     "version": "Version {{version}} ({{sha}})"
+  },
+  "pages": {
+    "login": "Sign in",
+    "dashboard": "Dashboard",
+    "forbidden": "Access denied",
+    "notFound": "Page not found"
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {{name}}.",
+    "emptyTitle": "Your dashboard is empty",
+    "emptyDescription": "Add widgets for the numbers your team cares about."
   }
 }
