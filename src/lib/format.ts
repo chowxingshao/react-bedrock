@@ -57,6 +57,17 @@ export function formatDateTime(
   return isValid(date) ? formatPattern(date, 'PPp', { locale: DATE_FNS_LOCALES[locale] }) : '';
 }
 
+/**
+ * The calendar day as "2026-01-05" (yyyy-MM-dd), read from the local date parts and the same in
+ * every UI language. Use it to send a date-only value, such as a DatePicker's, to an API:
+ * `toISOString()` of a local-midnight Date gives the previous day east of UTC.
+ * Returns '' for invalid input.
+ */
+export function formatISODate(value: DateInput): string {
+  const date = toDate(value);
+  return isValid(date) ? formatPattern(date, 'yyyy-MM-dd') : '';
+}
+
 /** "3 days ago" / "in 2 hours", relative to `base` (default: now). Returns '' for invalid input. */
 export function formatRelative(
   value: DateInput,

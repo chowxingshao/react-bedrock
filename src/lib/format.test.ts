@@ -6,6 +6,7 @@ import {
   formatCurrency,
   formatDate,
   formatDateTime,
+  formatISODate,
   formatNumber,
   formatPercent,
   formatRelative,
@@ -27,6 +28,20 @@ describe('format helpers', () => {
     expect(formatDateTime(ISO, { locale: 'en' })).toBe('Jan 5, 2026, 10:00 AM');
   });
 
+  it('formats the calendar day as yyyy-MM-dd from the local date parts', () => {
+    // Built from local parts, so these hold in any time zone. `toISOString()` of the first
+    // would give the previous day east of UTC, and of the last the next day west of it.
+    expect(formatISODate(new Date(2026, 0, 5))).toBe('2026-01-05');
+    expect(formatISODate(new Date(2026, 0, 5, 0, 30))).toBe('2026-01-05');
+    expect(formatISODate(new Date(2026, 0, 5, 23, 30))).toBe('2026-01-05');
+    expect(formatISODate(new Date(2026, 11, 31, 23, 59).getTime())).toBe('2026-12-31');
+    // A date-only string is local midnight, so it round-trips.
+    expect(formatISODate('2026-01-05')).toBe('2026-01-05');
+    // The UI language does not change it.
+    setFormatLocale('es');
+    expect(formatISODate(new Date(2026, 0, 5))).toBe('2026-01-05');
+  });
+
   it('formats relative time', () => {
     const base = new Date('2026-01-08T10:00:00Z');
     expect(formatRelative(ISO, { base, locale: 'en' })).toBe('3 days ago');
@@ -35,6 +50,8 @@ describe('format helpers', () => {
 
   it('returns an empty string for invalid dates', () => {
     expect(formatDate('not a date')).toBe('');
+    expect(formatISODate('not a date')).toBe('');
+    expect(formatISODate(new Date('not a date'))).toBe('');
     expect(formatRelative(Number.NaN)).toBe('');
   });
 
