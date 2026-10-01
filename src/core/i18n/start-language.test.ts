@@ -11,9 +11,22 @@ import { localStore, STORAGE_KEYS } from '@/core/storage';
  * The formatters come from the same fresh load. `<html lang>` cannot show whether the start-up
  * sync ran: an earlier copy's `languageChanged` listener sets it when the new copy initialises.
  */
-async function startLanguage({ saved, browser }: { saved?: unknown; browser: string[] }) {
+async function startLanguage({
+  saved,
+  browser,
+  single,
+}: {
+  saved?: unknown;
+  /** `navigator.languages`; `null` stands for an environment that does not define it. */
+  browser: string[] | null;
+  /** `navigator.language`, the older single-value form. */
+  single?: string;
+}) {
   if (saved !== undefined) localStore.set(STORAGE_KEYS.locale, saved);
-  vi.spyOn(window.navigator, 'languages', 'get').mockReturnValue(browser);
+  vi.spyOn(window.navigator, 'languages', 'get').mockReturnValue(
+    browser ?? (undefined as unknown as string[]),
+  );
+  if (single !== undefined) vi.spyOn(window.navigator, 'language', 'get').mockReturnValue(single);
   vi.resetModules();
   const { i18n } = await import('./i18n');
   const { getFormatLocale } = await import('@/lib/format');
@@ -35,6 +48,13 @@ describe('the language the app starts in', () => {
 
   it('is the browser language when nothing is saved', async () => {
     expect(await startLanguage({ browser: ['fr-FR', 'es-MX'] })).toEqual({
+      language: 'es',
+      formatLocale: 'es',
+    });
+  });
+
+  it('is the single browser language when navigator.languages is not defined', async () => {
+    expect(await startLanguage({ browser: null, single: 'es-MX' })).toEqual({
       language: 'es',
       formatLocale: 'es',
     });

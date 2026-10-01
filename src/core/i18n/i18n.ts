@@ -15,9 +15,13 @@ import { zodErrorMap } from './zod-error-map';
 /** Keys already reported: i18next asks for a missing key on every render; one warning is enough. */
 const reportedMissing = new Set<string>();
 
+// The DOM typings say `languages` is always there; an old or embedded browser may not define it, and
+// a throw here is a blank page before any error handler exists.
+const browserLanguages = navigator.languages as readonly string[] | undefined;
+
 const initialLocale = detectLocale({
   saved: localStore.get<unknown>(STORAGE_KEYS.locale),
-  browser: navigator.languages,
+  browser: browserLanguages ?? [navigator.language],
   fallback: env.VITE_DEFAULT_LOCALE,
 });
 
