@@ -106,7 +106,9 @@ Button sizes are `sm | md | lg | icon` (default `md`). Button variants are `defa
 **DatePicker** (`@/components/ui/date-picker`) composes Popover and Calendar (react-day-picker).
 
 - It formats with `formatDate` and localises the calendar through the current UI language.
-- Inside a form: wrap it in `<FormControl>` and pass `field.value` / `field.onChange`.
+- Inside a form: wrap it in `<FormControl>` and spread the field, `<DatePicker {...field} />`. `value` and `onChange` are its own props; `ref`, `onBlur`, `name` and `disabled` flow on to the trigger Button, so React Hook Form can focus the picker when validation fails and track whether it was touched. Passing only `field.value` and `field.onChange` loses both.
+- A label names the trigger, so the chosen date (or the placeholder) is exposed as its accessible description, next to any `aria-describedby` the form passes (`FormDescription`, the error message).
+- The value is a `Date` at local midnight. Send it to an API with `formatISODate` (docs/i18n.md), not `toISOString()`.
 - The bare `Calendar` primitive has English labels unless you pass `labels` (see DatePicker). Its `captionLayout="dropdown"` is not localised either (shadcn formats the month in the browser language, and react-day-picker's dropdown labels are English), so it has no story: translate those labels before you use it.
 
 ## Storybook: the visual catalogue

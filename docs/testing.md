@@ -16,6 +16,7 @@
 
 - Import `describe`, `it`, `expect` and `vi` from `vitest`. Globals are off, so every file says where its test APIs come from.
 - Query the DOM the way users do: `getByRole`, `getByLabelText`, `getByText`. Use `data-testid` only as a last resort.
+- Tests run in UTC (`TZ: 'UTC'`), with `VITE_API_BASE_URL: '/api'` and `VITE_LOG_LEVEL: 'debug'`, whatever your `.env.local` says (the three `test.env` pins in `vite.config.ts`). A date test therefore sees UTC, not your time zone.
 - Mocks are cleared and restored after every test (`clearMocks` is on by default in Vitest 5, and `restoreMocks: true` is set).
 - `src/test/setup.ts` runs before every test file. It registers the jest-dom matchers and stubs the browser APIs jsdom lacks but Radix primitives and the theme code use (`ResizeObserver`, `matchMedia`, the pointer-capture methods and `scrollIntoView`). Before each test it resets the i18n language to `en`, because a test may switch it and the app starts in the detected language (saved choice, then browser, then `VITE_DEFAULT_LOCALE`, which Vitest reads from your `.env.local`); a test therefore always starts in English. After each test it resets the session, theme and UI stores to their initial state, unmounts rendered trees and clears `localStorage` / `sessionStorage`, so a test may change any of them without cleaning up (a new store is added to the reset list in `setup.ts`). It also starts the MSW server before a file's tests, resets any handlers a test added after each test, and closes the server afterwards (see "Mocking the API with MSW" below).
 
