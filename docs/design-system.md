@@ -115,6 +115,7 @@ Button sizes are `sm | md | lg | icon` (default `md`). Button variants are `defa
 
 - `pnpm storybook` runs it at http://localhost:6006; `pnpm storybook:build` writes a static site to `storybook-static/`.
 - Every primitive has a story in `src/components/ui/<name>.stories.tsx` that shows all its variants. Add or update the story whenever you add a component or variant.
+- Every story renders inside a `MemoryRouter`, so `Link`, `NavLink` and the layout components work. A component that reads the signed-in user (`AppShell`, through `UserMenu`) needs an `AuthProvider` in its story: `app-shell.stories.tsx` supplies one with a fake strategy that is always signed in.
 - The toolbar switches **Theme** (light/dark) and **Locale** (en/es). The **Accessibility** panel runs axe on the current story.
 - Stories are CSF3 (`satisfies Meta<typeof Component>`), titled `UI/<Name>` (or `Feedback/<Name>` for feedback components in `src/components/feedback/`). Demo copy in stories may be plain English, because stories are not shipped to users.
 
@@ -129,6 +130,8 @@ Button sizes are `sm | md | lg | icon` (default `md`). Button variants are `defa
 | `EmptyState`                                                                      | Icon, title, description and an optional action                                 |
 | `ErrorState`                                                                      | Friendly message and **Try again**. Technical details show in development only. |
 | `QueryState`, `AsyncBoundary`                                                     | Pick the right state automatically (docs/data-fetching.md)                      |
+| `ForbiddenState`, `NotFoundState`                                                 | The 403 and 404 views (guards, detail pages whose record is missing)            |
+| `OfflineBanner`                                                                   | A banner under the header while the browser is offline                          |
 
 `PageLoader` and `QueryState` wait 200 ms (`SKELETON_DELAY_MS`) before showing a loading indicator, so fast responses never flash a skeleton. The `DataTable` skeleton (`isLoading`) shows immediately: render the table inside `QueryState`, or drive `isLoading` from a delayed flag, to keep that behaviour.
 
