@@ -4,12 +4,15 @@ import type { z } from 'zod';
 
 /**
  * A bound as shown to the user. Dates are timestamps in the issue; `Intl`, not `@/lib/format`, keeps
- * date-fns out of the entry chunk.
+ * date-fns out of the entry chunk. An invalid Date bound is NaN, which `Intl` refuses to format:
+ * show it as is, so that the validation fails instead of throwing from Zod's issue handling.
  */
-const boundText = (origin: string, bound: unknown): string =>
-  origin === 'date'
-    ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(Number(bound))
+const boundText = (origin: string, bound: unknown): string => {
+  const ms = Number(bound);
+  return origin === 'date' && Number.isFinite(ms)
+    ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(ms)
     : String(bound);
+};
 
 /**
  * Translates Zod's validation messages through i18next (spec §7.6). Evaluated at parse time, so it

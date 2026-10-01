@@ -57,4 +57,18 @@ describe('zod error map', () => {
     await i18n.changeLanguage('es');
     expect(messageOf(z.number().gt(5), 5)).toBe('Debe ser mayor que 5');
   });
+
+  it('fails validation, rather than throwing, when a date bound is not a valid date', () => {
+    const invalid = new Date('not a date');
+    const early = new Date(2020, 0, 1);
+
+    // Zod builds the issues lazily: the map runs when `.error` is read, not inside `safeParse`.
+    const tooEarly = z.date().min(invalid).safeParse(early);
+    expect(tooEarly.success).toBe(false);
+    expect(tooEarly.error?.issues[0]?.message).toBe('Must be at least NaN');
+
+    const tooLate = z.date().max(invalid).safeParse(early);
+    expect(tooLate.success).toBe(false);
+    expect(tooLate.error?.issues[0]?.message).toBe('Must be at most NaN');
+  });
 });
