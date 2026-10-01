@@ -1,11 +1,10 @@
-import {
-  type Locale as DateFnsLocale,
-  format as formatPattern,
-  formatDistance,
-  isValid,
-  parseISO,
-} from 'date-fns';
-import { enUS, es } from 'date-fns/locale';
+import type { Locale as DateFnsLocale } from 'date-fns';
+import { format as formatPattern } from 'date-fns/format';
+import { formatDistance } from 'date-fns/formatDistance';
+import { isValid } from 'date-fns/isValid';
+import { enUS } from 'date-fns/locale/en-US';
+import { es } from 'date-fns/locale/es';
+import { parseISO } from 'date-fns/parseISO';
 
 import { isLocale, type Locale } from '@/config/constants';
 import { env } from '@/config/env';
