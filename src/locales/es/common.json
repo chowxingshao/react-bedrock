@@ -10,7 +10,8 @@
   },
   "status": {
     "loading": "Cargando",
-    "offline": "No tienes conexión. Los cambios no se podrán guardar hasta que vuelva."
+    "offline": "No tienes conexión. Los cambios no se podrán guardar hasta que vuelva.",
+    "navigating": "Cargando página"
   },
   "pagination": {
     "label": "Paginación",
@@ -72,5 +73,26 @@
     "description": "Tienes cambios sin guardar. Se perderán si sales.",
     "leave": "Salir",
     "stay": "Quedarme"
+  },
+  "nav": {
+    "label": "Navegación principal",
+    "description": "Enlaces a cada sección de la aplicación",
+    "open": "Abrir navegación",
+    "collapse": "Contraer barra lateral",
+    "expand": "Expandir barra lateral",
+    "dashboard": "Panel",
+    "items": "Elementos"
+  },
+  "a11y": {
+    "skipToContent": "Saltar al contenido principal"
+  },
+  "auth": {
+    "signOut": "Cerrar sesión"
+  },
+  "userMenu": {
+    "open": "Abrir menú de usuario"
+  },
+  "about": {
+    "version": "Versión {{version}} ({{sha}})"
   }
 }

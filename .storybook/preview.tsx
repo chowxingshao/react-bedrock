@@ -1,5 +1,6 @@
 import type { Preview } from '@storybook/react-vite';
 import { type ReactNode, useEffect } from 'react';
+import { MemoryRouter } from 'react-router';
 
 import '@/styles/globals.css';
 import { SUPPORTED_LOCALES, type Locale } from '@/config/constants';
@@ -56,7 +57,9 @@ const preview: Preview = {
         theme={context.globals.theme as ResolvedTheme}
         locale={context.globals.locale as Locale}
       >
-        <Story />
+        <MemoryRouter>
+          <Story />
+        </MemoryRouter>
       </StoryShell>
     ),
   ],

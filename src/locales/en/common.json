@@ -10,7 +10,8 @@
   },
   "status": {
     "loading": "Loading",
-    "offline": "You are offline. Changes can't be saved until your connection is back."
+    "offline": "You are offline. Changes can't be saved until your connection is back.",
+    "navigating": "Loading page"
   },
   "pagination": {
     "label": "Pagination",
@@ -72,5 +73,26 @@
     "description": "You have unsaved changes. They will be lost if you leave.",
     "leave": "Leave",
     "stay": "Stay"
+  },
+  "nav": {
+    "label": "Main navigation",
+    "description": "Links to every section of the app",
+    "open": "Open navigation",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "dashboard": "Dashboard",
+    "items": "Items"
+  },
+  "a11y": {
+    "skipToContent": "Skip to main content"
+  },
+  "auth": {
+    "signOut": "Sign out"
+  },
+  "userMenu": {
+    "open": "Open user menu"
+  },
+  "about": {
+    "version": "Version {{version}} ({{sha}})"
   }
 }
