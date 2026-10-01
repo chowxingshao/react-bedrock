@@ -5,6 +5,7 @@ import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
 import type { StoreApi } from 'zustand';
 
 import { i18n } from '@/core/i18n';
+import { resetMockDb } from '@/mocks/db';
 import { server } from '@/mocks/server';
 import { useSessionStore } from '@/stores/session-store';
 import { useThemeStore } from '@/stores/theme-store';
@@ -67,6 +68,15 @@ function resetStore<State>(store: StoreApi<State>): void {
   store.setState(store.getInitialState(), true);
 }
 
+// jsdom keeps cookies for the whole test file, and MSW forwards a mocked Set-Cookie to document.cookie:
+// without this, a login in one test would sign the next one in.
+function clearCookies(): void {
+  for (const pair of document.cookie.split(';')) {
+    const name = pair.split('=')[0]?.trim();
+    if (name) document.cookie = `${name}=; Path=/; Max-Age=0`;
+  }
+}
+
 afterEach(() => {
   // Reset every store BEFORE the storage clears below: persisted stores write on reset.
   resetStore(useSessionStore);
@@ -75,6 +85,8 @@ afterEach(() => {
   // Vitest globals are off, so Testing Library's auto-cleanup is not registered: do it here.
   cleanup();
   server.resetHandlers();
+  resetMockDb();
+  clearCookies();
   window.localStorage.clear();
   window.sessionStorage.clear();
 });

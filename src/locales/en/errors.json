@@ -9,6 +9,7 @@
     "TIMEOUT": "The server took too long to respond. Please try again.",
     "CANCELLED": "The request was cancelled.",
     "UNAUTHORIZED": "Your session has expired. Please sign in again.",
+    "INVALID_CREDENTIALS": "Incorrect email or password.",
     "FORBIDDEN": "You don't have permission to do that.",
     "NOT_FOUND": "We couldn't find what you were looking for.",
     "VALIDATION_ERROR": "Some fields need your attention.",

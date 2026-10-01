@@ -9,6 +9,7 @@
     "TIMEOUT": "El servidor tardó demasiado en responder. Inténtalo de nuevo.",
     "CANCELLED": "La solicitud se canceló.",
     "UNAUTHORIZED": "Tu sesión ha caducado. Vuelve a iniciar sesión.",
+    "INVALID_CREDENTIALS": "Correo electrónico o contraseña incorrectos.",
     "FORBIDDEN": "No tienes permiso para hacer eso.",
     "NOT_FOUND": "No encontramos lo que buscabas.",
     "VALIDATION_ERROR": "Algunos campos necesitan tu atención.",
