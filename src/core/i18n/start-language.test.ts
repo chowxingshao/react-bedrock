@@ -5,14 +5,19 @@ import { localStore, STORAGE_KEYS } from '@/core/storage';
 
 /**
  * Loads a fresh copy of the i18n module, as a page load does, and returns the language it starts
- * in. This lives in its own file because i18next is an external singleton: every fresh copy
- * re-initialises the instance the other i18n tests share.
+ * in plus the locale of that copy's formatters. This lives in its own file because i18next is an
+ * external singleton: every fresh copy re-initialises the instance the other i18n tests share.
+ *
+ * The formatters come from the same fresh load. `<html lang>` cannot show whether the start-up
+ * sync ran: an earlier copy's `languageChanged` listener sets it when the new copy initialises.
  */
 async function startLanguage({ saved, browser }: { saved?: unknown; browser: string[] }) {
   if (saved !== undefined) localStore.set(STORAGE_KEYS.locale, saved);
   vi.spyOn(window.navigator, 'languages', 'get').mockReturnValue(browser);
   vi.resetModules();
-  return (await import('./i18n')).i18n.language;
+  const { i18n } = await import('./i18n');
+  const { getFormatLocale } = await import('@/lib/format');
+  return { language: i18n.language, formatLocale: getFormatLocale() };
 }
 
 describe('the language the app starts in', () => {
@@ -22,21 +27,36 @@ describe('the language the app starts in', () => {
   });
 
   it('is the saved choice, ahead of the browser language', async () => {
-    expect(await startLanguage({ saved: 'es', browser: ['en-US'] })).toBe('es');
+    expect(await startLanguage({ saved: 'es', browser: ['en-US'] })).toEqual({
+      language: 'es',
+      formatLocale: 'es',
+    });
   });
 
   it('is the browser language when nothing is saved', async () => {
-    expect(await startLanguage({ browser: ['fr-FR', 'es-MX'] })).toBe('es');
+    expect(await startLanguage({ browser: ['fr-FR', 'es-MX'] })).toEqual({
+      language: 'es',
+      formatLocale: 'es',
+    });
   });
 
   it('is VITE_DEFAULT_LOCALE when neither is bundled', async () => {
-    expect(await startLanguage({ saved: 'de', browser: ['fr-FR'] })).toBe(env.VITE_DEFAULT_LOCALE);
+    expect(await startLanguage({ saved: 'de', browser: ['fr-FR'] })).toEqual({
+      language: env.VITE_DEFAULT_LOCALE,
+      formatLocale: env.VITE_DEFAULT_LOCALE,
+    });
+  });
+
+  it('starts the formatters in the starting language, whatever VITE_DEFAULT_LOCALE is', async () => {
+    const other = env.VITE_DEFAULT_LOCALE === 'es' ? 'en' : 'es';
+
+    expect((await startLanguage({ saved: other, browser: ['fr-FR'] })).formatLocale).toBe(other);
   });
 
   it.each([123, { v: 'es' }, ['es']])(
     'ignores a saved value that is not a string (%j)',
     async (saved) => {
-      expect(await startLanguage({ saved, browser: ['en-US'] })).toBe('en');
+      expect((await startLanguage({ saved, browser: ['en-US'] })).language).toBe('en');
     },
   );
 });
