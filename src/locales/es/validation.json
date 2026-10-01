@@ -1,0 +1,20 @@
+{
+  "required": "Este campo es obligatorio",
+  "invalidType": "Introduce un valor válido",
+  "tooShort": "Usa al menos {{count}} caracteres",
+  "tooLong": "Usa como máximo {{count}} caracteres",
+  "tooSmall": "Debe ser como mínimo {{minimum}}",
+  "tooSmallExclusive": "Debe ser mayor que {{minimum}}",
+  "tooBig": "Debe ser como máximo {{maximum}}",
+  "tooBigExclusive": "Debe ser menor que {{maximum}}",
+  "tooFewItems": "Selecciona al menos {{count}} elementos",
+  "tooManyItems": "Selecciona como máximo {{count}} elementos",
+  "email": "Introduce una dirección de correo válida",
+  "url": "Introduce una URL válida",
+  "invalidFormat": "El formato no es válido",
+  "invalidOption": "Elige una de las opciones disponibles",
+  "server": {
+    "ALREADY_EXISTS": "Este valor ya está en uso",
+    "INVALID": "Este valor no es válido"
+  }
+}

@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { useForm } from 'react-hook-form';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { i18n } from '@/core/i18n';
 
@@ -30,32 +30,39 @@ describe('applyServerErrors', () => {
     expect(applyServerErrors(result.current, new Error('boom'))).toBe(false);
   });
 
-  describe('with a validation:server namespace', () => {
-    afterEach(() => {
-      i18n.removeResourceBundle('en', 'validation');
-    });
-
-    it('translates a known UPPER_SNAKE_CASE key and shows any other message as sent', () => {
-      i18n.addResourceBundle('en', 'validation', {
-        server: { ALREADY_EXISTS: 'That value is already in use' },
-      });
-      const { result } = renderHook(() => useForm<{ name: string; email: string; nick: string }>());
+  describe('with the validation:server namespace', () => {
+    const applyFields = (fields: Record<string, string>) => {
+      const { result } = renderHook(() => useForm<Record<string, string>>());
       const error = new AppError({
         code: 'VALIDATION_ERROR',
         message: 'Invalid',
         status: 422,
-        details: { fields: { name: 'ALREADY_EXISTS', email: 'constructor', nick: 'Too short' } },
+        details: { fields },
       });
-
       act(() => {
         applyServerErrors(result.current, error);
       });
+      return (name: string) => result.current.getFieldState(name).error?.message;
+    };
 
-      expect(result.current.getFieldState('name').error?.message).toBe(
-        'That value is already in use',
-      );
-      expect(result.current.getFieldState('email').error?.message).toBe('constructor');
-      expect(result.current.getFieldState('nick').error?.message).toBe('Too short');
+    it('translates a known UPPER_SNAKE_CASE code and shows any other message as sent', () => {
+      const messageOf = applyFields({
+        name: 'ALREADY_EXISTS',
+        email: 'constructor',
+        nick: 'Too short',
+        unknown: 'NOT_A_KNOWN_CODE',
+      });
+
+      expect(messageOf('name')).toBe('This value is already in use');
+      expect(messageOf('email')).toBe('constructor');
+      expect(messageOf('nick')).toBe('Too short');
+      expect(messageOf('unknown')).toBe('NOT_A_KNOWN_CODE');
+    });
+
+    it('translates into the current language', async () => {
+      await i18n.changeLanguage('es');
+
+      expect(applyFields({ name: 'ALREADY_EXISTS' })('name')).toBe('Este valor ya está en uso');
     });
   });
 });

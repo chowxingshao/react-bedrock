@@ -1,5 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { z } from 'zod';
 
 import { type Locale, SUPPORTED_LOCALES } from '@/config/constants';
 import { env } from '@/config/env';
@@ -9,6 +10,7 @@ import { setFormatLocale } from '@/lib/format';
 
 import { detectLocale } from './detect';
 import { defaultNS, namespaces, resources } from './resources';
+import { zodErrorMap } from './zod-error-map';
 
 /** Keys already reported: i18next asks for a missing key on every render; one warning is enough. */
 const reportedMissing = new Set<string>();
@@ -49,6 +51,9 @@ function syncLocale(locale: string): void {
 
 syncLocale(i18n.language);
 i18n.on('languageChanged', syncLocale);
+
+// Every Zod schema in the app gets translated messages (schema-level messages still win).
+z.config({ customError: zodErrorMap });
 
 /** Switches the UI language and remembers the choice (spec §7.6). */
 export async function changeLocale(locale: Locale): Promise<void> {

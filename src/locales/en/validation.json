@@ -1,0 +1,20 @@
+{
+  "required": "This field is required",
+  "invalidType": "Enter a valid value",
+  "tooShort": "Use at least {{count}} characters",
+  "tooLong": "Use at most {{count}} characters",
+  "tooSmall": "Must be at least {{minimum}}",
+  "tooSmallExclusive": "Must be greater than {{minimum}}",
+  "tooBig": "Must be at most {{maximum}}",
+  "tooBigExclusive": "Must be less than {{maximum}}",
+  "tooFewItems": "Select at least {{count}} items",
+  "tooManyItems": "Select at most {{count}} items",
+  "email": "Enter a valid email address",
+  "url": "Enter a valid URL",
+  "invalidFormat": "The format is not valid",
+  "invalidOption": "Choose one of the available options",
+  "server": {
+    "ALREADY_EXISTS": "This value is already in use",
+    "INVALID": "This value is not valid"
+  }
+}

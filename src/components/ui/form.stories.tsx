@@ -15,9 +15,10 @@ import {
 } from './form';
 import { Input } from './input';
 
+// No messages in the schema: the global Zod error map translates them (see docs/forms.md).
 const schema = z.object({
-  name: z.string().min(2, { error: 'Use at least 2 characters' }),
-  email: z.email({ error: 'Enter a valid email address' }),
+  name: z.string().min(2),
+  email: z.email(),
 });
 type Values = z.infer<typeof schema>;
 

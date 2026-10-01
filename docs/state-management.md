@@ -7,7 +7,7 @@ Pick the home for a piece of state with this table (spec Principle 3):
 | Server data                                | **TanStack Query** (docs/data-fetching.md)                                              | lists, details, anything from the API         |
 | View state someone might bookmark or share | **The URL**: `useUrlState`, `usePagination` (planned, with the router; docs/routing.md) | filters, search, page, sort, active tab       |
 | App-wide UI and session state              | **Zustand**, in `src/stores/`                                                           | theme, sidebar collapsed, the signed-in user  |
-| Form state                                 | **React Hook Form** (planned; docs/forms.md)                                            | field values, dirty and touched state, errors |
+| Form state                                 | **React Hook Form** (docs/forms.md)                                                     | field values, dirty and touched state, errors |
 | Everything else                            | `useState` / `useReducer` in the component                                              | open/closed, hover, a local draft             |
 
 ## Rules
