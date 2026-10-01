@@ -66,5 +66,11 @@
     "navigation": "Navegación por meses",
     "today": "Hoy",
     "selected": "seleccionado"
+  },
+  "unsaved": {
+    "title": "¿Salir de esta página?",
+    "description": "Tienes cambios sin guardar. Se perderán si sales.",
+    "leave": "Salir",
+    "stay": "Quedarme"
   }
 }

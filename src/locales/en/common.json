@@ -66,5 +66,11 @@
     "navigation": "Month navigation",
     "today": "Today",
     "selected": "selected"
+  },
+  "unsaved": {
+    "title": "Leave this page?",
+    "description": "You have unsaved changes. They will be lost if you leave.",
+    "leave": "Leave",
+    "stay": "Stay"
   }
 }
