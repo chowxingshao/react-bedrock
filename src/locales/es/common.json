@@ -8,7 +8,8 @@
     "confirm": "Confirmar"
   },
   "status": {
-    "loading": "Cargando"
+    "loading": "Cargando",
+    "offline": "No tienes conexión. Los cambios no se podrán guardar hasta que vuelva."
   },
   "pagination": {
     "label": "Paginación",

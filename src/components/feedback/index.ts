@@ -13,3 +13,4 @@ export { EmptyState, type EmptyStateProps } from './empty-state';
 export { ErrorState, type ErrorStateProps } from './error-state';
 export { QueryState, type QueryLike, type QueryStateProps } from './query-state';
 export { AsyncBoundary, type AsyncBoundaryProps } from './async-boundary';
+export { OfflineBanner } from './offline-banner';

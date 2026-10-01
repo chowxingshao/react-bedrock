@@ -8,7 +8,8 @@
     "confirm": "Confirm"
   },
   "status": {
-    "loading": "Loading"
+    "loading": "Loading",
+    "offline": "You are offline. Changes can't be saved until your connection is back."
   },
   "pagination": {
     "label": "Pagination",
