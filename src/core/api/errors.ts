@@ -27,7 +27,7 @@ export interface AppErrorInit {
   status: number;
   details?: Record<string, unknown>;
   requestId?: string;
-  /** A message from the server, assumed user-facing and localised via Accept-Language. */
+  /** A message from a 4xx response, assumed user-facing and localised via Accept-Language. */
   userMessage?: string;
   cause?: unknown;
 }
@@ -144,7 +144,8 @@ function classify(error: unknown): AppError {
       status,
       details: body.details,
       requestId,
-      userMessage: body.message,
+      // A 5xx body is the server's technical text (`pg: connection refused`): logs only, never users.
+      userMessage: status < 500 ? body.message : undefined,
       cause: error,
     });
   }

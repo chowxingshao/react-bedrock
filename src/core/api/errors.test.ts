@@ -46,6 +46,24 @@ describe('toAppError', () => {
     });
   });
 
+  it.each([400, 404, 422, 499])('keeps the body message of a %i as the user message', (status) => {
+    const error = toAppError(responseError(status, { message: 'Check the form' }));
+
+    expect(error.userMessage).toBe('Check the form');
+  });
+
+  it.each([500, 503, 599])(
+    'keeps the body message of a %i out of the user message (it is for logs only)',
+    (status) => {
+      const error = toAppError(
+        responseError(status, { code: 'DB_DOWN', message: 'pg: connection refused' }),
+      );
+
+      expect(error.userMessage).toBeUndefined();
+      expect(error.message).toBe('pg: connection refused');
+    },
+  );
+
   it.each([
     [401, 'UNAUTHORIZED'],
     [403, 'FORBIDDEN'],
