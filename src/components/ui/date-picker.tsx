@@ -1,5 +1,5 @@
 import { CalendarIcon } from 'lucide-react';
-import { type ComponentProps, useState } from 'react';
+import { type ComponentProps, useId, useState } from 'react';
 import { labelDayButton } from 'react-day-picker';
 import { useTranslation } from 'react-i18next';
 
@@ -22,25 +22,35 @@ export function DatePicker({
   onChange,
   placeholder,
   className,
+  'aria-describedby': describedBy,
   ...buttonProps
 }: DatePickerProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const valueId = useId();
+  // An invalid Date formats to '', so it reads as empty instead of leaving the button without text.
+  const formatted = value ? formatDate(value) : '';
+  const isEmpty = formatted === '';
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          data-empty={value === undefined}
+          data-empty={isEmpty}
           className={cn(
             'w-full justify-start text-left font-normal data-[empty=true]:text-muted-foreground',
             className,
           )}
           {...buttonProps}
+          // A <label> names the button ahead of its content, which would drop the value from the
+          // accessible name; the description keeps it, next to whatever the caller already points at.
+          aria-describedby={describedBy ? `${valueId} ${describedBy}` : valueId}
         >
           <CalendarIcon aria-hidden="true" />
-          {value ? formatDate(value) : <span>{placeholder ?? t('datePicker.placeholder')}</span>}
+          <span id={valueId}>
+            {isEmpty ? (placeholder ?? t('datePicker.placeholder')) : formatted}
+          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start" aria-label={t('datePicker.dialog')}>
