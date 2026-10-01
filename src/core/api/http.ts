@@ -14,6 +14,9 @@ import { installInterceptors } from './interceptors';
 /** The single Axios instance (spec §6.1). Hand-written services and Orval-generated hooks both use it. */
 export const http = axios.create({
   baseURL: env.VITE_API_BASE_URL,
+  // Axios ignores `baseURL` for an absolute (or `//host`) URL, which would send the request headers, and
+  // the credentials the auth layer adds, to another origin. With this off, the base always applies.
+  allowAbsoluteUrls: false,
   timeout: HTTP_TIMEOUT_MS,
   headers: { Accept: 'application/json' },
   transitional: { clarifyTimeoutError: true }, // timeouts report ETIMEDOUT instead of ECONNABORTED

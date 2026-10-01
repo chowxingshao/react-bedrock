@@ -231,6 +231,34 @@ describe('http', () => {
     await expect(request).rejects.toMatchObject({ code: 'CANCELLED' });
   });
 
+  // Axios ignores `baseURL` for an absolute or protocol-relative URL, so the headers (and, once the
+  // auth layer registers its adapter, the credentials) would go to that other origin.
+  it.each(['https://other.example/leak', '//other.example/leak'])(
+    'never calls another origin: %s stays under the API base',
+    async (url) => {
+      // `all`, so a CORS preflight to the other origin counts as contact too.
+      const foreign = vi.fn(() => HttpResponse.json({ leaked: true }));
+      const reached: string[] = [];
+      server.use(
+        mock.all('https://other.example/leak', foreign),
+        mock.all('http://other.example/leak', foreign),
+        mock.get(apiUrl('/*'), ({ request }) => {
+          reached.push(new URL(request.url).origin);
+          return new HttpResponse(null, { status: 404 });
+        }),
+      );
+
+      const outcome = await http.get(url).then(
+        () => 'resolved',
+        (error: unknown) => error,
+      );
+
+      expect(foreign).not.toHaveBeenCalled();
+      expect(outcome).toMatchObject({ code: 'NOT_FOUND', status: 404 });
+      expect(reached).toEqual([new URL(apiUrl('/')).origin]);
+    },
+  );
+
   describe('logging', () => {
     // A query built from unencoded text (a textarea, say) can hold line breaks, which `.` does not match.
     const QUERIES = [
