@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { HOSTILE_CAUSES, throwingGetterCause } from '@/test/hostile-values';
+
 import { createRedactor } from './redact';
 
 describe('createRedactor', () => {
@@ -87,5 +89,35 @@ describe('createRedactor', () => {
     expect(result.error.cause).toEqual({ name: 'Error', message: 'Request failed' });
     expect(JSON.stringify(result)).not.toContain('hunter2');
     expect(result.other.cause).toBe('socket closed');
+  });
+});
+
+describe('createRedactor with a hostile cause', () => {
+  const redact = createRedactor();
+
+  it.each(HOSTILE_CAUSES)('does not throw when the cause is %s', (_name, make) => {
+    const wrapped = redact({ error: new Error('Wrapped', { cause: make() }) }) as {
+      error: { message: string; cause: unknown };
+    };
+    const assigned = redact({ error: Object.assign(new Error('Wrapped'), { cause: make() }) }) as {
+      error: { message: string; cause: unknown };
+    };
+
+    expect(wrapped.error).toMatchObject({
+      message: 'Wrapped',
+      cause: expect.any(Object) as unknown,
+    });
+    expect(assigned.error).toMatchObject({
+      message: 'Wrapped',
+      cause: expect.any(Object) as unknown,
+    });
+  });
+
+  it('keeps the fields of a cause that can be read when another one throws', () => {
+    const result = redact({ error: new Error('Wrapped', { cause: throwingGetterCause() }) }) as {
+      error: { cause: unknown };
+    };
+
+    expect(result.error.cause).toEqual({ name: 'FlakyError' });
   });
 });

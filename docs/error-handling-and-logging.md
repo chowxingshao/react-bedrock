@@ -39,7 +39,7 @@ How errors are caught, what the user sees, and where they are logged.
 - `AppErrorBoundary` is the app-root boundary: `App.tsx` already wraps everything in it, so you don't add another. Its fallback is a full-page `ErrorState` with **Try again** and **Reload page**.
 - For data fetched with suspense, use `AsyncBoundary`, which also resets failed queries (docs/data-fetching.md).
 
-`describeError(error)` (`@/lib/describe-error`) builds the text `ErrorState` shows under **Technical details** in development: for an `Error`, its stack (with a `name: message` header when the engine's stack lists frames only) followed by its extra own properties as JSON, then one `Caused by: name: message (code, status)` line when the error has a `cause`; a string as is; anything else as JSON. The cause is always a one-line summary: a cause such as an Axios error carries the request (body, URL query, credentials), which is never printed.
+`describeError(error)` (`@/lib/describe-error`) builds the text `ErrorState` shows under **Technical details** in development: for an `Error`, its stack (with a `name: message` header when the engine's stack lists frames only) followed by its extra own properties as JSON, then one `Caused by: name: message (code, status)` line when the error has a `cause`; a string as is; anything else as JSON. The cause is always a one-line summary: a cause such as an Axios error carries the request (body, URL query, credentials), which is never printed. `describeError` and `toAppError` never throw, whatever was thrown (an object without a prototype, a revoked proxy, a throwing getter or `toString`): they run while an error is being shown, retried or logged, where a throw would hide the original error.
 
 ## Logging (`@/core/logger`)
 

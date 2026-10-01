@@ -2,6 +2,7 @@ import { type AxiosError, isAxiosError, isCancel } from 'axios';
 import { z } from 'zod';
 
 import { i18n, translateKey } from '@/core/i18n';
+import { safeString } from '@/lib/safe-string';
 
 export const ERROR_CODES = [
   'NETWORK_ERROR',
@@ -51,7 +52,12 @@ export class AppError extends Error {
 }
 
 export function isAppError(value: unknown): value is AppError {
-  return value instanceof AppError;
+  try {
+    return value instanceof AppError;
+  } catch {
+    // `instanceof` throws for a revoked proxy, which is not an AppError.
+    return false;
+  }
 }
 
 /** Assumed backend error body (owner decision 2). Adapt HERE if your backend differs. */
@@ -89,9 +95,27 @@ function requestIdOf(error: AxiosError): string | undefined {
   );
 }
 
-/** Normalises anything thrown by an API call into an AppError. */
+/**
+ * Normalises anything thrown by an API call into an AppError. Total: it never throws, whatever was
+ * thrown. Anything can be thrown in JavaScript, and this runs in the last-resort error paths (the
+ * query caches, the retry policy, the error screens), where a throw would hide the original error.
+ */
 export function toAppError(error: unknown): AppError {
   if (isAppError(error)) return error;
+  try {
+    return classify(error);
+  } catch {
+    // A value that cannot even be inspected (a revoked proxy, a throwing getter or `toString`).
+    return new AppError({
+      code: 'UNKNOWN',
+      message: safeString(error, 'Unrepresentable thrown value'),
+      status: 0,
+      cause: error,
+    });
+  }
+}
+
+function classify(error: unknown): AppError {
   if (isCancel(error)) {
     return new AppError({
       code: 'CANCELLED',
@@ -124,7 +148,7 @@ export function toAppError(error: unknown): AppError {
       cause: error,
     });
   }
-  const message = error instanceof Error ? error.message : String(error);
+  const message = error instanceof Error ? error.message : safeString(error);
   return new AppError({ code: 'UNKNOWN', message, status: 0, cause: error });
 }
 

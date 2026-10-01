@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { AppError } from '@/core/api';
 import { i18n } from '@/core/i18n';
+import { HOSTILE_VALUES } from '@/test/hostile-values';
 
 import { ErrorState } from './error-state';
 
@@ -69,4 +70,30 @@ describe('ErrorState', () => {
     render(<ErrorState onRetry={() => undefined} />);
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
   });
+});
+
+describe('ErrorState with a hostile thrown value', () => {
+  it.each(HOSTILE_VALUES)(
+    'shows the generic message, without details, for %s instead of crashing',
+    (_name, make) => {
+      render(<ErrorState error={make()} showDetails={false} />);
+
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Something went wrong. Please try again.',
+      );
+      expect(screen.queryByText('Technical details')).not.toBeInTheDocument();
+    },
+  );
+
+  it.each(HOSTILE_VALUES)(
+    'shows the generic message and the details section for %s instead of crashing',
+    (_name, make) => {
+      render(<ErrorState error={make()} showDetails />);
+
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Something went wrong. Please try again.',
+      );
+      expect(screen.getByText('Technical details')).toBeInTheDocument();
+    },
+  );
 });

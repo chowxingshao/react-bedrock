@@ -26,6 +26,15 @@ declare module '@tanstack/react-query' {
   }
 }
 
+/** `instanceof` throws for a revoked proxy, and the handlers below must never throw. */
+function isCancelledError(error: unknown): boolean {
+  try {
+    return error instanceof CancelledError;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * What the cache handlers and the retry policy need to know about a failure. `defaultError` is only
  * a type: a `queryFn` or `mutationFn` that does not go through `http` can throw anything (a raw
@@ -38,7 +47,7 @@ function inspectFailure(error: unknown) {
   return {
     appError,
     // Nothing went wrong: the caller aborted the request, which is not logged, toasted or retried.
-    cancelled: error instanceof CancelledError || appError.code === 'CANCELLED',
+    cancelled: isCancelledError(error) || appError.code === 'CANCELLED',
     // Not an AppError: a bug, or a service that bypasses `http`. Production must see it.
     unexpected: !isAppError(error),
   };

@@ -1,4 +1,4 @@
-import { CancelledError, useMutation, useQuery } from '@tanstack/react-query';
+import { CancelledError, type Query, useMutation, useQuery } from '@tanstack/react-query';
 import { AxiosError, AxiosHeaders, CanceledError } from 'axios';
 import { http as mock, HttpResponse } from 'msw';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
@@ -7,6 +7,7 @@ import { type LogEntry, logger } from '@/core/logger';
 import { notify } from '@/core/notify';
 import { apiUrl } from '@/mocks/api-url';
 import { server } from '@/mocks/server';
+import { HOSTILE_VALUES, rejectWith } from '@/test/hostile-values';
 import { createTestQueryClient, renderHook, waitFor } from '@/test/render';
 
 import { AppError } from './errors';
@@ -317,4 +318,74 @@ describe('createQueryClient', () => {
       ['error', 'HTTP request failed'],
     ]);
   });
+});
+
+describe('a thrown value that is hostile to error handling', () => {
+  it.each(HOSTILE_VALUES)('the retry policy copes with %s, and retries it once', (_name, make) => {
+    const retry = retryPolicy();
+
+    expect(retry(0, make())).toBe(true);
+    expect(retry(1, make())).toBe(false);
+  });
+
+  it.each(HOSTILE_VALUES)('the query cache logs %s as unexpected', (_name, make) => {
+    const error = vi.spyOn(logger, 'error');
+    const onError = createQueryClient().getQueryCache().config.onError;
+
+    onError?.(
+      make() as AppError,
+      { queryKey: ['hostile'], meta: undefined } as unknown as Query<unknown, unknown>,
+    );
+
+    expect(error).toHaveBeenCalledWith(
+      'Query failed',
+      expect.objectContaining({ queryKey: ['hostile'] }),
+    );
+  });
+
+  it.each(HOSTILE_VALUES)(
+    'a mutation that failed with %s is logged and toasted',
+    async (_name, make) => {
+      const error = vi.spyOn(logger, 'error');
+      const toast = vi.spyOn(notify, 'error');
+      const { result } = renderHook(
+        () => useMutation({ mutationFn: () => rejectWith(make()), mutationKey: ['hostile'] }),
+        { queryClient: createQueryClient() },
+      );
+
+      await result.current.mutateAsync().catch(() => undefined);
+
+      expect(error).toHaveBeenCalledWith(
+        'Mutation failed',
+        expect.objectContaining({ mutationKey: ['hostile'] }),
+      );
+      expect(toast).toHaveBeenCalledWith('Something went wrong. Please try again.');
+    },
+  );
+
+  // The retry policy runs inside query-core's retryer: a throw there left the retryer's promise
+  // pending for good, so the query stayed loading. (Logging is checked on the cache handler above:
+  // query-core's own `instanceof CancelledError` throws for a revoked proxy before it gets there.)
+  it.each(HOSTILE_VALUES)(
+    'a query that failed with %s settles instead of loading forever',
+    async (_name, make) => {
+      const client = createQueryClient();
+
+      const outcome = await Promise.race([
+        client
+          .query({
+            queryKey: ['hostile'],
+            queryFn: () => rejectWith(make()),
+            retryDelay: 0,
+          })
+          .then(
+            () => 'resolved',
+            () => 'rejected',
+          ),
+        new Promise<string>((resolve) => setTimeout(resolve, 1_000, 'still loading')),
+      ]);
+
+      expect(outcome).toBe('rejected');
+    },
+  );
 });

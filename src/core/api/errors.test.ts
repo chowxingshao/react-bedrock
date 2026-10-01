@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { i18n } from '@/core/i18n';
 import { createRedactor } from '@/core/logger';
 import { describeError } from '@/lib/describe-error';
+import { HOSTILE_CAUSES, HOSTILE_VALUES } from '@/test/hostile-values';
 
 import { AppError, getErrorMessage, getFieldErrors, isAppError, toAppError } from './errors';
 
@@ -143,4 +144,38 @@ describe('getFieldErrors', () => {
     expect(getFieldErrors(error)).toEqual({ name: 'Taken', email: 'Invalid' });
     expect(getFieldErrors(new Error('x'))).toEqual({});
   });
+});
+
+describe('hostile thrown values', () => {
+  it.each(HOSTILE_VALUES)('toAppError does not throw for %s', (_name, make) => {
+    const value = make();
+    const error = toAppError(value);
+
+    expect(isAppError(error)).toBe(true);
+    expect(error).toMatchObject({ name: 'AppError', code: 'UNKNOWN', status: 0 });
+    expect(typeof error.message).toBe('string');
+    expect(error.cause).toBe(value);
+  });
+
+  it.each(HOSTILE_VALUES)('getErrorMessage gives the generic message for %s', (_name, make) => {
+    expect(getErrorMessage(make())).toBe('Something went wrong. Please try again.');
+  });
+
+  it.each(HOSTILE_VALUES)('isAppError and getFieldErrors do not throw for %s', (_name, make) => {
+    const value = make();
+
+    expect(isAppError(value)).toBe(false);
+    expect(getFieldErrors(value)).toEqual({});
+  });
+
+  it.each(HOSTILE_CAUSES)(
+    'an AppError with %s is still described and redacted safely',
+    (_name, make) => {
+      const error = new AppError({ code: 'X', message: 'Wrapped', status: 500, cause: make() });
+
+      expect(toAppError(error)).toBe(error);
+      expect(describeError(error)).toContain('Wrapped');
+      expect(() => createRedactor()({ error })).not.toThrow();
+    },
+  );
 });

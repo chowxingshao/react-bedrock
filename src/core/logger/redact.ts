@@ -1,3 +1,5 @@
+import { summariseCause } from '@/lib/summarise-cause';
+
 /** Keys whose values are never logged (spec §7.4). Matching ignores case, `-` and `_`, and substrings count. */
 export const DEFAULT_REDACT_KEYS = [
   'password',
@@ -14,19 +16,11 @@ const REDACTED = '[REDACTED]';
 const normalise = (key: string) => key.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 /**
- * The `cause` of an error, reduced to name, message, code and status. A cause such as an Axios error
- * carries the request (headers, body, URL query), and a body is a string that key-based redaction
- * cannot look into, so nothing else is ever copied.
+ * The `cause` of an error as it is logged: an object is reduced to its name, message, code and status
+ * (`summariseCause`), a primitive is kept.
  */
-function summariseCause(cause: unknown): unknown {
-  if (typeof cause !== 'object' || cause === null) return cause;
-  const { name, message, code, status } = cause as Record<string, unknown>;
-  return Object.fromEntries(
-    Object.entries({ name, message, code, status }).filter(
-      ([, value]) => typeof value === 'string' || typeof value === 'number',
-    ),
-  );
-}
+const causeForLog = (cause: unknown): unknown =>
+  typeof cause === 'object' && cause !== null ? summariseCause(cause) : cause;
 
 /** Returns a function that deep-copies a value with sensitive keys replaced by "[REDACTED]". */
 export function createRedactor(keys: readonly string[] = DEFAULT_REDACT_KEYS) {
@@ -36,12 +30,19 @@ export function createRedactor(keys: readonly string[] = DEFAULT_REDACT_KEYS) {
     return needles.some((needle) => normalised.includes(needle));
   };
 
-  function redactEntries(source: object, depth: number, ancestors: WeakSet<object>) {
+  function redactEntries(
+    source: object,
+    depth: number,
+    ancestors: WeakSet<object>,
+    skipKey?: string,
+  ) {
     return Object.fromEntries(
-      Object.entries(source).map(([key, child]) => [
-        key,
-        isSensitive(key) ? REDACTED : redact(child, depth + 1, ancestors),
-      ]),
+      Object.entries(source)
+        .filter(([key]) => key !== skipKey)
+        .map(([key, child]) => [
+          key,
+          isSensitive(key) ? REDACTED : redact(child, depth + 1, ancestors),
+        ]),
     );
   }
 
@@ -58,8 +59,9 @@ export function createRedactor(keys: readonly string[] = DEFAULT_REDACT_KEYS) {
           name: value.name,
           message: value.message,
           stack: value.stack,
-          ...redactEntries(value, depth, ancestors),
-          ...(value.cause === undefined ? {} : { cause: summariseCause(value.cause) }),
+          // The `cause` is summarised below, never copied whole, not even when it is an own property.
+          ...redactEntries(value, depth, ancestors, 'cause'),
+          ...(value.cause === undefined ? {} : { cause: causeForLog(value.cause) }),
         };
       }
       if (Array.isArray(value))

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { HOSTILE_CAUSES, HOSTILE_VALUES, throwingGetterCause } from '@/test/hostile-values';
+
 import { describeError } from './describe-error';
 
 describe('describeError', () => {
@@ -75,6 +77,25 @@ describe('describeError causes', () => {
   it('describes a non-error cause', () => {
     expect(describeError(new Error('Wrapped', { cause: 'socket closed' }))).toContain(
       'Caused by: socket closed',
+    );
+  });
+});
+
+describe('describeError with hostile values', () => {
+  it.each(HOSTILE_VALUES)('does not throw for %s', (_name, make) => {
+    expect(typeof describeError(make())).toBe('string');
+  });
+
+  it.each(HOSTILE_CAUSES)('still describes an error whose cause is %s', (_name, make) => {
+    const text = describeError(new Error('Wrapped', { cause: make() }));
+
+    expect(text).toContain('Wrapped');
+    expect(text).toContain('Caused by:');
+  });
+
+  it('keeps what a cause with a throwing getter can tell', () => {
+    expect(describeError(new Error('Wrapped', { cause: throwingGetterCause() }))).toContain(
+      'Caused by: FlakyError',
     );
   });
 });
