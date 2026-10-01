@@ -12,7 +12,11 @@ export interface HttpAuthAdapter {
    * `skipAuthRefresh: true`: otherwise their own 401 would wait for this very refresh and never settle.
    */
   refresh: () => Promise<void>;
-  /** Called when a request is still unauthorised after refreshing, or refreshing failed. */
+  /**
+   * Called when a request is still unauthorised after refreshing, or when the refresh was refused or
+   * failed for a reason other than connectivity (offline, timeout, cancelled) or a 5xx: those keep
+   * the session, and the request fails with that error instead.
+   */
   onSessionExpired: () => void;
 }
 

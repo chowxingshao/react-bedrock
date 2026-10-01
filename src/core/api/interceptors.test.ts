@@ -8,6 +8,7 @@ import { apiUrl } from '@/mocks/api-url';
 import { server } from '@/mocks/server';
 
 import type { HttpAuthAdapter } from './auth-bridge';
+import { AppError } from './errors';
 import { installInterceptors } from './interceptors';
 
 const UUID = /^[0-9a-f-]{36}$/;
@@ -23,16 +24,17 @@ function setup(auth: HttpAuthAdapter | null) {
     transports: [{ name: 'memory', log: (entry) => entries.push(entry) }],
   });
   const instance = axios.create({ baseURL: apiUrl('/') });
+  const notifyError = vi.fn();
   installInterceptors(instance, {
     getLocale: () => 'en',
     createRequestId,
     getHttpAuth: () => auth,
     logger,
-    notifyError: vi.fn(),
+    notifyError,
   });
   const serialisable = () =>
     JSON.stringify(entries.map(({ message, context, meta }) => ({ message, context, meta })));
-  return { instance, entries, serialisable };
+  return { instance, entries, serialisable, notifyError };
 }
 
 function adapter(overrides: Partial<HttpAuthAdapter> = {}): HttpAuthAdapter {
@@ -175,5 +177,158 @@ describe('installInterceptors: 401 handling is logged', () => {
         context: { status: 401, code: 'UNAUTHORIZED', url: '/secure' },
       },
     ]);
+  });
+});
+
+describe('installInterceptors: a failed refresh', () => {
+  const unauthorised = () =>
+    mock.get(apiUrl('/secure'), () => new HttpResponse(null, { status: 401 }));
+
+  const transient: readonly (readonly [string, () => AppError])[] = [
+    [
+      'a network error',
+      () => new AppError({ code: 'NETWORK_ERROR', message: 'Network Error', status: 0 }),
+    ],
+    [
+      'a timeout',
+      () => new AppError({ code: 'TIMEOUT', message: 'timeout of 30000ms exceeded', status: 0 }),
+    ],
+    [
+      'a cancellation',
+      () => new AppError({ code: 'CANCELLED', message: 'Request cancelled', status: 0 }),
+    ],
+    ['a 500', () => new AppError({ code: 'SERVER_ERROR', message: 'Server Error', status: 500 })],
+    [
+      'a 503 with its own code',
+      () => new AppError({ code: 'MAINTENANCE', message: 'Down', status: 503 }),
+    ],
+  ];
+
+  it.each(transient)(
+    'keeps the session and rethrows %s, the reason the request failed',
+    async (_name, makeError) => {
+      server.use(unauthorised());
+      const refreshError = makeError();
+      const auth = adapter({ refresh: () => Promise.reject(refreshError) });
+      const { instance } = setup(auth);
+
+      await expect(instance.get('/secure')).rejects.toBe(refreshError);
+
+      expect(auth.onSessionExpired).not.toHaveBeenCalled();
+    },
+  );
+
+  it('normalises a raw transient error before rethrowing it', async () => {
+    server.use(unauthorised());
+    const auth = adapter({
+      refresh: () => Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK')),
+    });
+    const { instance } = setup(auth);
+
+    await expect(instance.get('/secure')).rejects.toMatchObject({
+      name: 'AppError',
+      code: 'NETWORK_ERROR',
+      status: 0,
+    });
+
+    expect(auth.onSessionExpired).not.toHaveBeenCalled();
+  });
+
+  it('logs a transient refresh failure once, at warn, summarised', async () => {
+    server.use(unauthorised());
+    const requestConfig = {
+      url: '/auth/refresh?token=s3cret',
+      data: '{"password":"hunter2"}',
+      headers: new AxiosHeaders({ Authorization: 'Bearer abc123' }),
+    };
+    const auth = adapter({
+      refresh: () => Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK', requestConfig)),
+    });
+    const { instance, entries, serialisable } = setup(auth);
+
+    await expect(instance.get('/secure?token=s3cret')).rejects.toMatchObject({
+      code: 'NETWORK_ERROR',
+    });
+
+    expect(entries.filter((entry) => entry.level === 'warn')).toMatchObject([
+      {
+        message: 'HTTP session refresh failed',
+        context: {
+          status: 401,
+          url: '/secure',
+          refreshError: { name: 'AppError', code: 'NETWORK_ERROR' },
+        },
+      },
+    ]);
+    const logged = serialisable();
+    for (const secret of ['s3cret', 'hunter2', 'abc123', 'Bearer']) {
+      expect(logged).not.toContain(secret);
+    }
+  });
+
+  it('keeps the session for every request that shared a transiently failing refresh', async () => {
+    server.use(unauthorised());
+    const auth = adapter({
+      refresh: () =>
+        Promise.reject(
+          new AppError({ code: 'NETWORK_ERROR', message: 'Network Error', status: 0 }),
+        ),
+    });
+    const { instance } = setup(auth);
+
+    const results = await Promise.allSettled([instance.get('/secure'), instance.get('/secure')]);
+
+    expect(results).toMatchObject([
+      { status: 'rejected', reason: { code: 'NETWORK_ERROR' } },
+      { status: 'rejected', reason: { code: 'NETWORK_ERROR' } },
+    ]);
+    expect(auth.onSessionExpired).not.toHaveBeenCalled();
+  });
+
+  it('toasts a transient connectivity failure like any other request, unless the request is silent', async () => {
+    server.use(unauthorised());
+    const refreshError = new AppError({
+      code: 'NETWORK_ERROR',
+      message: 'Network Error',
+      status: 0,
+    });
+    const { instance, notifyError } = setup(
+      adapter({ refresh: () => Promise.reject(refreshError) }),
+    );
+
+    await expect(instance.get('/secure', { silent: true })).rejects.toBe(refreshError);
+    expect(notifyError).not.toHaveBeenCalled();
+
+    await expect(instance.get('/secure')).rejects.toBe(refreshError);
+    expect(notifyError).toHaveBeenCalledExactlyOnceWith(refreshError);
+  });
+
+  it.each([400, 401, 403])(
+    'expires the session when the refresh is refused with a %i',
+    async (status) => {
+      server.use(unauthorised());
+      const auth = adapter({
+        refresh: () =>
+          Promise.reject(new AppError({ code: 'REFRESH_REFUSED', message: 'No', status })),
+      });
+      const { instance } = setup(auth);
+
+      await expect(instance.get('/secure')).rejects.toMatchObject({
+        code: 'UNAUTHORIZED',
+        status: 401,
+      });
+
+      expect(auth.onSessionExpired).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('expires the session when the adapter itself throws something that is not an HTTP failure', async () => {
+    server.use(unauthorised());
+    const auth = adapter({ refresh: () => Promise.reject(new TypeError('adapter bug')) });
+    const { instance } = setup(auth);
+
+    await expect(instance.get('/secure')).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+
+    expect(auth.onSessionExpired).toHaveBeenCalledTimes(1);
   });
 });
