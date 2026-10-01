@@ -40,5 +40,12 @@
   },
   "notifications": {
     "label": "Notificaciones"
+  },
+  "language": {
+    "change": "Cambiar idioma",
+    "names": {
+      "en": "English",
+      "es": "Español"
+    }
   }
 }
