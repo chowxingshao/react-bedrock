@@ -41,9 +41,14 @@ export default defineConfig(({ mode }) => {
       setupFiles: ['./src/test/setup.ts'],
       include: ['src/**/*.test.{ts,tsx}'],
       restoreMocks: true,
-      // Tests must not depend on a developer's VITE_API_BASE_URL: an absolute one makes every request
-      // cross-origin, and jsdom then sends CORS preflights that the MSW handlers do not answer.
-      env: { VITE_API_BASE_URL: '/api' },
+      env: {
+        // Tests must not depend on a developer's VITE_API_BASE_URL: an absolute one makes every request
+        // cross-origin, and jsdom then sends CORS preflights that the MSW handlers do not answer.
+        VITE_API_BASE_URL: '/api',
+        // Nor on their VITE_LOG_LEVEL: above `debug` the logger drops entries before it de-duplicates
+        // them, so a test of the de-duplication would pass without testing anything.
+        VITE_LOG_LEVEL: 'debug',
+      },
       // Vitest blanks every `.css` module by default, `?raw` imports included; tokens.test.ts reads the source.
       css: { include: [/tokens\.css\?raw/] },
       coverage: {
