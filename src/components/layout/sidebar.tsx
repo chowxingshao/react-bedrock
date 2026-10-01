@@ -15,10 +15,12 @@ interface SidebarProps {
   collapsed: boolean;
   /** Show the collapse toggle (desktop only). */
   collapsible?: boolean;
+  /** Called when a link is clicked, including the link to the current route (the mobile sheet closes on it). */
+  onNavigate?: () => void;
 }
 
 /** Navigation driven by the NavItem config, filtered by permission (spec §5.5). */
-export function Sidebar({ items, collapsed, collapsible = false }: SidebarProps) {
+export function Sidebar({ items, collapsed, collapsible = false, onNavigate }: SidebarProps) {
   const { t } = useTranslation();
   const { hasPermission } = useAuth();
   const toggle = useToggleSidebar();
@@ -37,6 +39,7 @@ export function Sidebar({ items, collapsed, collapsible = false }: SidebarProps)
               <NavLink
                 to={item.to}
                 end={item.end}
+                onClick={onNavigate}
                 className={({ isActive }) =>
                   cn(
                     'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-3 focus-visible:ring-ring',

@@ -33,7 +33,11 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="gap-2 px-2" aria-label={t('userMenu.open')}>
+        <Button
+          variant="ghost"
+          className="gap-2 px-2"
+          aria-label={t('userMenu.open', { name: user.name })}
+        >
           <Avatar className="size-7">
             <AvatarFallback className="text-foreground">{initialsOf(user.name)}</AvatarFallback>
           </Avatar>

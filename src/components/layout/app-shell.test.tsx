@@ -1,9 +1,9 @@
-import userEvent from '@testing-library/user-event';
+import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { LayoutDashboardIcon, PackageIcon } from 'lucide-react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { useUiStore } from '@/stores/ui-store';
-import { render, screen, within } from '@/test/render';
+import { act, render, screen, waitFor, within } from '@/test/render';
 
 import { AppShell } from './app-shell';
 import type { NavItem } from './nav-types';
@@ -45,15 +45,96 @@ describe('AppShell', () => {
     expect(within(nav).queryByRole('link', { name: 'Items' })).not.toBeInTheDocument();
   });
 
-  it('opens the mobile navigation sheet and collapses the desktop sidebar', async () => {
+  it('collapses the desktop sidebar', async () => {
+    const user = userEvent.setup();
+    renderShell('admin');
+
+    await user.click(await screen.findByRole('button', { name: 'Collapse sidebar' }));
+
+    expect(useUiStore.getState().sidebarCollapsed).toBe(true);
+  });
+});
+
+describe('AppShell mobile navigation', () => {
+  const closeWithEscape = (user: UserEvent) => user.keyboard('{Escape}');
+  const closeWithButton = (user: UserEvent) =>
+    user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
+
+  it.each([
+    ['Escape', closeWithEscape],
+    ['the close button', closeWithButton],
+  ])('opens a named dialog and returns focus to the open button on %s', async (_name, close) => {
+    const user = userEvent.setup();
+    renderShell('admin');
+    const openButton = await screen.findByRole('button', { name: 'Open navigation' });
+
+    await user.click(openButton);
+    expect(await screen.findByRole('dialog', { name: 'Main navigation' })).toBeInTheDocument();
+    await close(user);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    // Radix restores focus on a timer.
+    await waitFor(() => {
+      expect(openButton).toHaveFocus();
+    });
+  });
+
+  it.each([
+    ['the current route', 'Dashboard'],
+    ['another route', 'Items'],
+  ])(
+    'closes on a click on the link to %s and leaves focus for the new page',
+    async (_name, linkName) => {
+      const user = userEvent.setup();
+      renderShell('admin');
+      const openButton = await screen.findByRole('button', { name: 'Open navigation' });
+
+      await user.click(openButton);
+      const dialog = await screen.findByRole('dialog', { name: 'Main navigation' });
+      await user.click(within(dialog).getByRole('link', { name: linkName }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+      // Give Radix's focus-restore timer the chance to run: it must not take focus from the page.
+      await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+      expect(openButton).not.toHaveFocus();
+      expect(document.activeElement).toBe(document.body);
+    },
+  );
+
+  it('closes when the viewport grows past the md breakpoint', async () => {
+    let wide = false;
+    const listeners = new Set<() => void>();
+    const original = window.matchMedia.bind(window);
+    vi.spyOn(window, 'matchMedia').mockImplementation((query) => {
+      if (!query.includes('min-width')) return original(query);
+      return {
+        media: query,
+        get matches() {
+          return wide;
+        },
+        addEventListener: (_type: string, listener: () => void) => listeners.add(listener),
+        removeEventListener: (_type: string, listener: () => void) => listeners.delete(listener),
+      } as unknown as MediaQueryList;
+    });
     const user = userEvent.setup();
     renderShell('admin');
 
     await user.click(await screen.findByRole('button', { name: 'Open navigation' }));
-    expect(await screen.findByRole('dialog')).toBeInTheDocument();
-    await user.keyboard('{Escape}');
+    expect(await screen.findByRole('dialog', { name: 'Main navigation' })).toBeInTheDocument();
+    act(() => {
+      wide = true;
+      listeners.forEach((listener) => {
+        listener();
+      });
+    });
 
-    await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }));
-    expect(useUiStore.getState().sidebarCollapsed).toBe(true);
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    expect(useUiStore.getState().mobileNavOpen).toBe(false);
   });
 });

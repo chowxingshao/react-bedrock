@@ -90,7 +90,7 @@
     "signOut": "Cerrar sesión"
   },
   "userMenu": {
-    "open": "Abrir menú de usuario"
+    "open": "Abrir menú de usuario de {{name}}"
   },
   "about": {
     "version": "Versión {{version}} ({{sha}})"
