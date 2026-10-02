@@ -336,6 +336,12 @@ describe('installInterceptors: a failed refresh', () => {
 describe('installInterceptors: a 401 from before the latest refresh', () => {
   it('is retried without starting a second refresh', async () => {
     const calls = { fast: 0, slow: 0 };
+    // The slow handler answers only when told to, so the order is fixed instead of timed: the slow
+    // request is sent first, the fast one is refreshed and retried, and only then does the slow 401 arrive.
+    let releaseSlow: () => void = () => undefined;
+    const slowAnswer = new Promise<void>((resolve) => {
+      releaseSlow = resolve;
+    });
     server.use(
       mock.get(apiUrl('/fast'), () => {
         calls.fast += 1;
@@ -347,19 +353,51 @@ describe('installInterceptors: a 401 from before the latest refresh', () => {
         calls.slow += 1;
         if (calls.slow > 1) return HttpResponse.json({ ok: true });
         // Sent before the refresh, answered after it: this 401 belongs to the old session.
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await slowAnswer;
         return new HttpResponse(null, { status: 401 });
       }),
     );
-    const refresh = vi.fn(() => new Promise<void>((resolve) => setTimeout(resolve, 10)));
+    const refresh = vi.fn(() => Promise.resolve());
     const auth = adapter({ refresh });
     const { instance } = setup(auth);
 
-    const [slow, fast] = await Promise.all([instance.get('/slow'), instance.get('/fast')]);
-
-    expect(slow.data).toEqual({ ok: true });
+    const slowRequest = instance.get('/slow');
+    const fast = await instance.get('/fast'); // 401, refresh, retry: the refresh has completed
     expect(fast.data).toEqual({ ok: true });
     expect(refresh).toHaveBeenCalledTimes(1);
+
+    releaseSlow();
+    const slow = await slowRequest;
+
+    expect(slow.data).toEqual({ ok: true });
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(calls.slow).toBe(2);
+    expect(auth.onSessionExpired).not.toHaveBeenCalled();
+  });
+
+  it('refreshes again for a 401 from a request sent after the previous refresh completed', async () => {
+    let serverSession = 1;
+    let clientSession = 1;
+    server.use(
+      mock.get(apiUrl('/secure'), () =>
+        clientSession === serverSession
+          ? HttpResponse.json({ ok: true })
+          : new HttpResponse(null, { status: 401 }),
+      ),
+    );
+    const refresh = vi.fn(() => {
+      clientSession = serverSession;
+      return Promise.resolve();
+    });
+    const auth = adapter({ refresh });
+    const { instance } = setup(auth);
+
+    serverSession = 2; // the access cookie expires
+    await expect(instance.get('/secure')).resolves.toMatchObject({ data: { ok: true } });
+    serverSession = 3; // and expires again later
+    await expect(instance.get('/secure')).resolves.toMatchObject({ data: { ok: true } });
+
+    expect(refresh).toHaveBeenCalledTimes(2);
     expect(auth.onSessionExpired).not.toHaveBeenCalled();
   });
 });
