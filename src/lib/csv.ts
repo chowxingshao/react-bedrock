@@ -5,7 +5,7 @@ const FORMULA_START = /^[=+\-@\t\r]/;
 
 function cell(value: unknown): string {
   let text = value === null || value === undefined ? '' : safeString(value);
-  // A leading =, +, - or @ makes spreadsheets evaluate the cell (CSV injection); prefix a quote.
+  // A leading =, +, -, @, TAB or CR makes spreadsheets evaluate the cell (CSV injection); prefix a quote.
   if (FORMULA_START.test(text)) text = `'${text}`;
   return NEEDS_QUOTES.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }

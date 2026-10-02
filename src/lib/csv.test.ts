@@ -17,4 +17,16 @@ describe('toCsv', () => {
   it('neutralises spreadsheet formula injection', () => {
     expect(toCsv([['=SUM(A1:A9)', '+1', '-2', '@x']])).toBe("'=SUM(A1:A9),'+1,'-2,'@x");
   });
+
+  it('neutralises a cell that starts with a tab or a carriage return', () => {
+    expect(toCsv([['\tcmd', '\rcmd']])).toBe('\'\tcmd,"\'\rcmd"');
+  });
+
+  it('quotes a neutralised cell that also needs quoting', () => {
+    expect(toCsv([['-a,b', '=x"y']])).toBe('"\'-a,b","\'=x""y"');
+  });
+
+  it('writes null and undefined as empty cells', () => {
+    expect(toCsv([[null, undefined, 'x', 0]])).toBe(',,x,0');
+  });
 });
