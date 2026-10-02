@@ -86,4 +86,6 @@ Attach `.rejects` to a mutation you expect to fail before you wait, so the rejec
 
 Mock handlers load in every test file (`setup.ts` starts the server, which registers all of them), so a handler reads a feature's contract (Zod schemas and types) from its `schemas/` and `types/` files, not from its index. A real feature's index also exports its hooks and pages, and importing it would load that UI into every test file, and into modules a test wants to `vi.mock` (the setup has already loaded the real ones). ESLint allows this deep import under `src/mocks` only.
 
+Compare prices with `formatCurrency()`, not a literal `$9.50`: the currency comes from `VITE_DEFAULT_CURRENCY`. A test that needs a feature flag off sets an explicit source (`setFeatureFlagSource(createEnvFlagSource([]))`), because the default one reads `VITE_FEATURE_FLAGS`.
+
 Always build handler URLs with `apiUrl()`: it resolves paths the same way the shared HTTP client does, whatever `VITE_API_BASE_URL` is. After upgrading `msw`, run `pnpm exec msw init public` to refresh `public/mockServiceWorker.js`.

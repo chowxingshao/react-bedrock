@@ -6,26 +6,18 @@ import { enUS } from 'date-fns/locale/en-US';
 import { es } from 'date-fns/locale/es';
 import { parseISO } from 'date-fns/parseISO';
 
-import { isLocale, type Locale } from '@/config/constants';
+import type { Locale } from '@/config/constants';
 import { env } from '@/config/env';
+
+import { getFormatLocale } from './format-locale';
+
+export { getFormatLocale, setFormatLocale } from './format-locale';
 
 /** One entry per bundled locale. Add the matching date-fns locale when you add a language. */
 const DATE_FNS_LOCALES = { en: enUS, es } satisfies Record<Locale, DateFnsLocale>;
 
-let currentLocale: Locale = env.VITE_DEFAULT_LOCALE;
-
-/** Called by core/i18n whenever the UI language changes. */
-export function setFormatLocale(locale: string): void {
-  const base = locale.toLowerCase().split('-')[0] ?? '';
-  currentLocale = isLocale(base) ? base : env.VITE_DEFAULT_LOCALE;
-}
-
-export function getFormatLocale(): Locale {
-  return currentLocale;
-}
-
 /** The date-fns locale for the current UI language (e.g. for the Calendar component). */
-export function getDateFnsLocale(locale: Locale = currentLocale): DateFnsLocale {
+export function getDateFnsLocale(locale: Locale = getFormatLocale()): DateFnsLocale {
   return DATE_FNS_LOCALES[locale];
 }
 
@@ -42,7 +34,7 @@ const toDate = (value: DateInput): Date =>
 /** Localised medium date: "Jan 5, 2026" / "5 ene 2026". Returns '' for invalid input. */
 export function formatDate(
   value: DateInput,
-  { locale = currentLocale }: FormatOptions = {},
+  { locale = getFormatLocale() }: FormatOptions = {},
 ): string {
   const date = toDate(value);
   return isValid(date) ? formatPattern(date, 'PP', { locale: DATE_FNS_LOCALES[locale] }) : '';
@@ -51,7 +43,7 @@ export function formatDate(
 /** Localised date and time: "Jan 5, 2026, 10:00 AM". Returns '' for invalid input. */
 export function formatDateTime(
   value: DateInput,
-  { locale = currentLocale }: FormatOptions = {},
+  { locale = getFormatLocale() }: FormatOptions = {},
 ): string {
   const date = toDate(value);
   return isValid(date) ? formatPattern(date, 'PPp', { locale: DATE_FNS_LOCALES[locale] }) : '';
@@ -71,7 +63,7 @@ export function formatISODate(value: DateInput): string {
 /** "3 days ago" / "in 2 hours", relative to `base` (default: now). Returns '' for invalid input. */
 export function formatRelative(
   value: DateInput,
-  { locale = currentLocale, base = new Date() }: FormatOptions & { base?: Date } = {},
+  { locale = getFormatLocale(), base = new Date() }: FormatOptions & { base?: Date } = {},
 ): string {
   const date = toDate(value);
   return isValid(date)
@@ -83,7 +75,7 @@ export function formatRelative(
 export function formatCurrency(
   amount: number,
   {
-    locale = currentLocale,
+    locale = getFormatLocale(),
     currency = env.VITE_DEFAULT_CURRENCY,
   }: FormatOptions & { currency?: string } = {},
 ): string {
@@ -93,7 +85,7 @@ export function formatCurrency(
 /** Locale-aware number formatting; accepts any Intl.NumberFormat option. */
 export function formatNumber(
   value: number,
-  { locale = currentLocale, ...options }: FormatOptions & Intl.NumberFormatOptions = {},
+  { locale = getFormatLocale(), ...options }: FormatOptions & Intl.NumberFormatOptions = {},
 ): string {
   return new Intl.NumberFormat(locale, options).format(value);
 }
@@ -102,7 +94,7 @@ export function formatNumber(
 export function formatPercent(
   ratio: number,
   {
-    locale = currentLocale,
+    locale = getFormatLocale(),
     maximumFractionDigits = 1,
   }: FormatOptions & { maximumFractionDigits?: number } = {},
 ): string {

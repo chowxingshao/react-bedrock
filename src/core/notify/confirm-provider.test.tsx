@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ConfirmProvider } from './confirm-provider';
@@ -161,6 +161,45 @@ describe('useConfirm', () => {
       await waitFor(() => {
         expect(first).toHaveFocus();
       });
+    });
+
+    it('leaves focus alone when the app moved it while the dialog was closing', async () => {
+      // Like a leave-page confirmation: the navigation it allows puts focus on the new page.
+      function Page() {
+        const confirm = useConfirm();
+        const elsewhere = useRef<HTMLButtonElement>(null);
+        return (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                void confirm({ title: 'Leave?' }).then((ok) => {
+                  if (ok) elsewhere.current?.focus();
+                });
+              }}
+            >
+              Leave
+            </button>
+            <button type="button" ref={elsewhere}>
+              Elsewhere
+            </button>
+          </>
+        );
+      }
+      const user = userEvent.setup();
+      render(
+        <ConfirmProvider>
+          <Page />
+        </ConfirmProvider>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Leave' }));
+      await user.click(await screen.findByRole('button', { name: 'Confirm' }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      });
+      expect(screen.getByRole('button', { name: 'Elsewhere' })).toHaveFocus();
     });
 
     it('does not fail when the opener is gone by the time the dialog closes', async () => {

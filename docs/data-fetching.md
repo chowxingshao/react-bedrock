@@ -55,7 +55,7 @@ React Query Devtools appear in development only (bottom-left button); they are n
 export const itemKeys = {
   all: ['items'] as const,
   lists: () => [...itemKeys.all, 'list'] as const,
-  list: (filters: ItemFilters) => [...itemKeys.lists(), filters] as const,
+  list: (params: ItemListParams) => [...itemKeys.lists(), params] as const,
   details: () => [...itemKeys.all, 'detail'] as const,
   detail: (id: string) => [...itemKeys.details(), id] as const,
 };
@@ -106,4 +106,4 @@ The `Suspense` fallback waits `SUSPENSE_FALLBACK_DELAY_MS` (350 ms) before it ap
 
 ## Exporting rows as CSV
 
-`toCsv(rows)` (`@/lib/csv`) turns an array of rows into RFC 4180 text with CRLF line endings. A value with a comma, quote or line break is quoted (and its quotes doubled), and `null` and `undefined` become empty cells. A value that starts with `=`, `+`, `-`, `@`, a tab or a carriage return gets a leading quote so a spreadsheet does not evaluate it as a formula (CSV injection). Numbers are written as they are, so a negative number also gets the quote (`-5` becomes `'-5`).
+`toCsv(rows)` (`@/lib/csv`) turns an array of rows into RFC 4180 text with CRLF line endings. A value with a comma, quote or line break is quoted (and its quotes doubled), and `null` and `undefined` become empty cells. A value that starts with `=`, `+`, `-`, `@`, a tab or a carriage return gets a leading quote so a spreadsheet does not evaluate it as a formula (CSV injection). Numbers are written as they are, so a negative number also gets the quote (`-5` becomes `'-5`). The reference list uses it behind the `itemsExport` flag (`ExportItemsButton`): it exports the rows on screen, with translated column headings.

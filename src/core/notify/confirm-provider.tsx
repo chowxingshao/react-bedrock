@@ -66,6 +66,14 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
             event.preventDefault();
             const opener = returnFocusRef.current;
             returnFocusRef.current = null;
+            // The caller may have moved focus on purpose while the dialog was closing (a leave-page
+            // confirmation navigates, and the new page's main content takes focus): do not take it back.
+            const active = document.activeElement;
+            const movedOn =
+              active instanceof HTMLElement &&
+              active !== document.body &&
+              !(event.target instanceof Node && event.target.contains(active));
+            if (movedOn) return;
             if (opener?.isConnected) opener.focus(); // a confirmed delete may have removed it
           }}
         >

@@ -6,7 +6,7 @@ import { type Locale, SUPPORTED_LOCALES } from '@/config/constants';
 import { env } from '@/config/env';
 import { logger } from '@/core/logger';
 import { localStore, STORAGE_KEYS } from '@/core/storage';
-import { setFormatLocale } from '@/lib/format';
+import { setFormatLocale } from '@/lib/format-locale';
 
 import { detectLocale } from './detect';
 import { defaultNS, namespaces, resources } from './resources';
