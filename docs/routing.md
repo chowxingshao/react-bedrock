@@ -7,8 +7,8 @@ React Router v8, in data mode (`createBrowserRouter`). The tree lives in `src/ap
 ├── index → redirect to /dashboard
 ├── guest layout (RequireGuest + AuthLayout)
 │   └── /login
-└── app layout (RequireAuth + AppShell + AsyncBoundary)
-    └── (errorElement: errors keep the shell)
+└── app layout (RequireAuth + AppShell)
+    └── page group (element: PageBoundary = AsyncBoundary; errorElement: RouteError, inside the shell)
         ├── /dashboard
         ├── /items … (the reference feature, planned)
         ├── /403
@@ -56,8 +56,11 @@ Guards wrap an `<Outlet />` by default, or take children. `returnTo` always goes
 ## Loading and errors
 
 - **Lazy chunks:** the first page load shows `PageLoader`; later navigations show a thin progress bar.
-- **Suspense:** pages may call `useSuspenseQuery`; `AsyncBoundary` in the app layout handles it and resets on navigation.
-- **Errors:** a page that throws renders `RouteError` inside the shell (logged; the **Reload page** button also fixes stale chunks after a deploy).
+- **Suspense:** pages may call `useSuspenseQuery`. `PageBoundary` (`src/app/routes/page-boundary.tsx`), the element of the page group, wraps every page in an `AsyncBoundary` that resets on navigation.
+- **Page errors:** a page that throws while it renders, or a `useSuspenseQuery` that fails, shows `ErrorState` inside the shell with **Try again** (it resets the failed queries and renders the page again) and **Reload page**. The error clears when the user navigates to another page.
+- **Router errors:** the page group's `errorElement` (`RouteError`) handles what only the router sees: a page chunk that fails to load, a thrown `Response` (a 404 renders the "not found" state) and a loader or action error. It is logged, and shows **Reload page**, which also fixes chunks that went stale after a deploy.
+
+The boundary has to sit below the router's `errorElement`: the router wraps the subtree of a route that has an `errorElement` in its own boundary, which would otherwise catch page errors before `PageBoundary` could offer **Try again**.
 
 ## URL state
 

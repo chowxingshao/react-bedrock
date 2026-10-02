@@ -4,6 +4,7 @@ import { PageLoader } from '@/components/feedback';
 import { paths } from '@/config/paths';
 
 import type { RouteHandle } from './route-handle';
+import { PageBoundary } from './routes/page-boundary';
 import { RootLayout } from './routes/root-layout';
 import { RouteError } from './routes/route-error';
 
@@ -36,7 +37,10 @@ export const routes: RouteObject[] = [
         lazy: () => import('./routes/app-layout'),
         children: [
           {
-            // Errors thrown by a page render here, inside the app shell.
+            // A page's render and suspense errors are caught by PageBoundary (Try again, inside the
+            // shell). `errorElement` handles what only the router sees: a page chunk that fails to
+            // load, a thrown Response, a loader error.
+            element: <PageBoundary />,
             errorElement: <RouteError />,
             children: [
               {
