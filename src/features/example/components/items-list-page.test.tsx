@@ -1,8 +1,12 @@
 import userEvent from '@testing-library/user-event';
+import { http as mock } from 'msw';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { SEARCH_DEBOUNCE_MS } from '@/config/constants';
 import { createEnvFlagSource, getFeatureFlagSource, setFeatureFlagSource } from '@/config/features';
+import { apiUrl } from '@/mocks/api-url';
 import { mockDb } from '@/mocks/db';
+import { server } from '@/mocks/server';
 import { act, render, screen, waitFor, within } from '@/test/render';
 
 import { ItemsListPage } from './items-list-page';
@@ -29,6 +33,7 @@ describe('ItemsListPage', () => {
     await screen.findByRole('link', { name: 'Desk lamp' });
 
     await user.type(screen.getByRole('searchbox', { name: 'Search items' }), 'desk');
+    expect(router.state.location.search).toBe(''); // nothing is committed while typing
 
     await waitFor(() => {
       expect(router.state.location.search).toBe('?q=desk');
@@ -95,6 +100,20 @@ describe('ItemsListPage', () => {
     expect(screen.getByRole('searchbox', { name: 'Search items' })).toHaveValue('');
   });
 
+  it('cancels a pending search when the filters are cleared', async () => {
+    const user = userEvent.setup();
+    const { router } = renderList('/items?q=zzz');
+    const clear = await screen.findByRole('button', { name: 'Clear filters' });
+
+    await user.type(screen.getByRole('searchbox', { name: 'Search items' }), 'x');
+    await user.click(clear);
+    await new Promise((resolve) => setTimeout(resolve, SEARCH_DEBOUNCE_MS + 100));
+
+    expect(router.state.location.search).toBe('');
+    expect(screen.getByRole('searchbox', { name: 'Search items' })).toHaveValue('');
+    await screen.findByText('25 total'); // finish with the requests done
+  });
+
   it('shows a retryable error when loading fails', async () => {
     renderList('/items?q=error');
     expect(await screen.findByRole('alert')).toHaveTextContent('The server ran into a problem');
@@ -113,6 +132,36 @@ describe('ItemsListPage', () => {
     expect(await screen.findByText('Page 3 of 3')).toBeInTheDocument();
     expect(router.state.location.search).toBe('?page=3');
     expect(await screen.findByRole('link', { name: 'Locked sample' })).toBeInTheDocument();
+  });
+
+  it('replaces a page past the end with the last page, with a skeleton (not "No items yet") meanwhile', async () => {
+    let release = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = () => {
+        resolve();
+      };
+    });
+    let asked = () => undefined;
+    const lastPageAsked = new Promise<void>((resolve) => {
+      asked = () => {
+        resolve();
+      };
+    });
+    server.use(
+      mock.get(apiUrl('/items'), async ({ request }) => {
+        if (new URL(request.url).searchParams.get('page') !== '3') return;
+        asked();
+        await held; // falls through to the real handler once released
+      }),
+    );
+    const { router } = renderList('/items?page=999');
+
+    await lastPageAsked; // rendered with ?page=3 and the empty page-999 placeholder
+    expect(router.state.location.search).toBe('?page=3');
+    expect(router.state.historyAction).toBe('REPLACE');
+    expect(screen.queryByText('No items yet')).not.toBeInTheDocument();
+    release();
+    expect(await screen.findByText('Page 3 of 3')).toBeInTheDocument();
   });
 
   it.each(['/items?page=0', '/items?page=abc', '/items?pageSize=7'])(

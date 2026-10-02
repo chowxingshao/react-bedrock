@@ -25,4 +25,17 @@ describe('ItemEditPage', () => {
     expect(await screen.findByText('Detail page')).toBeInTheDocument();
     expect(mockDb.items.find((item) => item.id === 'item-001')?.name).toBe('Desk lamp XL');
   });
+
+  it('shows the not-found state for an item that does not exist', async () => {
+    render(<ItemEditPage />, {
+      auth: 'admin',
+      path: '/items/:itemId/edit',
+      route: '/items/nope/edit',
+    });
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Item not found' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText('Name')).not.toBeInTheDocument();
+  });
 });

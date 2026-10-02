@@ -98,6 +98,17 @@ describe('app routes', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Desk lamp' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/items/item-001');
   });
+
+  it.each(['/items/new', '/items/item-001/edit'])(
+    'shows the 403 state to a viewer on %s',
+    async (url) => {
+      mockDb.sessionUserId = MOCK_USER_IDS.viewer;
+      renderApp(url);
+
+      expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
+      expect(screen.queryByRole('textbox', { name: 'Name' })).not.toBeInTheDocument();
+    },
+  );
 });
 
 describe('focus after navigation (WCAG 2.4.3)', () => {
