@@ -17,7 +17,8 @@ const publicUser = ({ id, name, email, permissions }: MockUser) => ({
   permissions,
 });
 
-function currentUser(cookies: Record<string, string>): MockUser | undefined {
+/** The signed-in mock user, from the cookie (browser) or the in-memory session (jsdom). */
+export function findSessionUser(cookies: Record<string, string>): MockUser | undefined {
   const id = cookies[MOCK_SESSION_COOKIE] ?? mockDb.sessionUserId;
   return MOCK_USERS.find((user) => user.id === id);
 }
@@ -52,7 +53,7 @@ export const authHandlers = [
 
   http.get(apiUrl('/auth/me'), async ({ cookies }) => {
     await delay();
-    const user = currentUser(cookies);
+    const user = findSessionUser(cookies);
     return user
       ? HttpResponse.json(publicUser(user))
       : HttpResponse.json({ code: 'UNAUTHORIZED' }, { status: 401 });
@@ -60,7 +61,7 @@ export const authHandlers = [
 
   http.post(apiUrl('/auth/refresh'), async ({ cookies }) => {
     await delay();
-    return currentUser(cookies)
+    return findSessionUser(cookies)
       ? new HttpResponse(null, { status: 204 })
       : HttpResponse.json({ code: 'UNAUTHORIZED' }, { status: 401 });
   }),

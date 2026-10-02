@@ -1,6 +1,7 @@
 import type { HttpHandler } from 'msw';
 
 import { authHandlers } from './handlers/auth';
+import { itemHandlers } from './handlers/items';
 
 /**
  * Every mock API handler, shared by the browser worker (dev, and the Docker demo once it exists) and the
@@ -8,5 +9,6 @@ import { authHandlers } from './handlers/auth';
  */
 export const handlers: HttpHandler[] = [
   ...authHandlers,
+  ...itemHandlers,
   // plop:handlers
 ];
