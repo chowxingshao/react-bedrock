@@ -10,8 +10,11 @@ import { sessionStore, STORAGE_KEYS } from '@/core/storage';
 import { apiUrl } from '@/mocks/api-url';
 import { DEMO_EMAILS, DEMO_PASSWORD } from '@/mocks/fixtures/users';
 import { server } from '@/mocks/server';
+import { type SessionUser, useSessionStore } from '@/stores/session-store';
 import { render, screen } from '@/test/render';
 
+import { AuthProvider } from './auth-provider';
+import type { AuthStrategy } from './types';
 import { useAuth } from './use-auth';
 
 function Probe() {
@@ -163,5 +166,90 @@ describe('AuthProvider', () => {
 
     expect(await screen.findByText('Signed out')).toBeInTheDocument();
     expect(notice).not.toHaveBeenCalled();
+  });
+
+  it('ends the session when /auth/me fails, and logs why with a normalised error', async () => {
+    const error = vi.spyOn(logger, 'error');
+    server.use(
+      mock.get(apiUrl('/auth/me'), () => HttpResponse.json({ code: 'SERVER' }, { status: 500 })),
+    );
+    render(<Probe />, { auth: 'admin' });
+
+    expect(await screen.findByText('Signed out')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument(); // the bootstrap loader is gone
+    expect(useSessionStore.getState().status).toBe('anonymous');
+    expect(error).toHaveBeenCalledWith('Could not restore the session', {
+      error: expect.objectContaining({ name: 'AppError', status: 500 }) as unknown,
+    });
+  });
+
+  it('logs a failure that did not come from http (a bad /auth/me body) as an AppError, not the raw error', async () => {
+    const error = vi.spyOn(logger, 'error');
+    server.use(mock.get(apiUrl('/auth/me'), () => HttpResponse.json({ unexpected: true })));
+    render(<Probe />, { auth: 'admin' });
+
+    expect(await screen.findByText('Signed out')).toBeInTheDocument();
+    expect(error).toHaveBeenCalledExactlyOnceWith('Could not restore the session', {
+      error: expect.objectContaining({ name: 'AppError' }) as unknown,
+    });
+  });
+});
+
+describe('AuthProvider with a class-based strategy', () => {
+  const classUser: SessionUser = {
+    id: 'class-user',
+    name: 'Class User',
+    email: 'class@example.com',
+    permissions: [],
+  };
+
+  /** Its methods read `this`, so they only work when they are called on the strategy. */
+  class ClassStrategy implements AuthStrategy {
+    readonly calls: string[] = [];
+
+    login(): Promise<SessionUser> {
+      return Promise.resolve(classUser);
+    }
+
+    logout(): Promise<void> {
+      return Promise.resolve();
+    }
+
+    fetchCurrentUser(): Promise<SessionUser> {
+      return Promise.resolve(classUser);
+    }
+
+    refresh(): Promise<void> {
+      this.calls.push('refresh');
+      return Promise.resolve();
+    }
+
+    prepareRequest(config: Parameters<AuthStrategy['prepareRequest']>[0]) {
+      this.calls.push('prepareRequest');
+      return config;
+    }
+  }
+
+  it('calls prepareRequest and refresh on the strategy, so they keep their `this`', async () => {
+    const strategy = new ClassStrategy();
+    let answered = false;
+    server.use(
+      mock.get(apiUrl('/secure'), () => {
+        if (answered) return HttpResponse.json({ ok: true });
+        answered = true;
+        return new HttpResponse(null, { status: 401 });
+      }),
+    );
+    render(
+      <AuthProvider strategy={strategy}>
+        <Probe />
+      </AuthProvider>,
+    );
+    expect(await screen.findByText('Signed in as Class User')).toBeInTheDocument();
+
+    await expect(http.get('/secure')).resolves.toMatchObject({ data: { ok: true } });
+
+    // The retry is prepared again, like any other request.
+    expect(strategy.calls).toEqual(['prepareRequest', 'refresh', 'prepareRequest']);
   });
 });

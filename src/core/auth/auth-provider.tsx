@@ -39,8 +39,9 @@ export function AuthProvider({ children, strategy = authStrategy }: AuthProvider
   useEffect(
     () =>
       registerHttpAuth({
-        prepareRequest: strategy.prepareRequest,
-        refresh: strategy.refresh,
+        // Arrows, not `strategy.prepareRequest`: a class-based strategy's methods need their `this`.
+        prepareRequest: (config) => strategy.prepareRequest(config),
+        refresh: () => strategy.refresh(),
         onSessionExpired: endSession,
       }),
     [strategy, endSession],
@@ -62,7 +63,8 @@ export function AuthProvider({ children, strategy = authStrategy }: AuthProvider
       })
       .catch((error: unknown) => {
         if (cancelled) return;
-        logger.error('Could not restore the session', { error });
+        // `toAppError`, never the raw error: a raw one (say an Axios error) carries the request.
+        logger.error('Could not restore the session', { error: toAppError(error) });
         useSessionStore.getState().clear();
       });
     return () => {

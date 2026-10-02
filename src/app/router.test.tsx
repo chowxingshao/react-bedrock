@@ -288,3 +288,27 @@ describe('errors on a page inside the app shell', () => {
     expectShell();
   });
 });
+
+describe('signing out from the user menu', () => {
+  it("lands on a clean /login that replaces the page, not on the guard's returnTo redirect", async () => {
+    const user = userEvent.setup();
+    mockDb.sessionUserId = MOCK_USER_IDS.admin;
+    const router = renderApp('/403?x=1');
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Access denied' }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Open user menu for Alex Admin' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Sign out' }));
+
+    expect(await screen.findByLabelText('Email')).toBeInTheDocument();
+    // RequireAuth redirects to /login?returnTo=%2F403%3Fx%3D1 once the session ends; the menu's own
+    // navigation to the bare /login has to win, or the next user would sign in to the previous
+    // user's last page.
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/login');
+      expect(router.state.location.search).toBe('');
+    });
+    expect(router.state.historyAction).toBe('REPLACE');
+  });
+});
