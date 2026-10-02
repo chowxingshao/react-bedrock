@@ -111,6 +111,7 @@
   "dashboard": {
     "welcome": "Hola de nuevo, {{name}}.",
     "emptyTitle": "Tu panel está vacío",
-    "emptyDescription": "Añade widgets con las cifras que le importan a tu equipo."
+    "emptyDescription": "Añade widgets con las cifras que le importan a tu equipo.",
+    "goToItems": "Ver elementos"
   }
 }

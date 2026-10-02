@@ -24,7 +24,7 @@ An arrow means "may be imported by everything to its right". These rules are enf
 
 More rules:
 
-- **Features** are imported only through their public `index.ts`: `@/features/items`, never `@/features/items/components/x`.
+- **Features** are imported only through their public `index.ts`: `@/features/items`, never `@/features/items/components/x`. The one exception is `src/mocks/**`, where a mock handler reads the feature's `schemas/` and `types/` files (see "Features" below); the `featureInternals` override in `eslint.config.js` allows it there and nowhere else.
 - **Core modules** are imported through their index (`@/core/api`) from outside `src/core`.
 - **Wrapped libraries** are only imported inside their wrapper. Use these instead:
 
@@ -67,3 +67,23 @@ More rules:
 - `providers.tsx`: `QueryClientProvider` → `ConfirmProvider` → `ThemeSync` → `AuthProvider` → `Toaster` (+ devtools in development)
 - `router.tsx`: the route tree; `routes/`: thin page modules that export `Component`, loaded lazily. The exceptions are `root-layout.tsx`, `route-error.tsx` and `page-boundary.tsx`, which the router imports directly, so they load with the entry chunk
 - `navigation.ts`: the sidebar config
+
+## Features (`src/features/<name>/`)
+
+Business code lives in features. The reference feature, `src/features/example/` (the "Items" catalogue), shows every pattern. Copy it (`pnpm gen feature`, planned, will generate the same layout).
+
+```
+api/         hand-written service (http + Zod-validated responses), query key factory, queryOptions
+hooks/       useItems / useItem / mutations (optimistic delete with rollback)
+schemas/     Zod schemas for API responses and forms
+types/       domain types and enums
+components/  pages and UI: list (DataTable + URL state), detail, create/edit form, delete, export
+index.ts     the public API: the only entry point other code may import (`src/mocks` is the one exception, below)
+```
+
+Rules:
+
+- Pages in `src/app/routes/` are **thin**: a permission guard plus the feature's page component.
+- Features never import another feature's internals. Move shared code to `src/components`, `src/hooks` or `src/lib`.
+- A feature owns its i18n namespace (`src/locales/<locale>/<feature>.json`) and its mock handlers (`src/mocks/handlers/<feature>.ts`).
+- A mock handler reads the feature's contract from its `schemas/` and `types/` files, not from its index (ESLint allows that deep import under `src/mocks` only). The test setup loads every handler, and the index also exports the pages: going through it would load the whole UI into every test file, and a test could no longer `vi.mock` a module the UI uses.

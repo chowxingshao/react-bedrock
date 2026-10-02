@@ -8,7 +8,7 @@ import { useUrlState } from './use-url-state';
 
 const isPageSize = (size: number) => (PAGE_SIZE_OPTIONS as readonly number[]).includes(size);
 
-const PAGINATION_SHAPE = {
+export const PAGINATION_SHAPE = {
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().refine(isPageSize).default(DEFAULT_PAGE_SIZE),
 };

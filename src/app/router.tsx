@@ -48,6 +48,26 @@ export const routes: RouteObject[] = [
                 lazy: () => import('./routes/dashboard'),
                 handle: titled((i18n) => i18n.t('common:pages.dashboard')),
               },
+              {
+                path: paths.items.list.pattern,
+                lazy: () => import('./routes/items/list'),
+                handle: titled((i18n) => i18n.t('items:list.title')),
+              },
+              {
+                path: paths.items.create.pattern,
+                lazy: () => import('./routes/items/create'),
+                handle: titled((i18n) => i18n.t('items:create.title')),
+              },
+              {
+                path: paths.items.detail.pattern,
+                lazy: () => import('./routes/items/detail'),
+                handle: titled((i18n) => i18n.t('items:detail.title')),
+              },
+              {
+                path: paths.items.edit.pattern,
+                lazy: () => import('./routes/items/edit'),
+                handle: titled((i18n) => i18n.t('items:edit.title')),
+              },
               // plop:routes
               {
                 path: paths.forbidden.pattern,

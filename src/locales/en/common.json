@@ -111,6 +111,7 @@
   "dashboard": {
     "welcome": "Welcome back, {{name}}.",
     "emptyTitle": "Your dashboard is empty",
-    "emptyDescription": "Add widgets for the numbers your team cares about."
+    "emptyDescription": "Add widgets for the numbers your team cares about.",
+    "goToItems": "Browse items"
   }
 }

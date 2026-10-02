@@ -33,3 +33,6 @@ export const HTTP_TIMEOUT_MS = 30_000;
 
 /** Default TanStack Query stale time: data younger than this is served without refetching. */
 export const QUERY_STALE_TIME_MS = 30_000;
+
+/** How long search inputs wait after the last keystroke before querying. */
+export const SEARCH_DEBOUNCE_MS = 300;

@@ -10,7 +10,7 @@ React Router v8, in data mode (`createBrowserRouter`). The tree lives in `src/ap
 └── app layout (RequireAuth + AppShell)
     └── page group (element: PageBoundary = AsyncBoundary; errorElement: RouteError, inside the shell)
         ├── /dashboard
-        ├── /items … (the reference feature, planned)
+        ├── /items, /items/new, /items/:itemId, /items/:itemId/edit (the reference feature, src/features/example)
         ├── /403
         └── * → 404
 ```
@@ -73,6 +73,8 @@ Put filters, search, sort, page and tab in the URL, not in component state (the 
 - `useUrlState(shape)`: typed search params, with invalid values falling back to defaults. Define `shape` at module level, with one Zod schema per parameter (`z.coerce.number()` for numbers); `setState(update, { replace })` replaces the history entry by default.
 - `usePagination()`: `?page=&pageSize=` ↔ DataTable pagination; call `resetPage()` when filters or search change.
 
+A search box keeps its own text and writes `q` to the URL once typing pauses (`useDebouncedCallback`, `SEARCH_DEBOUNCE_MS`), in the same `setState` call that resets the page, so typing adds no history entries. When the URL changes by other means (Back, Forward, a link), show the URL's value in the box. A list also has to cope with a page past the end (a stale link, or the last row of the last page was just deleted): move to the last page that exists, as `ItemsListPage` does.
+
 Writes made in the same tick build on each other, even from different hook instances, so `setState({ q })` followed by `resetPage()` in one handler keeps both. Compute the whole update first and call `setState` once; a write made after an `await` in the same handler starts from the last rendered URL and can drop an earlier write.
 
 ## Unsaved changes
@@ -82,5 +84,7 @@ Writes made in the same tick build on each other, even from different hook insta
 ```tsx
 useUnsavedChangesWarning(form.formState.isDirty);
 ```
+
+After **Leave**, focus goes to the new page's main content, like any other navigation; **Stay** returns focus to the link that was clicked. (`ConfirmProvider` gives focus back to the element that opened a dialog only if nothing else has taken it meanwhile.) Signing out does not ask: it unmounts the page before any navigation, so unsaved changes are lost.
 
 The guard blocks for as long as `when` is `true`. After a successful save, set `when` to `false` before navigating, and navigate once that has rendered (from an effect or the next event). Navigating in the same handler that clears it still sees the old value and opens the dialog.

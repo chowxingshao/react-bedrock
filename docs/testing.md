@@ -32,7 +32,9 @@ const { queryClient, router } = render(<ItemsPage />, { route: '/items?page=2', 
 
 `@/test/render` also exports a `renderHook` that wraps the hook in the same providers; pass `{ queryClient }` to either function to use your own client.
 
-Routing and auth options (both functions): `route` is the initial URL (default `/`), `path` the route pattern the UI is mounted at (default `*`, so `useParams` works when you set it), `routes` extra routes (for example a `/login` page to assert a redirect), and `auth` wraps the UI in `AuthProvider` as `'admin'`, `'viewer'` (signed in as that mock user) or `'anonymous'`. With `auth` the first frame is the bootstrap loader, so use `findBy…` queries. The result also carries the `router`, whose `router.state.location` shows where the UI ended up.
+Routing and auth options (both functions): `route` is the initial URL (default `/`), `path` the route pattern the UI is mounted at (default `*`, so `useParams` works when you set it), `routes` extra routes (for example a `/login` page to assert a redirect), and `auth` wraps the UI in `AuthProvider` as `'admin'`, `'viewer'` (signed in as that mock user) or `'anonymous'`. With `auth` the first frame is the bootstrap loader, so use `findBy…` queries. The result also carries the `router`, whose `router.state.location` shows where the UI ended up; `await act(() => router.navigate(-1))` goes Back, for a test of how a page follows the URL.
+
+For a flow that crosses pages (a sidebar link, a redirect, where focus lands), `src/app/router.test.tsx` renders the real route tree with all the app providers (`renderApp(url)`) instead. Its tests also cover the items flow from the sidebar to an item and the focus after leaving a form with unsaved changes.
 
 Finish a test with its requests done: an answer that arrives after the test has ended is handled during the next one, where the shared HTTP client may treat a 401 or a dropped request as part of that test's session. Wait for something the data produces (a total, a row), not for an element that was already on screen (a breadcrumb link, a heading).
 
@@ -84,7 +86,7 @@ server.use(
 
 Attach `.rejects` to a mutation you expect to fail before you wait, so the rejection is never unhandled while you wait.
 
-Mock handlers load in every test file (`setup.ts` starts the server, which registers all of them), so a handler reads a feature's contract (Zod schemas and types) from its `schemas/` and `types/` files, not from its index. A real feature's index also exports its hooks and pages, and importing it would load that UI into every test file, and into modules a test wants to `vi.mock` (the setup has already loaded the real ones). ESLint allows this deep import under `src/mocks` only.
+Mock handlers load in every test file (`setup.ts` starts the server, which registers all of them), so a handler reads a feature's contract (Zod schemas and types) from its `schemas/` and `types/` files, not from its index. A real feature's index also exports its hooks and pages, and importing it would load that UI into every test file, and into modules a test wants to `vi.mock` (the setup has already loaded the real ones). ESLint allows this deep import under `src/mocks` only (the rule is in docs/architecture.md).
 
 Compare prices with `formatCurrency()`, not a literal `$9.50`: the currency comes from `VITE_DEFAULT_CURRENCY`. A test that needs a feature flag off sets an explicit source (`setFeatureFlagSource(createEnvFlagSource([]))`), because the default one reads `VITE_FEATURE_FLAGS`.
 

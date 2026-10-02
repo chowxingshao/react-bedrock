@@ -86,6 +86,18 @@ describe('app routes', () => {
       await screen.findByRole('heading', { level: 1, name: 'Access denied' }),
     ).toBeInTheDocument();
   });
+
+  it('navigates from the sidebar to the items list, then to an item', async () => {
+    mockDb.sessionUserId = MOCK_USER_IDS.admin;
+    const user = userEvent.setup();
+    const router = renderApp('/dashboard');
+
+    await user.click(await screen.findByRole('link', { name: 'Items' }));
+    await user.click(await screen.findByRole('link', { name: 'Desk lamp' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Desk lamp' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/items/item-001');
+  });
 });
 
 describe('focus after navigation (WCAG 2.4.3)', () => {
@@ -111,6 +123,26 @@ describe('focus after navigation (WCAG 2.4.3)', () => {
       await screen.findByRole('heading', { level: 1, name: 'Access denied' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('main')).toHaveFocus();
+  });
+
+  it('puts focus on the new page after leaving a form with unsaved changes', async () => {
+    mockDb.sessionUserId = MOCK_USER_IDS.admin;
+    const user = userEvent.setup();
+    const router = renderApp('/items/item-001/edit');
+
+    await user.type(await screen.findByLabelText('Name'), ' XL');
+    await user.click(screen.getByRole('link', { name: 'Cancel' }));
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Leave' }),
+    );
+
+    // Wait for the list's own data (the edit page's breadcrumb is a 'Desk lamp' link too), so that no
+    // request is still in flight when the test ends: it would be answered during the next test.
+    await screen.findByText('25 total');
+    expect(router.state.location.pathname).toBe('/items');
+    await waitFor(() => {
+      expect(screen.getByRole('main')).toHaveFocus();
+    });
   });
 
   it('leaves focus alone on the first load', async () => {
