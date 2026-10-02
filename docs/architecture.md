@@ -65,5 +65,5 @@ More rules:
 - `main.tsx`: loads the validated env, installs the global error handlers, starts the mock worker (if enabled), then `createRoot(…, reactRootErrorHandlers)` renders `App` (or the config error screen when the env is invalid)
 - `App.tsx`: `AppErrorBoundary` → `AppProviders` → `RouterProvider`
 - `providers.tsx`: `QueryClientProvider` → `ConfirmProvider` → `ThemeSync` → `AuthProvider` → `Toaster` (+ devtools in development)
-- `router.tsx`: the route tree; `routes/`: thin, lazy page modules that export `Component`
+- `router.tsx`: the route tree; `routes/`: thin page modules that export `Component`, loaded lazily. The exceptions are `root-layout.tsx`, `route-error.tsx` and `page-boundary.tsx`, which the router imports directly, so they load with the entry chunk
 - `navigation.ts`: the sidebar config

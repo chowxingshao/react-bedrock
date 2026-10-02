@@ -26,6 +26,10 @@ navigate(paths.login(location.pathname));
 
 Each builder carries its `.pattern` (e.g. `/items/:itemId`), which only the router uses. `paths.test.ts` checks that every builder matches its pattern.
 
+## Where to fetch data
+
+Fetch in components, through TanStack Query (docs/data-fetching.md), not in route `loader`s. `createBrowserRouter` runs when `router.tsx` is imported, before the mock worker starts and before `AuthProvider` registers the HTTP auth adapter, so a loader's request would skip the mocks, `withCredentials` and the refresh flow.
+
 ## Adding a page
 
 The page generator (`pnpm gen page`, planned) will do this for you. By hand:

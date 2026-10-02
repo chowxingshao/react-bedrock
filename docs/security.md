@@ -22,7 +22,7 @@
 
 ## Authentication, CSRF and redirects
 
-- **Session cookie:** the server must set it as `HttpOnly; Secure; SameSite=Lax` (or `Strict`). The frontend can't read it, so XSS can't steal it.
+- **Session cookie:** the server must set it as `HttpOnly; Secure; SameSite=Lax` (or `Strict`). The frontend can't read it, so XSS can't steal it. This assumes an API that is same-site with the app (the `/api` proxy, or a sibling subdomain). A cross-site API needs `SameSite=None; Secure` and `Access-Control-Allow-Credentials: true` with an explicit allowed origin (not `*`), and then `SameSite` no longer keeps the cookie off cross-site requests, so the CSRF measures below become required.
 - **CSRF:** `SameSite=Lax` blocks cross-site form posts from carrying the cookie. For defence in depth, have the backend also require a custom header on state-changing requests; every request from the shared client carries `X-Request-Id`, which a cross-site form cannot send. For a double-submit CSRF token instead, Axios's `xsrfCookieName` / `xsrfHeaderName` options work with the shared instance.
 - **Open redirects:** `returnTo` is honoured only for same-origin relative paths (`safeReturnTo`).
 - **Permissions in the UI are cosmetic.** The API must enforce them.
