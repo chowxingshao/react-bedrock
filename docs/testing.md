@@ -86,7 +86,7 @@ server.use(
 
 Attach `.rejects` to a mutation you expect to fail before you wait, so the rejection is never unhandled while you wait.
 
-Mock handlers load in every test file (`setup.ts` starts the server, which registers all of them), so a handler reads a feature's contract (Zod schemas and types) from its `schemas/` and `types/` files, not from its index. A real feature's index also exports its hooks and pages, and importing it would load that UI into every test file, and into modules a test wants to `vi.mock` (the setup has already loaded the real ones). ESLint allows this deep import under `src/mocks` only (the rule is in docs/architecture.md).
+Mock handlers load in every test file (`setup.ts` starts the server, which registers all of them), so a handler reads a feature's contract (Zod schemas and types) from its `schemas/` and `types/` files, not from its index. A real feature's index also exports its hooks and pages, and importing it would load that UI into every test file, and into modules a test wants to `vi.mock` (the setup has already loaded the real ones). ESLint allows this deep import under `src/mocks` only, and only for `schemas/` and `types/` (the rule is in docs/architecture.md).
 
 Compare prices with `formatCurrency()`, not a literal `$9.50`: the currency comes from `VITE_DEFAULT_CURRENCY`. A test that needs a feature flag off sets an explicit source (`setFeatureFlagSource(createEnvFlagSource([]))`), because the default one reads `VITE_FEATURE_FLAGS`.
 

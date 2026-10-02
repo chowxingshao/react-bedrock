@@ -1,8 +1,8 @@
 /**
  * Public API of the reference feature. Other code imports ONLY from '@/features/example'
  * (ESLint forbids '@/features/example/*'). The one exception is `src/mocks/**`, which reads the
- * feature's `schemas/` and `types/` files directly (the `featureInternals` override in
- * `eslint.config.js`): the test setup loads every mock handler, and this index also exports the
+ * feature's `schemas/` and `types/` files directly, and nothing else of it (the `featureInternals`
+ * override in `eslint.config.js`): the test setup loads every mock handler, and this index also exports the
  * pages, which would then load the whole UI into every test file.
  */
 export {

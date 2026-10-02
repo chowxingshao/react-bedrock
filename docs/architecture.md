@@ -24,7 +24,7 @@ An arrow means "may be imported by everything to its right". These rules are enf
 
 More rules:
 
-- **Features** are imported only through their public `index.ts`: `@/features/items`, never `@/features/items/components/x`. The one exception is `src/mocks/**`, where a mock handler reads the feature's `schemas/` and `types/` files (see "Features" below); the `featureInternals` override in `eslint.config.js` allows it there and nowhere else.
+- **Features** are imported only through their public `index.ts`: `@/features/items`, never `@/features/items/components/x`. The one exception is `src/mocks/**`, where a mock handler reads the feature's `schemas/` and `types/` files only (see "Features" below); the `featureInternals` override in `eslint.config.js` allows those two folders there and nowhere else, so `api/`, `hooks/` and `components/` stay refused.
 - **Core modules** are imported through their index (`@/core/api`) from outside `src/core`.
 - **Wrapped libraries** are only imported inside their wrapper. Use these instead:
 
@@ -86,4 +86,4 @@ Rules:
 - Pages in `src/app/routes/` are **thin**: a permission guard plus the feature's page component.
 - Features never import another feature's internals. Move shared code to `src/components`, `src/hooks` or `src/lib`.
 - A feature owns its i18n namespace (`src/locales/<locale>/<feature>.json`) and its mock handlers (`src/mocks/handlers/<feature>.ts`).
-- A mock handler reads the feature's contract from its `schemas/` and `types/` files, not from its index (ESLint allows that deep import under `src/mocks` only). The test setup loads every handler, and the index also exports the pages: going through it would load the whole UI into every test file, and a test could no longer `vi.mock` a module the UI uses.
+- A mock handler reads the feature's contract from its `schemas/` and `types/` files, not from its index (ESLint allows that deep import under `src/mocks` only, and only for `schemas/` and `types/`: an import of `api/`, `hooks/` or `components/` fails lint there too). The test setup loads every handler, and the index also exports the pages: going through it would load the whole UI into every test file, and a test could no longer `vi.mock` a module the UI uses.

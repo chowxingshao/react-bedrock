@@ -39,7 +39,8 @@ const WRAPPED = [
 /**
  * Options for `no-restricted-imports`.
  * @param {{ allow?: number, insideCore?: boolean, featureInternals?: boolean }} [options] `allow` is the WRAPPED index whose home is being linted.
- * `featureInternals` lets the file read a feature's files, not only its index (mock handlers do).
+ * `featureInternals` lets the file read a feature's `schemas/` and `types/` files, not only its index
+ * (mock handlers do); anything else inside a feature (api, components, hooks) is still refused.
  */
 function restrictedImports({ allow = -1, insideCore = false, featureInternals = false } = {}) {
   const active = WRAPPED.filter((_, index) => index !== allow);
@@ -52,7 +53,12 @@ function restrictedImports({ allow = -1, insideCore = false, featureInternals = 
       ],
       patterns: [
         ...(featureInternals
-          ? []
+          ? [
+              {
+                regex: '^@/features/[^/]+/(?!(schemas|types)/)',
+                message: 'Mock handlers may read only the schemas/ and types/ files of a feature.',
+              },
+            ]
           : [
               {
                 group: ['@/features/*/*'],
@@ -269,8 +275,9 @@ export default defineConfig([
     },
   })),
   // Mock handlers are the backend half of a feature's contract, so they read its schemas and types from
-  // its files. The feature's index also exports its pages, and the test setup loads every handler: going
-  // through the index would load the whole UI into every test file (+2 s each) and into mocked modules.
+  // its files (and only those). The feature's index also exports its pages, and the test setup loads
+  // every handler: going through the index would load the whole UI into every test file (+2 s each) and
+  // into mocked modules.
   {
     files: ['src/mocks/**/*.ts'],
     rules: { 'no-restricted-imports': restrictedImports({ featureInternals: true }) },
