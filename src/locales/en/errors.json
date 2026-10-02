@@ -16,6 +16,7 @@
     "CONFLICT": "This was changed elsewhere. Refresh and try again.",
     "RATE_LIMITED": "Too many requests. Please wait a moment and try again.",
     "SERVER_ERROR": "The server ran into a problem. Please try again later.",
-    "UNKNOWN": "An unexpected error occurred. Please try again."
+    "UNKNOWN": "An unexpected error occurred. Please try again.",
+    "ITEM_LOCKED": "This item is locked and can't be deleted."
   }
 }

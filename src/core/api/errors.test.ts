@@ -134,8 +134,8 @@ describe('getErrorMessage', () => {
 
   it('prefers a translation for backend-specific codes, then the server message for 4xx', () => {
     expect(
-      getErrorMessage(responseError(409, { code: 'ITEM_LOCKED', message: 'Item is locked' })),
-    ).toBe('Item is locked');
+      getErrorMessage(responseError(409, { code: 'ACCOUNT_FROZEN', message: 'Account is frozen' })),
+    ).toBe('Account is frozen');
   });
 
   it('never shows raw server messages for 5xx', () => {

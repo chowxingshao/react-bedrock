@@ -1,0 +1,71 @@
+{
+  "list": {
+    "title": "Items",
+    "description": "Everything in your catalogue, searchable and sortable.",
+    "searchLabel": "Search items",
+    "searchPlaceholder": "Search by name or description…",
+    "statusLabel": "Filter by status",
+    "allStatuses": "All statuses",
+    "caption": "Items",
+    "refreshing": "Refreshing",
+    "emptyTitle": "No items yet",
+    "emptyDescription": "Create your first item to get started.",
+    "noResultsTitle": "No items match",
+    "noResultsDescription": "Try a different search, or clear the filters.",
+    "clearFilters": "Clear filters"
+  },
+  "fields": {
+    "id": "ID",
+    "name": "Name",
+    "description": "Description",
+    "status": "Status",
+    "price": "Price",
+    "quantity": "Quantity",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "actions": "Actions"
+  },
+  "status": {
+    "draft": "Draft",
+    "active": "Active",
+    "archived": "Archived"
+  },
+  "actions": {
+    "create": "New item",
+    "edit": "Edit",
+    "editItem": "Edit {{name}}",
+    "deleteItem": "Delete {{name}}",
+    "copyId": "Copy ID",
+    "copied": "Copied",
+    "export": "Export CSV"
+  },
+  "detail": {
+    "title": "Item details",
+    "notFoundTitle": "Item not found",
+    "notFoundDescription": "It may have been deleted, or the link is wrong."
+  },
+  "create": {
+    "title": "New item",
+    "submit": "Create item"
+  },
+  "edit": {
+    "title": "Edit item",
+    "heading": "Edit {{name}}",
+    "submit": "Save changes"
+  },
+  "form": {
+    "namePlaceholder": "e.g. Desk lamp",
+    "descriptionHint": "Optional. Up to 500 characters.",
+    "priceHint": "In {{currency}}."
+  },
+  "delete": {
+    "title": "Delete {{name}}?",
+    "description": "This permanently removes the item.",
+    "confirm": "Delete"
+  },
+  "toast": {
+    "created": "Created {{name}}",
+    "updated": "Saved {{name}}",
+    "deleted": "Deleted {{name}}"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "list": {
+    "title": "Elementos",
+    "description": "Todo tu catálogo, con búsqueda y orden.",
+    "searchLabel": "Buscar elementos",
+    "searchPlaceholder": "Busca por nombre o descripción…",
+    "statusLabel": "Filtrar por estado",
+    "allStatuses": "Todos los estados",
+    "caption": "Elementos",
+    "refreshing": "Actualizando",
+    "emptyTitle": "Aún no hay elementos",
+    "emptyDescription": "Crea tu primer elemento para empezar.",
+    "noResultsTitle": "Ningún elemento coincide",
+    "noResultsDescription": "Prueba otra búsqueda o quita los filtros.",
+    "clearFilters": "Quitar filtros"
+  },
+  "fields": {
+    "id": "ID",
+    "name": "Nombre",
+    "description": "Descripción",
+    "status": "Estado",
+    "price": "Precio",
+    "quantity": "Cantidad",
+    "createdAt": "Creado",
+    "updatedAt": "Actualizado",
+    "actions": "Acciones"
+  },
+  "status": {
+    "draft": "Borrador",
+    "active": "Activo",
+    "archived": "Archivado"
+  },
+  "actions": {
+    "create": "Nuevo elemento",
+    "edit": "Editar",
+    "editItem": "Editar {{name}}",
+    "deleteItem": "Eliminar {{name}}",
+    "copyId": "Copiar ID",
+    "copied": "Copiado",
+    "export": "Exportar CSV"
+  },
+  "detail": {
+    "title": "Detalle del elemento",
+    "notFoundTitle": "Elemento no encontrado",
+    "notFoundDescription": "Puede que se haya eliminado o que el enlace sea incorrecto."
+  },
+  "create": {
+    "title": "Nuevo elemento",
+    "submit": "Crear elemento"
+  },
+  "edit": {
+    "title": "Editar elemento",
+    "heading": "Editar {{name}}",
+    "submit": "Guardar cambios"
+  },
+  "form": {
+    "namePlaceholder": "p. ej., Lámpara de escritorio",
+    "descriptionHint": "Opcional. Hasta 500 caracteres.",
+    "priceHint": "En {{currency}}."
+  },
+  "delete": {
+    "title": "¿Eliminar {{name}}?",
+    "description": "Esto elimina el elemento de forma permanente.",
+    "confirm": "Eliminar"
+  },
+  "toast": {
+    "created": "Se creó {{name}}",
+    "updated": "Se guardó {{name}}",
+    "deleted": "Se eliminó {{name}}"
+  }
+}

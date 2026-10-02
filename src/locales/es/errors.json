@@ -16,6 +16,7 @@
     "CONFLICT": "Esto se modificó en otro lugar. Actualiza e inténtalo de nuevo.",
     "RATE_LIMITED": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
     "SERVER_ERROR": "El servidor tuvo un problema. Inténtalo más tarde.",
-    "UNKNOWN": "Se produjo un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Se produjo un error inesperado. Inténtalo de nuevo.",
+    "ITEM_LOCKED": "Este elemento está bloqueado y no se puede eliminar."
   }
 }

@@ -103,3 +103,7 @@ For `useSuspenseQuery` (or lazy components), wrap the subtree once:
 `AsyncBoundary` combines `Suspense`, an error boundary and TanStack Query's `QueryErrorResetBoundary`, so **Try again** also refetches the failed queries. Use `resetKeys={[id]}` to clear the error automatically when the input changes.
 
 The `Suspense` fallback waits `SUSPENSE_FALLBACK_DELAY_MS` (350 ms) before it appears. That is longer than the 200 ms of `QueryState` because React holds a Suspense reveal for about 300 ms after the fallback mounts, so a shorter delay would still flash the loader on fast responses. A custom `loading` node is delayed the same way, and `loading={null}` renders nothing while suspended.
+
+## Exporting rows as CSV
+
+`toCsv(rows)` (`@/lib/csv`) turns an array of rows into RFC 4180 text with CRLF line endings. A value with a comma, quote or line break is quoted (and its quotes doubled), and `null` and `undefined` become empty cells. A value that starts with `=`, `+`, `-`, `@`, a tab or a carriage return gets a leading quote so a spreadsheet does not evaluate it as a formula (CSV injection). Numbers are written as they are, so a negative number also gets the quote (`-5` becomes `'-5`).
