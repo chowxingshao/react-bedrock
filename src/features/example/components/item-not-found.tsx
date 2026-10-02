@@ -14,7 +14,7 @@ export function ItemNotFound() {
         breadcrumbs={[{ label: t('list.title'), to: paths.items.list() }]}
       />
       <NotFoundState
-        title={t('detail.notFoundTitle')}
+        title={t('detail.notFoundHeading')}
         description={t('detail.notFoundDescription')}
       />
     </>

@@ -42,6 +42,7 @@
   "detail": {
     "title": "Detalle del elemento",
     "notFoundTitle": "Elemento no encontrado",
+    "notFoundHeading": "No encontramos ese elemento",
     "notFoundDescription": "Puede que se haya eliminado o que el enlace sea incorrecto."
   },
   "create": {

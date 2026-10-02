@@ -42,6 +42,7 @@
   "detail": {
     "title": "Item details",
     "notFoundTitle": "Item not found",
+    "notFoundHeading": "We couldn't find that item",
     "notFoundDescription": "It may have been deleted, or the link is wrong."
   },
   "create": {

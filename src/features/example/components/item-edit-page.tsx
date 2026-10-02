@@ -33,6 +33,7 @@ export function ItemEditPage() {
             ]}
           />
           <ItemForm
+            key={item.id}
             defaultValues={{
               name: item.name,
               description: item.description,

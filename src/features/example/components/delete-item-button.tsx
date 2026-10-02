@@ -2,6 +2,7 @@ import { Trash2Icon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { notify, useConfirm } from '@/core/notify';
 
 import { useDeleteItem } from '../hooks/use-item-mutations';
@@ -43,11 +44,12 @@ export function DeleteItemButton({ item, onDeleted, variant = 'icon' }: DeleteIt
     return (
       <Button
         variant="destructive"
+        disabled={deleteItem.isPending}
         onClick={() => {
           void handleClick();
         }}
       >
-        <Trash2Icon aria-hidden="true" />
+        {deleteItem.isPending ? <Spinner aria-hidden="true" /> : <Trash2Icon aria-hidden="true" />}
         {t('delete.confirm')}
       </Button>
     );
@@ -57,6 +59,7 @@ export function DeleteItemButton({ item, onDeleted, variant = 'icon' }: DeleteIt
       variant="ghost"
       size="icon"
       aria-label={t('actions.deleteItem', { name: item.name })}
+      disabled={deleteItem.isPending}
       onClick={() => {
         void handleClick();
       }}
