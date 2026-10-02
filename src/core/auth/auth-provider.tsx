@@ -4,7 +4,9 @@ import { type ReactNode, useCallback, useEffect, useMemo } from 'react';
 import { PageLoader } from '@/components/feedback';
 import type { Permission } from '@/config/permissions';
 import { registerHttpAuth, toAppError } from '@/core/api';
+import { i18n } from '@/core/i18n';
 import { logger } from '@/core/logger';
+import { notify } from '@/core/notify';
 import { sessionStore } from '@/core/storage';
 import { useSessionStatus, useSessionStore, useSessionUser } from '@/stores/session-store';
 
@@ -88,6 +90,9 @@ export function AuthProvider({ children, strategy = authStrategy }: AuthProvider
       logger.warn('Sign-out request failed; the local session was cleared anyway', {
         error: toAppError(error),
       });
+      // The httpOnly session cookie is still valid on the server (only the app forgot the user), so a
+      // reload would sign them back in: say so.
+      notify.warning(i18n.t('auth.signOutIncomplete'));
     } finally {
       endSession();
     }

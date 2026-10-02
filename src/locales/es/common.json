@@ -93,6 +93,7 @@
     "email": "Correo electrónico",
     "password": "Contraseña",
     "signIn": "Iniciar sesión",
+    "signOutIncomplete": "Has cerrado la sesión aquí, pero no pudimos comunicarnos con el servidor. Cierra el navegador para terminar la sesión en este equipo.",
     "demoHint": "Cuentas de demostración de la API simulada: {{admin}} (todos los permisos) o {{viewer}} (solo lectura). Contraseña: {{password}}"
   },
   "userMenu": {

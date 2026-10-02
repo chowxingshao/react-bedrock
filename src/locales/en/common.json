@@ -93,6 +93,7 @@
     "email": "Email",
     "password": "Password",
     "signIn": "Sign in",
+    "signOutIncomplete": "You're signed out here, but we couldn't reach the server. Close the browser to end the session on this computer.",
     "demoHint": "Mock API demo accounts: {{admin}} (every permission) or {{viewer}} (read-only). Password: {{password}}"
   },
   "userMenu": {

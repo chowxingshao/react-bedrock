@@ -7,7 +7,7 @@
 2. **Login:** `POST /auth/login`. The server sets an **httpOnly** session cookie; the frontend never sees a token. The user returns to `returnTo`.
 3. **Every request:** the browser attaches the cookie. The strategy sets `withCredentials` so cross-origin APIs receive it too.
 4. **401:** the HTTP layer calls `POST /auth/refresh` **once**, even for many concurrent requests (and not again for a request that was already in flight when it finished), then retries each request once. If the refresh is refused, the session is cleared once and `<RequireAuth>` redirects to login. If it fails for a transient reason (offline, timeout, a 5xx), the session is kept and the request fails with that error.
-5. **Logout:** `POST /auth/logout`, then the session store, the whole query cache and the app's sessionStorage keys are cleared. If the logout request itself fails, the browser still forgets the user (and logs a warning).
+5. **Logout:** `POST /auth/logout`, then the session store, the whole query cache and the app's sessionStorage keys are cleared. If the logout request itself fails (offline, timeout, a 5xx), the app still forgets the user and logs a warning, and it shows a warning toast (`auth.signOutIncomplete`): "You're signed out here, but we couldn't reach the server." The server never heard about the logout, so the httpOnly session cookie stays valid until it expires, and a reload signs the user back in. Keep server session lifetimes short (docs/security.md). There is no automatic retry of the logout request.
 
 Backend endpoints the template expects (the MSW mocks implement them):
 
