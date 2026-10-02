@@ -61,7 +61,7 @@ export const itemKeys = {
 };
 ```
 
-Invalidate broadly (`itemKeys.lists()`) after mutations. The reference feature (`src/features/example`, planned) will show the full pattern, including optimistic updates.
+Invalidate broadly (`itemKeys.lists()`) after mutations. The reference feature (`src/features/example`) shows the full pattern: the key factory, `queryOptions` (`itemListQuery` keeps the previous page on screen while the next one loads), create and update mutations that seed the detail cache and invalidate the lists, and an optimistic delete (`useDeleteItem`) that cancels list fetches, removes the item from every cached list, puts the lists back if the server refuses, and refetches when it settles. An open detail page is only marked stale after its item is deleted, not refetched: that would be a 404.
 
 ## Rendering async state: `QueryState`
 

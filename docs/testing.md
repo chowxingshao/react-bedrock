@@ -34,6 +34,8 @@ const { queryClient, router } = render(<ItemsPage />, { route: '/items?page=2', 
 
 Routing and auth options (both functions): `route` is the initial URL (default `/`), `path` the route pattern the UI is mounted at (default `*`, so `useParams` works when you set it), `routes` extra routes (for example a `/login` page to assert a redirect), and `auth` wraps the UI in `AuthProvider` as `'admin'`, `'viewer'` (signed in as that mock user) or `'anonymous'`. With `auth` the first frame is the bootstrap loader, so use `findBy…` queries. The result also carries the `router`, whose `router.state.location` shows where the UI ended up.
 
+Finish a test with its requests done: an answer that arrives after the test has ended is handled during the next one, where the shared HTTP client may treat a 401 or a dropped request as part of that test's session. Wait for something the data produces (a total, a row), not for an element that was already on screen (a breadcrumb link, a heading).
+
 Two timing notes. Asynchronous Testing Library helpers (`findBy…`, `waitFor`) wait up to 3 s by default (`configure` in `setup.ts`), because the first import of a lazy route chunk can be slow. And do not fake `queueMicrotask` (for example `vi.useFakeTimers({ toFake: ['queueMicrotask'] })`): `useUrlState` clears its same-tick snapshot of the URL in a microtask, so a faked one leaves the snapshot stale and the next write starts from it instead of from the current URL.
 
 `createTestQueryClient()` gives you the app's client (`createQueryClient()`, so the same global error handling) with retries off and no garbage collection, for tests that need one directly. Its `staleTime` stays 30 s: a test that remounts a component and expects a refetch must set `staleTime: 0`.
@@ -62,6 +64,25 @@ server.use(
   http.get(apiUrl('/items'), () => HttpResponse.json({ code: 'SERVER_ERROR' }, { status: 500 })),
 );
 ```
+
+To see an optimistic update in a test, hold the request: the mock API answers in about 25 ms, faster than the 50 ms poll of `waitFor`. A handler that awaits a promise and returns nothing falls through to the real handler once the promise resolves:
+
+```ts
+let release = () => undefined;
+const held = new Promise<void>((resolve) => {
+  release = () => {
+    resolve();
+  };
+});
+server.use(
+  http.delete(apiUrl('/items/:itemId'), async () => {
+    await held;
+  }),
+);
+// ...start the mutation, `await waitFor(...)` the optimistic state, then `release()`.
+```
+
+Attach `.rejects` to a mutation you expect to fail before you wait, so the rejection is never unhandled while you wait.
 
 Mock handlers load in every test file (`setup.ts` starts the server, which registers all of them), so a handler reads a feature's contract (Zod schemas and types) from its `schemas/` and `types/` files, not from its index. A real feature's index also exports its hooks and pages, and importing it would load that UI into every test file, and into modules a test wants to `vi.mock` (the setup has already loaded the real ones). ESLint allows this deep import under `src/mocks` only.
 
