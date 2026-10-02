@@ -93,7 +93,7 @@ To report Core Web Vitals, add the `web-vitals` package and log each metric with
 import { getErrorMessage } from '@/core/api';
 import { notify, useConfirm } from '@/core/notify';
 
-notify.success(t('items:toast.created'));
+notify.success(t('items:toast.created', { name }));
 notify.error(getErrorMessage(error)); // a translated, user-friendly message for any thrown value
 await notify.promise(save(), { loading: t('…saving'), success: t('…saved'), error: t('…failed') });
 

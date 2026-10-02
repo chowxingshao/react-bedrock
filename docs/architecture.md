@@ -85,5 +85,5 @@ Rules:
 
 - Pages in `src/app/routes/` are **thin**: a permission guard plus the feature's page component.
 - Features never import another feature's internals. Move shared code to `src/components`, `src/hooks` or `src/lib`.
-- A feature owns its i18n namespace (`src/locales/<locale>/<feature>.json`) and its mock handlers (`src/mocks/handlers/<feature>.ts`).
+- A feature owns its i18n namespace (`src/locales/<locale>/<namespace>.json`, where the namespace is the feature's own: `items` for the `example` feature) and its mock handlers file (`src/mocks/handlers/<namespace>.ts`, so `handlers/items.ts` for `example`).
 - A mock handler reads the feature's contract from its `schemas/` and `types/` files, not from its index (ESLint allows that deep import under `src/mocks` only, and only for `schemas/` and `types/`: an import of `api/`, `hooks/` or `components/` fails lint there too). The test setup loads every handler, and the index also exports the pages: going through it would load the whole UI into every test file, and a test could no longer `vi.mock` a module the UI uses.

@@ -63,6 +63,11 @@ export const itemKeys = {
 
 Invalidate broadly (`itemKeys.lists()`) after mutations. The reference feature (`src/features/example`) shows the full pattern: the key factory, `queryOptions` (`itemListQuery` keeps the previous page on screen while the next one loads), create and update mutations that seed the detail cache and invalidate the lists, and an optimistic delete (`useDeleteItem`) that cancels list fetches, removes the item from every cached list, puts the lists back if the server refuses, and refetches when it settles. An open detail page is only marked stale after its item is deleted, not refetched: that would be a 404.
 
+Two limits of that delete, which a real feature may want to tighten:
+
+- With two deletes in flight, a refused earlier delete puts back the lists as they were before it started, which still hold the row deleted later. That row is back on screen, briefly, until the later delete settles; the refetch after every delete puts the cache right.
+- After a delete from the detail page, the observed detail query is only marked stale and stays cached until garbage collection. Browser Back can therefore show the deleted item for one round trip, until the refetch returns 404 and the not-found state replaces it.
+
 ## Rendering async state: `QueryState`
 
 Every async view handles loading, empty, error and success (spec Principle 4). `QueryState` does it for you:
@@ -71,7 +76,7 @@ Every async view handles loading, empty, error and success (spec Principle 4). `
 <QueryState
   query={itemsQuery}
   loading={<TableSkeleton rows={10} />}
-  empty={<EmptyState title={t('items:list.empty')} />}
+  empty={<EmptyState title={t('items:list.emptyTitle')} />}
   isEmpty={(data) => data.items.length === 0}
 >
   {(data) => <ItemsTable data={data.items} />}

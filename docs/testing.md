@@ -67,7 +67,7 @@ server.use(
 );
 ```
 
-To see an optimistic update in a test, hold the request: the mock API answers in about 25 ms, faster than the 50 ms poll of `waitFor`. A handler that awaits a promise and returns nothing falls through to the real handler once the promise resolves:
+To see an optimistic update in a test, hold the request: the mock API answers within a few tens of milliseconds, about as fast as the 50 ms poll of `waitFor`. A handler that awaits a promise and returns nothing falls through to the real handler once the promise resolves:
 
 ```ts
 let release = () => undefined;
