@@ -156,19 +156,24 @@ export default function (plop) {
     return 'nothing to overwrite, every anchor found once';
   });
 
-  plop.setHelper(
-    'storyGroup',
-    (location) =>
-      ({ ui: 'UI', feedback: 'Feedback', feature: 'Features' })[String(location).split(':')[0]] ??
-      'Components',
-  );
   // "purchase-orders" -> "Purchase Orders" (plop's titleCase keeps the dashes).
-  plop.setHelper('label', (value) =>
+  const label = (value) =>
     String(value)
       .split('-')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' '),
-  );
+      .join(' ');
+  plop.setHelper('label', label);
+  // The folder of a story title. A feature's components go under that feature ("Features/Order Lines"):
+  // a story id is built from its title, so two features may each have a `status-badge` only if their
+  // titles differ. `location` is "feature:<feature>" (non-interactive) or "feature" plus the `feature` answer.
+  plop.setHelper('storyGroup', (location, feature) => {
+    const [kind, named] = String(location).split(':');
+    if (kind === 'feature') {
+      const name = named ?? feature;
+      return typeof name === 'string' && name ? `Features/${label(name)}` : 'Features';
+    }
+    return { ui: 'UI', feedback: 'Feedback' }[kind] ?? 'Components';
+  });
   // A JSON string literal, `$`-safe because the result goes through String.replace in the modify actions below.
   plop.setHelper('json', (value) => JSON.stringify(String(value)).replaceAll('$', '$$$$'));
 
