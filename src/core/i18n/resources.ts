@@ -18,7 +18,11 @@ const en = {
   // plop:resources-en
 };
 
-/** Every other locale must provide every English key (checked by the compiler and resources.test.ts). */
+/**
+ * Every other locale must provide every English key (checked by the compiler and resources.test.ts).
+ * End each locale's block with its `// plop:resources-<code>` line: the generators add a feature's
+ * namespace there (docs/i18n.md, "Adding a language").
+ */
 const es: typeof en = {
   common: esCommon,
   errors: esErrors,

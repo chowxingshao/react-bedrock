@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 
@@ -7,6 +7,12 @@ const nodeRequire = createRequire(import.meta.url);
 
 const FEATURE = 'src/features/{{kebabCase name}}';
 const EOL = '\\r?\\n'; // tolerate CRLF checkouts
+const RESOURCES = 'src/core/i18n/resources.ts';
+const TEMPLATES = 'plop/templates/feature';
+/** A folder of src/locales is a locale when it is named like a language code (en, es, pt-BR). */
+const LOCALE_CODE = /^[A-Za-z][A-Za-z0-9-]*$/;
+const NO_LOCALES =
+  'src/locales has no locale folder: add src/locales/<code>/ (docs/i18n.md, "Adding a language")';
 
 const kebab = (value) =>
   /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(value) ||
@@ -25,12 +31,39 @@ function binScript(pkg) {
 /** Runs first: refuses, before anything is written, what would damage the tree (see the `guard` action). */
 const guarded = (actions, checks = {}) => [{ type: 'guard', actions, ...checks }, ...actions];
 
+/** What every locale-driven generator does when `src/locales` holds no locale: refuse, with a reason. */
+const noLocales = [{ type: 'guard', actions: [], problems: [NO_LOCALES] }];
+
+/**
+ * A `modify` anchor that carries what the guard needs to explain itself: the text the user must keep
+ * (or add) and, optionally, how to add it.
+ */
+const anchored = (pattern, anchor, hint) => ({ pattern, anchor, hint });
+
 /**
  * Code generators (spec §9). `pnpm gen` opens a menu; `pnpm gen <generator> <answers…>` skips it.
  * Every generator ends by running ESLint --fix and then Prettier on what it touched, so output is lint-clean.
+ * Languages are configuration (docs/i18n.md): `feature` and `page` write one file per folder of
+ * `src/locales`, never a hard-coded list.
  * @param {import('plop').NodePlopAPI} plop
  */
 export default function (plop) {
+  /** The locale folders of `src/locales`, sorted. */
+  const localeCodes = () => {
+    const dir = resolve(plop.getDestBasePath(), 'src/locales');
+    if (!existsSync(dir)) return [];
+    return readdirSync(dir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && LOCALE_CODE.test(entry.name))
+      .map((entry) => entry.name)
+      .sort();
+  };
+
+  /** `locale.<code>.json.hbs` when the template folder has one (a pre-translated language), else `locale.json.hbs`. */
+  const localeTemplate = (code) =>
+    existsSync(resolve(plop.getPlopfilePath(), TEMPLATES, `locale.${code}.json.hbs`))
+      ? `${TEMPLATES}/locale.${code}.json.hbs`
+      : `${TEMPLATES}/locale.json.hbs`;
+
   plop.setActionType('format', (answers, config) => {
     const files = [...new Set(config.files.map((file) => plop.renderString(file, answers)))];
     const run = (script, args) =>
@@ -46,12 +79,12 @@ export default function (plop) {
    * Plop's `add` stops at an existing file but leaves the files it already wrote, and its `modify` silently
    * skips an anchor that is gone. This check runs before the first write and fails with the whole list:
    * a file to create must not exist, an anchor must occur exactly once, a `taken` pattern must not match,
-   * and a `needs` folder must exist.
+   * a `needs` folder must exist, and the `problems` an action list already knows about are reported.
    */
   plop.setActionType('guard', (answers, config) => {
     const render = (text) => plop.renderString(text, answers);
     const locate = (file) => resolve(plop.getDestBasePath(), render(file));
-    const problems = [];
+    const problems = [...(config.problems ?? [])];
 
     for (const action of config.actions) {
       const file = render(action.path ?? '');
@@ -67,7 +100,7 @@ export default function (plop) {
         );
         if (matches?.length !== 1) {
           problems.push(
-            `${file}: expected the anchor ${action.pattern} once, found ${matches?.length ?? 0} (do not delete or rename the plop anchors)`,
+            `${file}: expected the anchor ${action.anchor ?? action.pattern} once, found ${matches?.length ?? 0} (${action.hint ?? 'do not delete or rename the plop anchors'})`,
           );
         }
       }
@@ -83,7 +116,9 @@ export default function (plop) {
       if (!existsSync(locate(folder))) problems.push(`${render(folder)} does not exist`);
     }
 
-    if (problems.length > 0) throw new Error(`nothing was written:\n  ${problems.join('\n  ')}`);
+    // The same anchor is used by several actions (one per locale): list each problem once.
+    const unique = [...new Set(problems)];
+    if (unique.length > 0) throw new Error(`nothing was written:\n  ${unique.join('\n  ')}`);
     return 'nothing to overwrite, every anchor found once';
   });
 
@@ -127,6 +162,9 @@ export default function (plop) {
       },
     ],
     actions: (answers) => {
+      const locales = localeCodes();
+      if (locales.length === 0) return noLocales;
+
       const files = {
         types: `${FEATURE}/types/{{kebabCase entity}}.ts`,
         schemas: `${FEATURE}/schemas/{{kebabCase entity}}.ts`,
@@ -136,11 +174,37 @@ export default function (plop) {
         page: `${FEATURE}/components/{{kebabCase name}}-list-page.tsx`,
         pageTest: `${FEATURE}/components/{{kebabCase name}}-list-page.test.tsx`,
         index: `${FEATURE}/index.ts`,
-        en: 'src/locales/en/{{kebabCase name}}.json',
-        es: 'src/locales/es/{{kebabCase name}}.json',
         mocks: 'src/mocks/handlers/{{kebabCase name}}.ts',
       };
-      const template = (file) => `plop/templates/feature/${file}`;
+      const template = (file) => `${TEMPLATES}/${file}`;
+      // One namespace file, one import and one `resources` entry per locale folder. The import name is
+      // the camel-cased code plus the feature (enOrders, ptBrOrders), valid whatever the folder is called.
+      const perLocale = locales.flatMap((code) => {
+        const id = `{{camelCase "${code}"}}{{pascalCase name}}`;
+        return [
+          {
+            type: 'add',
+            path: `src/locales/${code}/{{kebabCase name}}.json`,
+            templateFile: localeTemplate(code),
+          },
+          {
+            type: 'modify',
+            path: RESOURCES,
+            pattern: /(\/\/ plop:resources-imports)/,
+            template: `import ${id} from '@/locales/${code}/{{kebabCase name}}.json';\n$1`,
+          },
+          {
+            type: 'modify',
+            path: RESOURCES,
+            ...anchored(
+              new RegExp(`( *// plop:resources-${code}${EOL})`),
+              `// plop:resources-${code}`,
+              `add // plop:resources-${code} inside the ${code} block of ${RESOURCES}`,
+            ),
+            template: `  {{camelCase name}}: ${id},\n$1`,
+          },
+        ];
+      });
       const actions = [
         { type: 'add', path: files.types, templateFile: template('types.ts.hbs') },
         { type: 'add', path: files.schemas, templateFile: template('schemas.ts.hbs') },
@@ -150,28 +214,8 @@ export default function (plop) {
         { type: 'add', path: files.page, templateFile: template('list-page.tsx.hbs') },
         { type: 'add', path: files.pageTest, templateFile: template('list-page.test.tsx.hbs') },
         { type: 'add', path: files.index, templateFile: template('index.ts.hbs') },
-        { type: 'add', path: files.en, templateFile: template('locale.en.json.hbs') },
-        { type: 'add', path: files.es, templateFile: template('locale.es.json.hbs') },
         { type: 'add', path: files.mocks, templateFile: template('mock-handlers.ts.hbs') },
-        {
-          type: 'modify',
-          path: 'src/core/i18n/resources.ts',
-          pattern: /(\/\/ plop:resources-imports)/,
-          template:
-            "import en{{pascalCase name}} from '@/locales/en/{{kebabCase name}}.json';\nimport es{{pascalCase name}} from '@/locales/es/{{kebabCase name}}.json';\n$1",
-        },
-        {
-          type: 'modify',
-          path: 'src/core/i18n/resources.ts',
-          pattern: /( *\/\/ plop:resources-en)/,
-          template: '  {{camelCase name}}: en{{pascalCase name}},\n$1',
-        },
-        {
-          type: 'modify',
-          path: 'src/core/i18n/resources.ts',
-          pattern: /( *\/\/ plop:resources-es)/,
-          template: '  {{camelCase name}}: es{{pascalCase name}},\n$1',
-        },
+        ...perLocale,
         {
           type: 'modify',
           path: 'src/mocks/handlers.ts',
@@ -188,12 +232,13 @@ export default function (plop) {
       ];
       const touched = [
         ...Object.values(files),
-        'src/core/i18n/resources.ts',
+        ...locales.map((code) => `src/locales/${code}/{{kebabCase name}}.json`),
+        RESOURCES,
         'src/mocks/handlers.ts',
       ];
       const taken = [
         {
-          path: 'src/core/i18n/resources.ts',
+          path: RESOURCES,
           pattern: '^  {{camelCase name}}: ',
           message: 'the namespace {{camelCase name}} is already registered',
         },
@@ -201,6 +246,12 @@ export default function (plop) {
 
       if (answers.withRoute) {
         const route = 'src/app/routes/{{kebabCase name}}/list.tsx';
+        const navLabels = locales.map((code) => ({
+          type: 'modify',
+          path: `src/locales/${code}/common.json`,
+          pattern: new RegExp(`("nav": \\{${EOL})`),
+          template: '$1    "{{camelCase name}}": "{{label name}}",\n',
+        }));
         actions.push(
           { type: 'add', path: route, templateFile: template('route.tsx.hbs') },
           {
@@ -230,26 +281,14 @@ export default function (plop) {
             template:
               "  { labelKey: 'nav.{{camelCase name}}', icon: {{pascalCase name}}Icon, to: paths.{{camelCase name}}.list() },\n$1",
           },
-          {
-            type: 'modify',
-            path: 'src/locales/en/common.json',
-            pattern: new RegExp(`("nav": \\{${EOL})`),
-            template: '$1    "{{camelCase name}}": "{{label name}}",\n',
-          },
-          {
-            type: 'modify',
-            path: 'src/locales/es/common.json',
-            pattern: new RegExp(`("nav": \\{${EOL})`),
-            template: '$1    "{{camelCase name}}": "{{label name}}",\n',
-          },
+          ...navLabels,
         );
         touched.push(
           route,
           'src/config/paths.ts',
           'src/app/router.tsx',
           'src/app/navigation.ts',
-          'src/locales/en/common.json',
-          'src/locales/es/common.json',
+          ...locales.map((code) => `src/locales/${code}/common.json`),
         );
         taken.push({
           path: 'src/config/paths.ts',
@@ -328,7 +367,7 @@ export default function (plop) {
     },
   });
 
-  const pageActions = [
+  const pageActions = (locales) => [
     {
       type: 'add',
       path: 'src/app/routes/{{kebabCase name}}.tsx',
@@ -349,18 +388,12 @@ export default function (plop) {
         "{\n  path: paths.{{camelCase name}}.pattern,\n  lazy: () => import('./routes/{{kebabCase name}}'),\n  handle: titled((i18n) => i18n.t('common:pages.{{camelCase name}}')),\n},\n$1",
     },
     // `json` writes the title as a JSON string: quotes, backslashes and apostrophes all survive.
-    {
+    ...locales.map((code) => ({
       type: 'modify',
-      path: 'src/locales/en/common.json',
+      path: `src/locales/${code}/common.json`,
       pattern: new RegExp(`("pages": \\{${EOL})`),
       template: '$1    "{{camelCase name}}": {{{json title}}},\n',
-    },
-    {
-      type: 'modify',
-      path: 'src/locales/es/common.json',
-      pattern: new RegExp(`("pages": \\{${EOL})`),
-      template: '$1    "{{camelCase name}}": {{{json title}}},\n',
-    },
+    })),
   ];
 
   plop.setGenerator('page', {
@@ -375,27 +408,30 @@ export default function (plop) {
         validate: required('Title'),
       },
     ],
-    actions: [
-      ...guarded(pageActions, {
-        taken: [
-          {
-            path: 'src/config/paths.ts',
-            pattern: '^  {{camelCase name}}:',
-            message: 'paths.{{camelCase name}} already exists',
-          },
-        ],
-      }),
-      {
-        type: 'format',
-        files: [
-          'src/app/routes/{{kebabCase name}}.tsx',
-          'src/config/paths.ts',
-          'src/app/router.tsx',
-          'src/locales/en/common.json',
-          'src/locales/es/common.json',
-        ],
-      },
-    ],
+    actions: () => {
+      const locales = localeCodes();
+      if (locales.length === 0) return noLocales;
+      return [
+        ...guarded(pageActions(locales), {
+          taken: [
+            {
+              path: 'src/config/paths.ts',
+              pattern: '^  {{camelCase name}}:',
+              message: 'paths.{{camelCase name}} already exists',
+            },
+          ],
+        }),
+        {
+          type: 'format',
+          files: [
+            'src/app/routes/{{kebabCase name}}.tsx',
+            'src/config/paths.ts',
+            'src/app/router.tsx',
+            ...locales.map((code) => `src/locales/${code}/common.json`),
+          ],
+        },
+      ];
+    },
   });
 
   const hookActions = [
