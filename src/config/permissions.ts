@@ -7,7 +7,7 @@ export const PERMISSIONS = [
   'items.create',
   'items.update',
   'items.delete',
-  // plop:permissions
+  // Add each feature's permissions here (generators don't touch this list).
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

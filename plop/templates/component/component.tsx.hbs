@@ -1,0 +1,10 @@
+import type { ComponentProps } from 'react';
+
+import { cn } from '@/lib/cn';
+
+export type {{pascalCase name}}Props = ComponentProps<'div'>;
+
+/** Describe what {{pascalCase name}} is for, and when to use it instead of an existing component. */
+export function {{pascalCase name}}({ className, ...props }: {{pascalCase name}}Props) {
+  return <div data-slot="{{kebabCase name}}" className={cn('rounded-md border p-4', className)} {...props} />;
+}

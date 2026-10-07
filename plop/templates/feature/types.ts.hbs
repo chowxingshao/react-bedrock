@@ -1,0 +1,19 @@
+export interface {{pascalCase entity}} {
+  id: string;
+  name: string;
+  /** ISO-8601. */
+  createdAt: string;
+}
+
+export interface {{pascalCase entity}}List {
+  items: {{pascalCase entity}}[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface {{pascalCase entity}}ListParams {
+  /** 1-based. */
+  page: number;
+  pageSize: number;
+}

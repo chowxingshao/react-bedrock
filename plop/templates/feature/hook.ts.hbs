@@ -1,0 +1,13 @@
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+
+import { {{camelCase name}}Api } from '../api/{{kebabCase name}}-api';
+import { {{camelCase entity}}Keys } from '../api/{{kebabCase entity}}-keys';
+import type { {{pascalCase entity}}ListParams } from '../types/{{kebabCase entity}}';
+
+export function use{{pascalCase name}}(params: {{pascalCase entity}}ListParams) {
+  return useQuery({
+    queryKey: {{camelCase entity}}Keys.list(params),
+    queryFn: ({ signal }) => {{camelCase name}}Api.list(params, signal),
+    placeholderData: keepPreviousData,
+  });
+}

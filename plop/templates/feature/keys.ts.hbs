@@ -1,0 +1,8 @@
+import type { {{pascalCase entity}}ListParams } from '../types/{{kebabCase entity}}';
+
+/** Query keys for this feature. Invalidate broadly with `{{camelCase entity}}Keys.lists()`. */
+export const {{camelCase entity}}Keys = {
+  all: ['{{kebabCase name}}'] as const,
+  lists: () => [...{{camelCase entity}}Keys.all, 'list'] as const,
+  list: (params: {{pascalCase entity}}ListParams) => [...{{camelCase entity}}Keys.lists(), params] as const,
+};

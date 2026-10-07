@@ -35,4 +35,4 @@ Pick the home for a piece of state with this table (spec Principle 3):
 
 ## Adding a store
 
-Once the generators land (planned), run `pnpm gen store` (docs/generators.md): it will create the store with selectors and a test. Until then, copy an existing store and its test (`src/stores/ui-store.ts`) and add the new store to the reset list in `src/test/setup.ts`.
+Run `pnpm gen store <name>` (docs/generators.md): it creates `src/stores/<name>-store.ts` with selector hooks, and a test. Then add the new store to the reset list in `src/test/setup.ts`; the generator does not touch that file. To persist the store, follow `src/stores/ui-store.ts`.

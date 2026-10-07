@@ -1,0 +1,15 @@
+import { z } from 'zod';
+
+/** API response validation: the contract is checked where data enters the app. */
+export const {{camelCase entity}}Schema = z.object({
+  id: z.string(),
+  name: z.string(),
+  createdAt: z.string(),
+});
+
+export const {{camelCase entity}}ListSchema = z.object({
+  items: z.array({{camelCase entity}}Schema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
+});

@@ -12,8 +12,8 @@ const titled = (title: NonNullable<RouteHandle['title']>): RouteHandle => ({ tit
 
 /**
  * The route tree (spec §7.1). Every page is lazy-loaded; the root shows <PageLoader /> while the first
- * chunk loads, and <RouteProgress /> during later navigations. The page generator (planned) will insert
- * routes at `plop:routes`.
+ * chunk loads, and <RouteProgress /> during later navigations. The page and feature generators
+ * (docs/generators.md) insert routes at `plop:routes`.
  */
 export const routes: RouteObject[] = [
   {

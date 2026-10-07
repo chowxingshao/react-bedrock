@@ -1,0 +1,29 @@
+import { delay, http, HttpResponse } from 'msw';
+
+// The contract comes from the feature's types/ file, not its index: the test setup loads every handler (docs/testing.md).
+import type { {{pascalCase entity}} } from '@/features/{{kebabCase name}}/types/{{kebabCase entity}}';
+
+import { apiUrl } from '../api-url';
+
+/** Demo data for the {{kebabCase name}} feature. Replace it with realistic fixtures. */
+const records: {{pascalCase entity}}[] = Array.from({ length: 12 }, (_, index) => ({
+  id: '{{kebabCase entity}}-' + String(index + 1),
+  name: 'Sample {{label entity}} ' + String(index + 1),
+  createdAt: new Date(Date.UTC(2026, 0, index + 1)).toISOString(),
+}));
+
+export const {{camelCase name}}Handlers = [
+  http.get(apiUrl('/{{kebabCase name}}'), async ({ request }) => {
+    await delay();
+    const url = new URL(request.url);
+    const page = Math.max(1, Number(url.searchParams.get('page') ?? 1));
+    const pageSize = Math.max(1, Number(url.searchParams.get('pageSize') ?? 10));
+    const start = (page - 1) * pageSize;
+    return HttpResponse.json({
+      items: records.slice(start, start + pageSize),
+      total: records.length,
+      page,
+      pageSize,
+    });
+  }),
+];

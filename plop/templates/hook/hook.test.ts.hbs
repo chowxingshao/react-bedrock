@@ -1,0 +1,16 @@
+import { act, renderHook } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+
+import { use{{pascalCase name}} } from './use-{{kebabCase name}}';
+
+describe('use{{pascalCase name}}', () => {
+  it('starts with the initial value and updates', () => {
+    const { result } = renderHook(() => use{{pascalCase name}}(true));
+    expect(result.current.value).toBe(true);
+
+    act(() => {
+      result.current.setValue(false);
+    });
+    expect(result.current.value).toBe(false);
+  });
+});

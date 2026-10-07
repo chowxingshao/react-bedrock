@@ -1,0 +1,15 @@
+import { useTranslation } from 'react-i18next';
+
+import { EmptyState } from '@/components/feedback';
+import { PageHeader } from '@/components/layout';
+
+/** Route page. Keep it thin: render a feature's page component here once it exists. */
+export function Component() {
+  const { t } = useTranslation();
+  return (
+    <>
+      <PageHeader title={t('pages.{{camelCase name}}')} />
+      <EmptyState />
+    </>
+  );
+}

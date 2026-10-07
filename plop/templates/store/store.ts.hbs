@@ -1,0 +1,29 @@
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+
+import { env } from '@/config/env';
+
+interface {{pascalCase name}}State {
+  value: string;
+  setValue: (value: string) => void;
+  reset: () => void;
+}
+
+/** UI state only (docs/state-management.md). To persist it, follow src/stores/ui-store.ts. */
+export const use{{pascalCase name}}Store = create<{{pascalCase name}}State>()(
+  devtools(
+    (set) => ({
+      value: '',
+      setValue: (value) => {
+        set({ value }, undefined, '{{camelCase name}}/setValue');
+      },
+      reset: () => {
+        set({ value: '' }, undefined, '{{camelCase name}}/reset');
+      },
+    }),
+    { name: '{{kebabCase name}}-store', enabled: env.isDev && !env.isTest },
+  ),
+);
+
+export const use{{pascalCase name}}Value = () => use{{pascalCase name}}Store((state) => state.value);
+export const useSet{{pascalCase name}}Value = () => use{{pascalCase name}}Store((state) => state.setValue);

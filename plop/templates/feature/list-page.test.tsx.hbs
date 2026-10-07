@@ -1,0 +1,13 @@
+import { describe, expect, it } from 'vitest';
+
+import { render, screen } from '@/test/render';
+
+import { {{pascalCase name}}ListPage } from './{{kebabCase name}}-list-page';
+
+describe('{{pascalCase name}}ListPage', () => {
+  it('lists records from the API', async () => {
+    render(<{{pascalCase name}}ListPage />, { path: '/{{kebabCase name}}', route: '/{{kebabCase name}}' });
+    expect(await screen.findByText('Sample {{label entity}} 1')).toBeInTheDocument();
+    expect(screen.getByText('12 total')).toBeInTheDocument();
+  });
+});

@@ -2,6 +2,7 @@ import { LayoutDashboardIcon, PackageIcon } from 'lucide-react';
 
 import type { NavItem } from '@/components/layout';
 import { paths } from '@/config/paths';
+// plop:nav-imports
 
 /** Sidebar entries, in order (spec §5.5). Items with `permission` are hidden from users without it. */
 export const navigation: NavItem[] = [

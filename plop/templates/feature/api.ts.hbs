@@ -1,0 +1,12 @@
+import { http } from '@/core/api';
+
+import { {{camelCase entity}}ListSchema } from '../schemas/{{kebabCase entity}}';
+import type { {{pascalCase entity}}List, {{pascalCase entity}}ListParams } from '../types/{{kebabCase entity}}';
+
+/** Hand-written service (see src/features/example/api for the full CRUD pattern). */
+export const {{camelCase name}}Api = {
+  async list(params: {{pascalCase entity}}ListParams, signal?: AbortSignal): Promise<{{pascalCase entity}}List> {
+    const { data } = await http.get<unknown>('/{{kebabCase name}}', { params, signal });
+    return {{camelCase entity}}ListSchema.parse(data);
+  },
+};

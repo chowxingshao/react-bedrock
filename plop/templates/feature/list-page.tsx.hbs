@@ -1,0 +1,53 @@
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { QueryState, TableSkeleton } from '@/components/feedback';
+import { PageHeader } from '@/components/layout';
+import { createDataTableColumnHelper, DataTable } from '@/components/ui/data-table';
+import { usePagination } from '@/hooks/use-pagination';
+import { formatDate } from '@/lib/format';
+
+import { use{{pascalCase name}} } from '../hooks/use-{{kebabCase name}}';
+import type { {{pascalCase entity}} } from '../types/{{kebabCase entity}}';
+
+const column = createDataTableColumnHelper<{{pascalCase entity}}>();
+
+export function {{pascalCase name}}ListPage() {
+  const { t } = useTranslation('{{camelCase name}}');
+  const { pagination, setPagination } = usePagination();
+  const query = use{{pascalCase name}}({ page: pagination.pageIndex + 1, pageSize: pagination.pageSize });
+
+  const columns = useMemo(
+    () =>
+      column.columns([
+        column.accessor('name', { header: () => t('fields.name') }),
+        column.accessor('createdAt', {
+          header: () => t('fields.createdAt'),
+          enableSorting: false,
+          cell: (info) => formatDate(info.getValue()),
+        }),
+      ]),
+    [t],
+  );
+
+  return (
+    <>
+      <PageHeader title={t('list.title')} description={t('list.description')} />
+      <QueryState
+        query={query}
+        loading={<TableSkeleton rows={pagination.pageSize} columns={2} />}
+        isEmpty={(data) => data.items.length === 0}
+      >
+        {(data) => (
+          <DataTable
+            caption={t('list.title')}
+            columns={columns}
+            data={data.items}
+            getRowId={(row) => row.id}
+            pagination={ { state: pagination, onChange: setPagination, rowCount: data.total } }
+          />
+        )}
+      </QueryState>
+    </>
+  );
+}

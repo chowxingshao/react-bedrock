@@ -70,7 +70,7 @@ More rules:
 
 ## Features (`src/features/<name>/`)
 
-Business code lives in features. The reference feature, `src/features/example/` (the "Items" catalogue), shows every pattern. Copy it (`pnpm gen feature`, planned, will generate the same layout).
+Business code lives in features. The reference feature, `src/features/example/` (the "Items" catalogue), shows every pattern. Copy it, or run `pnpm gen feature <plural> <singular> y` (docs/generators.md), which generates the same layout as a read-only list.
 
 ```
 api/         hand-written service (http + Zod-validated responses), query key factory, queryOptions

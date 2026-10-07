@@ -1,0 +1,7 @@
+import { useState } from 'react';
+
+/** Describe what use{{pascalCase name}} returns and when to use it. */
+export function use{{pascalCase name}}(initialValue = false) {
+  const [value, setValue] = useState(initialValue);
+  return { value, setValue };
+}

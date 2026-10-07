@@ -1,0 +1,11 @@
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+
+import { {{pascalCase name}} } from './{{kebabCase name}}';
+
+describe('{{pascalCase name}}', () => {
+  it('renders its children', () => {
+    render(<{{pascalCase name}}>Hello</{{pascalCase name}}>);
+    expect(screen.getByText('Hello')).toBeInTheDocument();
+  });
+});

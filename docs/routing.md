@@ -32,7 +32,7 @@ Fetch in components, through TanStack Query (docs/data-fetching.md), not in rout
 
 ## Adding a page
 
-The page generator (`pnpm gen page`, planned) will do this for you. By hand:
+The page generator (`pnpm gen page <name> <Title>`, docs/generators.md) does steps 1 to 3 for you, and writes the title into `common.json` for every locale. By hand:
 
 1. Add a builder to `src/config/paths.ts`.
 2. Create `src/app/routes/<name>.tsx` that exports `function Component()`, the lazy-route convention. Keep it thin and delegate to a feature.
