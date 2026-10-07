@@ -19,6 +19,15 @@ export default defineConfig({
         mutator: { path: './src/core/api/mutator.ts', name: 'customInstance' },
         // No `useQuery: true`: it turns POST/PATCH/DELETE into query hooks that send the write on mount.
         query: { useSuspenseQuery: true, signal: true },
+        // The auth endpoints skip the 401 refresh flow and the global toasts, exactly as
+        // src/core/auth/cookie-strategy.ts does. Without this, a refused password would refresh the
+        // session and then end it. A real spec needs the same entries under its own operationIds.
+        operations: {
+          login: { requestOptions: { skipAuthRefresh: true, silent: true } },
+          logout: { requestOptions: { skipAuthRefresh: true, silent: true } },
+          refreshSession: { requestOptions: { skipAuthRefresh: true, silent: true } },
+          getCurrentUser: { requestOptions: { silent: true } },
+        },
       },
     },
   },

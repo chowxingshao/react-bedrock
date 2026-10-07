@@ -6,8 +6,10 @@ import { apiUrl } from '@/mocks/api-url';
 import { mockDb } from '@/mocks/db';
 import { MOCK_USER_IDS } from '@/mocks/fixtures/users';
 import { server } from '@/mocks/server';
+import { useSessionStore } from '@/stores/session-store';
 import { act, renderHook, waitFor } from '@/test/render';
 
+import { useLogin } from './generated/endpoints/auth/auth';
 import { useCreateItem, useDeleteItem, useGetItem } from './generated/endpoints/items/items';
 
 describe('Orval-generated client', () => {
@@ -83,6 +85,11 @@ describe('Orval-generated client', () => {
     const { result } = renderHook(() => useCreateItem({ mutation: { meta: { silent: true } } }));
 
     expect(result.current.isIdle).toBe(true);
+    // A write fired on mount reaches the handler a few milliseconds later: wait before counting, so the
+    // count can see it (the isIdle check above and the final count carry the rest of the guard).
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
     expect(created).toBe(0);
     await act(async () => {
       await expect(
@@ -107,5 +114,35 @@ describe('Orval-generated client', () => {
         (error: unknown) => isAppError(error) && error.code === 'ITEM_LOCKED',
       );
     });
+  });
+
+  it('keeps a signed-in session when a generated login is refused, like the hand-written strategy', async () => {
+    const calls = { login: 0, refresh: 0 };
+    server.use(
+      mock.post(apiUrl('/auth/login'), () => {
+        calls.login += 1;
+        return HttpResponse.json({ code: 'INVALID_CREDENTIALS' }, { status: 401 });
+      }),
+      mock.post(apiUrl('/auth/refresh'), () => {
+        calls.refresh += 1;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+
+    const { result } = renderHook(() => useLogin(), { auth: 'admin' });
+    await waitFor(() => {
+      expect(useSessionStore.getState().status).toBe('authenticated');
+      expect(result.current).toBeTruthy();
+    });
+
+    await act(async () => {
+      await expect(
+        result.current.mutateAsync({ data: { email: 'admin@example.com', password: 'wrong' } }),
+      ).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS', status: 401 });
+    });
+
+    // One request: the 401 is the answer to the password, not an expired session to refresh.
+    expect(calls).toEqual({ login: 1, refresh: 0 });
+    expect(useSessionStore.getState().status).toBe('authenticated');
   });
 });

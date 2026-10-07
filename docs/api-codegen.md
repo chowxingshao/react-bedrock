@@ -2,26 +2,32 @@
 
 `pnpm codegen:api` reads the OpenAPI spec and writes typed clients to `src/api/generated/`:
 
-| Output                     | Contents                                                                                                                                                                                   |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `endpoints/<tag>/<tag>.ts` | request functions, query hooks (`useGetItem`, `useListItems`, `…Suspense` variants, `get…QueryKey` helpers) and mutation hooks (`useCreateItem`, `useUpdateItem`, `useDeleteItem`)         |
-| `model/`                   | TypeScript types for every schema                                                                                                                                                          |
-| `zod/`                     | Zod schemas for every request and response. They are not applied automatically: call `ListItemsResponse.parse(data)` yourself where you want the contract checked at runtime (Principle 6) |
+| Output                     | Contents                                                                                                                                                                                                                                       |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `endpoints/<tag>/<tag>.ts` | request functions, query hooks (`useGetItem`, `useListItems`, `…Suspense` variants, `get…QueryKey` helpers) and mutation hooks (`useCreateItem`, `useUpdateItem`, `useDeleteItem`)                                                             |
+| `model/`                   | TypeScript types for every schema                                                                                                                                                                                                              |
+| `zod/`                     | Zod schemas for every request and success response (parameters, bodies and 2xx responses). They are not applied automatically: call `ListItemsResponse.parse(data)` yourself where you want the contract checked at runtime (spec Principle 6) |
 
 - **Generated files are committed** and excluded from ESLint, Prettier, the design-token guard and test coverage. Never edit them by hand; change the spec and regenerate. The output is deterministic, so a clean `git status --porcelain -- src/api/generated` after `pnpm codegen:api` means the committed files are up to date. A CI check for that is planned.
 - **The spec:** `orval.config.ts` points at `openapi/openapi.yaml`, a local fixture that mirrors the MSW mocks: their success shapes, status codes and limits. For a real backend, set `input.target` to its spec file or URL, and put the server's base path in `VITE_API_BASE_URL` (generated URLs start at the path, e.g. `/items`).
-- **Two options in `orval.config.ts` matter:** `urlEncodeParameters: true` encodes path parameters like the hand-written client does, and `override.query.useQuery` stays unset. With `useQuery: true`, Orval turns every POST, PATCH and DELETE into a query hook that sends the write as soon as the component mounts.
+- **Three settings in `orval.config.ts` matter:** `urlEncodeParameters: true` encodes path parameters like the hand-written client does; `override.query.useQuery` stays unset (with `useQuery: true`, Orval turns every POST, PATCH and DELETE into a query hook that sends the write as soon as the component mounts); and `override.operations` gives the auth endpoints their request options (below).
 
 ## Why the generated hooks behave like the rest of the app
 
 Orval's **custom mutator** (`src/core/api/mutator.ts`) sends every generated call through the shared `http` instance. So generated calls get:
 
-- the auth refresh on 401
+- the auth refresh on 401 (the auth operations opt out, see below)
 - `X-Request-Id` and `Accept-Language`
 - `AppError` normalisation and the 403 / offline toasts
 - logging
 
-`src/api/generated-client.test.tsx` proves the headers, the `AppError` normalisation, the path encoding and that a mutation sends nothing until it is called.
+**The auth endpoints are the exception.** The session layer (`src/core/auth/cookie-strategy.ts`) sends `login`, `logout` and the refresh call with `skipAuthRefresh: true, silent: true`, because a 401 from them is an answer (wrong password, no session), not an expired session to refresh. Orval does not know that, so `orval.config.ts` sets the same options on the generated `login`, `logout` and `refreshSession` (and `silent` on `getCurrentUser`) through `override.operations`. Without it, a refused password sent through `useLogin()` while signed in would refresh the session, retry, and then sign the user out.
+
+- Sign in and out through `useAuth()`, not through the generated auth hooks.
+- A real spec's auth operations need the same `override.operations` entries under their own `operationId`s.
+- Any single call can set the options itself: `request: { skipAuthRefresh: true, silent: true }` (hooks) or the second argument of a generated function. They replace the defaults of the config.
+
+`src/api/generated-client.test.tsx` proves the headers, the `AppError` normalisation, the path encoding, that a mutation sends nothing until it is called and that a refused login keeps the session.
 
 ```tsx
 import { useCreateItem, useListItems } from '@/api/generated/endpoints/items/items';
@@ -33,15 +39,15 @@ const create = useCreateItem({ mutation: { meta: { silent: true } } });
 create.mutate({ data: { name: 'Desk', description: '', status: 'draft', price: 1, quantity: 1 } });
 ```
 
-Generated mutations do not touch the cache. Invalidate in `onSuccess`, for example `queryClient.invalidateQueries({ queryKey: getListItemsQueryKey() })`: the key is a prefix of every list key, like `itemKeys.lists()` in the hand-written client.
+Generated mutations do not touch the cache. Invalidate in `onSuccess`, for example `queryClient.invalidateQueries({ queryKey: getListItemsQueryKey() })`: the key is a prefix of every list key, like `itemKeys.lists()` in the hand-written client. The detail key is not under that prefix: it is `['/items/<id>']`. After an update or a delete, invalidate `getGetItemQueryKey(itemId)` as well as `getListItemsQueryKey()`.
 
 ## No OpenAPI spec? Hand-write the service
 
-The reference feature does exactly this (`src/features/example/api/`):
+The reference feature does exactly this (`src/features/example/`):
 
-1. `items-api.ts`: functions that call `http` and validate responses with Zod.
-2. `item-keys.ts`: a query key factory.
-3. `item-queries.ts`: `queryOptions` with `signal`.
+1. `api/items-api.ts`: functions that call `http` and validate responses with Zod.
+2. `api/item-keys.ts`: a query key factory.
+3. `api/item-queries.ts`: `queryOptions` with `signal`.
 4. `hooks/`: `useQuery` / `useMutation` wrappers.
 
 The patterns are the same, but the generated hooks are not drop-in replacements: they return the raw response (no Zod check, no `keepPreviousData`), take mutation variables as `{ data }` or `{ itemId }`, and use their own query keys (`['/items', params]`, not `itemKeys`). To move a feature to codegen, wrap the generated functions in the feature's `hooks/` and keep the hook names, so components do not change.

@@ -69,7 +69,7 @@ export const login = (
       headers: {'Content-Type': 'application/json', },
       data: loginRequest, signal
     },
-      options);
+      { skipAuthRefresh: true, silent: true,  ...options});
     }
 
 
@@ -128,7 +128,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return customInstance<void>(
       {url: `/auth/logout`, method: 'POST', signal
     },
-      options);
+      { skipAuthRefresh: true, silent: true,  ...options});
     }
 
 
@@ -187,7 +187,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return customInstance<SessionUser>(
       {url: `/auth/me`, method: 'GET', signal
     },
-      options);
+      { silent: true,  ...options});
     }
 
 
@@ -325,7 +325,7 @@ export const refreshSession = (
       return customInstance<void>(
       {url: `/auth/refresh`, method: 'POST', signal
     },
-      options);
+      { skipAuthRefresh: true, silent: true,  ...options});
     }
 
 
