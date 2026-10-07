@@ -15,9 +15,8 @@ function toQuery(params: ItemListParams): Record<string, number | string> {
 const segment = (id: string) => encodeURIComponent(id);
 
 /**
- * Hand-written service: the pattern for backends without an OpenAPI spec (a client generated from an
- * OpenAPI spec, planned, is the alternative). Every response is validated, so contract drift fails
- * here, loudly.
+ * Hand-written service: the pattern for backends without an OpenAPI spec (docs/api-codegen.md shows the
+ * generated alternative). Every response is validated, so contract drift fails here, loudly.
  */
 export const itemsApi = {
   async list(params: ItemListParams, signal?: AbortSignal): Promise<ItemList> {

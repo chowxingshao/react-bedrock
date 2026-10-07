@@ -12,3 +12,4 @@ export { applyServerErrors } from './form-errors';
 export { registerHttpAuth, type HttpAuthAdapter } from './auth-bridge';
 export { http } from './http';
 export { createQueryClient, queryClient, type QueryClientOptions } from './query-client';
+export { customInstance, type BodyType, type ErrorType } from './mutator';

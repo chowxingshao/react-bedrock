@@ -2,7 +2,7 @@
 
 ## HTTP client (`@/core/api`)
 
-There is **one** Axios instance: `http`. Hand-written services and Orval-generated hooks both use it, so every call gets the same behaviour. Never import `axios` directly (ESLint enforces this).
+There is **one** Axios instance: `http`. Hand-written services and Orval-generated hooks (docs/api-codegen.md) both use it, so every call gets the same behaviour. Never import `axios` directly (ESLint enforces this).
 
 ```ts
 import { http } from '@/core/api';
