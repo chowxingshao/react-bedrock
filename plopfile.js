@@ -12,6 +12,8 @@ const kebab = (value) =>
   /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(value) ||
   'Use lower-case words separated by single dashes, e.g. purchase-orders';
 const required = (label) => (value) => (value.trim() ? true : `${label} is required`);
+/** `use-thing` -> `thing`. Only a `use-` prefix with its dash goes: `user-prefs` and `users` stay as typed. */
+const stripUse = (value) => value.replace(/^use-/, '');
 
 /** The script a package's `bin` field points at: Prettier and ESLint then run through `node`, with no shell. */
 function binScript(pkg) {
@@ -71,6 +73,8 @@ export default function (plop) {
       }
     }
     for (const { path, pattern, message } of config.taken ?? []) {
+      // A missing file is already listed by the `modify` check of the same generator.
+      if (!existsSync(locate(path))) continue;
       if (new RegExp(render(pattern), 'm').test(readFileSync(locate(path), 'utf8'))) {
         problems.push(`${render(path)}: ${render(message)}`);
       }
@@ -414,8 +418,14 @@ export default function (plop) {
         type: 'input',
         name: 'name',
         message: 'Hook name without "use" (e.g. window-size):',
-        filter: (value) => value.replace(/^use-?/i, ''),
-        validate: kebab,
+        filter: stripUse,
+        // Plop validates the raw answer and filters it afterwards, so validate the name the filter will produce.
+        validate: (value) => {
+          const name = stripUse(value);
+          return name === 'use'
+            ? 'Give the hook a name after "use-", e.g. window-size'
+            : kebab(name);
+        },
       },
     ],
     actions: [
