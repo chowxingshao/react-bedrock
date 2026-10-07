@@ -6,7 +6,6 @@ import { dirname, join, resolve } from 'node:path';
 const nodeRequire = createRequire(import.meta.url);
 
 const FEATURE = 'src/features/{{kebabCase name}}';
-const EOL = '\\r?\\n'; // tolerate CRLF checkouts
 const RESOURCES = 'src/core/i18n/resources.ts';
 const TEMPLATES = 'plop/templates/feature';
 /** A folder of src/locales is a locale when it is named like a language code (en, es, pt-BR). */
@@ -14,9 +13,10 @@ const LOCALE_CODE = /^[A-Za-z][A-Za-z0-9-]*$/;
 const NO_LOCALES =
   'src/locales has no locale folder: add src/locales/<code>/ (docs/i18n.md, "Adding a language")';
 
+/** Words may hold digits (s3, v2) but each starts with a letter: `top-10-items` would give `top_10Items`. */
 const kebab = (value) =>
-  /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(value) ||
-  'Use lower-case words separated by single dashes, e.g. purchase-orders';
+  /^[a-z][a-z0-9]*(-[a-z][a-z0-9]*)*$/.test(value) ||
+  'Use lower-case words separated by single dashes, each starting with a letter, e.g. purchase-orders (order-v2 is fine, top-10-items is not)';
 const required = (label) => (value) => (value.trim() ? true : `${label} is required`);
 /** `use-thing` -> `thing`. Only a `use-` prefix with its dash goes: `user-prefs` and `users` stay as typed. */
 const stripUse = (value) => value.replace(/^use-/, '');
@@ -28,17 +28,36 @@ function binScript(pkg) {
   return join(dirname(manifest), typeof bin === 'string' ? bin : bin[pkg]);
 }
 
+/** Whether the JSON text holds a nested key (`['nav', 'orders']` is `nav.orders`); throws if it is not JSON. */
+function hasJsonKey(text, keys) {
+  let node = JSON.parse(text);
+  for (const key of keys) {
+    if (typeof node !== 'object' || node === null || !Object.hasOwn(node, key)) return false;
+    node = node[key];
+  }
+  return true;
+}
+
 /** Runs first: refuses, before anything is written, what would damage the tree (see the `guard` action). */
 const guarded = (actions, checks = {}) => [{ type: 'guard', actions, ...checks }, ...actions];
 
 /** What every locale-driven generator does when `src/locales` holds no locale: refuse, with a reason. */
 const noLocales = [{ type: 'guard', actions: [], problems: [NO_LOCALES] }];
 
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, (char) => `\\${char}`);
+
 /**
- * A `modify` anchor that carries what the guard needs to explain itself: the text the user must keep
- * (or add) and, optionally, how to add it.
+ * The `modify` pattern of an anchor: a whole line that holds only `text` (indent and trailing blanks
+ * allowed), the same thing src/test/plop-anchors.guard.test.ts counts. A comment or a string that merely
+ * quotes the anchor is not one. The match stops at the end of the line, so a CRLF checkout works too.
+ * It also carries what the guard needs to explain a problem: the `anchor` text and an optional `hint`.
+ * The first capture group is the line itself, so a replacement can insert text before it with `$1`.
  */
-const anchored = (pattern, anchor, hint) => ({ pattern, anchor, hint });
+const anchored = (text, hint) => ({
+  pattern: new RegExp(`^([^\\S\\r\\n]*${escapeRegExp(text)})[^\\S\\r\\n]*$`, 'm'),
+  anchor: text,
+  hint,
+});
 
 /**
  * Code generators (spec §9). `pnpm gen` opens a menu; `pnpm gen <generator> <answers…>` skips it.
@@ -66,8 +85,12 @@ export default function (plop) {
 
   plop.setActionType('format', (answers, config) => {
     const files = [...new Set(config.files.map((file) => plop.renderString(file, answers)))];
+    // The paths are relative to the project, whatever folder plop was started from.
     const run = (script, args) =>
-      execFileSync(process.execPath, [script, ...args], { stdio: 'inherit' });
+      execFileSync(process.execPath, [script, ...args], {
+        stdio: 'inherit',
+        cwd: plop.getDestBasePath(),
+      });
     // ESLint first: its fixes (merged or reordered imports) can leave a file Prettier would still change.
     const code = files.filter((file) => /\.tsx?$/.test(file));
     if (code.length > 0) run(binScript('eslint'), ['--fix', '--no-warn-ignored', ...code]);
@@ -78,8 +101,9 @@ export default function (plop) {
   /**
    * Plop's `add` stops at an existing file but leaves the files it already wrote, and its `modify` silently
    * skips an anchor that is gone. This check runs before the first write and fails with the whole list:
-   * a file to create must not exist, an anchor must occur exactly once, a `taken` pattern must not match,
-   * a `needs` folder must exist, and the `problems` an action list already knows about are reported.
+   * a file to create must not exist, an anchor must occur exactly once, a `taken` pattern must not match
+   * (or a `taken` JSON key must be absent), a `needs` folder must exist, and the `problems` an action
+   * list already knows about are reported.
    */
   plop.setActionType('guard', (answers, config) => {
     const render = (text) => plop.renderString(text, answers);
@@ -105,12 +129,22 @@ export default function (plop) {
         }
       }
     }
-    for (const { path, pattern, message } of config.taken ?? []) {
+    for (const { path, pattern, json, message } of config.taken ?? []) {
       // A missing file is already listed by the `modify` check of the same generator.
       if (!existsSync(locate(path))) continue;
-      if (new RegExp(render(pattern), 'm').test(readFileSync(locate(path), 'utf8'))) {
-        problems.push(`${render(path)}: ${render(message)}`);
+      const text = readFileSync(locate(path), 'utf8');
+      let found;
+      if (json) {
+        try {
+          found = hasJsonKey(text, json.map(render));
+        } catch {
+          problems.push(`${render(path)} is not valid JSON`);
+          continue;
+        }
+      } else {
+        found = new RegExp(render(pattern), 'm').test(text);
       }
+      if (found) problems.push(`${render(path)}: ${render(message)}`);
     }
     for (const folder of config.needs ?? []) {
       if (!existsSync(locate(folder))) problems.push(`${render(folder)} does not exist`);
@@ -190,14 +224,13 @@ export default function (plop) {
           {
             type: 'modify',
             path: RESOURCES,
-            pattern: /(\/\/ plop:resources-imports)/,
+            ...anchored('// plop:resources-imports'),
             template: `import ${id} from '@/locales/${code}/{{kebabCase name}}.json';\n$1`,
           },
           {
             type: 'modify',
             path: RESOURCES,
             ...anchored(
-              new RegExp(`( *// plop:resources-${code}${EOL})`),
               `// plop:resources-${code}`,
               `add // plop:resources-${code} inside the ${code} block of ${RESOURCES}`,
             ),
@@ -219,14 +252,14 @@ export default function (plop) {
         {
           type: 'modify',
           path: 'src/mocks/handlers.ts',
-          pattern: /(\/\/ plop:handlers-imports)/,
+          ...anchored('// plop:handlers-imports'),
           template:
             "import { {{camelCase name}}Handlers } from './handlers/{{kebabCase name}}';\n$1",
         },
         {
           type: 'modify',
           path: 'src/mocks/handlers.ts',
-          pattern: new RegExp(`( *// plop:handlers${EOL})`),
+          ...anchored('// plop:handlers'),
           template: '  ...{{camelCase name}}Handlers,\n$1',
         },
       ];
@@ -242,6 +275,11 @@ export default function (plop) {
           pattern: '^  {{camelCase name}}: ',
           message: 'the namespace {{camelCase name}} is already registered',
         },
+        {
+          path: 'src/mocks/handlers.ts',
+          pattern: '\\b{{camelCase name}}Handlers\\b',
+          message: '{{camelCase name}}Handlers is already used (another feature has this name)',
+        },
       ];
 
       if (answers.withRoute) {
@@ -249,35 +287,35 @@ export default function (plop) {
         const navLabels = locales.map((code) => ({
           type: 'modify',
           path: `src/locales/${code}/common.json`,
-          pattern: new RegExp(`("nav": \\{${EOL})`),
-          template: '$1    "{{camelCase name}}": "{{label name}}",\n',
+          ...anchored('"nav": {'),
+          template: '$1\n    "{{camelCase name}}": "{{label name}}",',
         }));
         actions.push(
           { type: 'add', path: route, templateFile: template('route.tsx.hbs') },
           {
             type: 'modify',
             path: 'src/config/paths.ts',
-            pattern: /( *\/\/ plop:paths)/,
+            ...anchored('// plop:paths'),
             template:
               "  {{camelCase name}}: {\n    list: route('/{{kebabCase name}}', () => '/{{kebabCase name}}'),\n  },\n$1",
           },
           {
             type: 'modify',
             path: 'src/app/router.tsx',
-            pattern: /( *\/\/ plop:routes)/,
+            ...anchored('// plop:routes'),
             template:
               "{\n  path: paths.{{camelCase name}}.list.pattern,\n  lazy: () => import('./routes/{{kebabCase name}}/list'),\n  handle: titled((i18n) => i18n.t('{{camelCase name}}:list.title')),\n},\n$1",
           },
           {
             type: 'modify',
             path: 'src/app/navigation.ts',
-            pattern: /(\/\/ plop:nav-imports)/,
+            ...anchored('// plop:nav-imports'),
             template: "import { FolderIcon as {{pascalCase name}}Icon } from 'lucide-react';\n$1",
           },
           {
             type: 'modify',
             path: 'src/app/navigation.ts',
-            pattern: new RegExp(`( *// plop:nav${EOL})`),
+            ...anchored('// plop:nav'),
             template:
               "  { labelKey: 'nav.{{camelCase name}}', icon: {{pascalCase name}}Icon, to: paths.{{camelCase name}}.list() },\n$1",
           },
@@ -290,11 +328,24 @@ export default function (plop) {
           'src/app/navigation.ts',
           ...locales.map((code) => `src/locales/${code}/common.json`),
         );
-        taken.push({
-          path: 'src/config/paths.ts',
-          pattern: '^  {{camelCase name}}:',
-          message: 'paths.{{camelCase name}} already exists',
-        });
+        taken.push(
+          {
+            path: 'src/config/paths.ts',
+            pattern: '^  {{camelCase name}}:',
+            message: 'paths.{{camelCase name}} already exists',
+          },
+          {
+            path: 'src/app/navigation.ts',
+            pattern: '\\b{{pascalCase name}}Icon\\b',
+            message: '{{pascalCase name}}Icon is already used (an icon import or another feature)',
+          },
+          // Parsed, not matched: only the `nav` object counts (a key `description` elsewhere is fine).
+          ...locales.map((code) => ({
+            path: `src/locales/${code}/common.json`,
+            json: ['nav', '{{camelCase name}}'],
+            message: 'nav.{{camelCase name}} already exists',
+          })),
+        );
       }
 
       return [...guarded(actions, { taken }), { type: 'format', files: touched }];
@@ -376,14 +427,14 @@ export default function (plop) {
     {
       type: 'modify',
       path: 'src/config/paths.ts',
-      pattern: /( *\/\/ plop:paths)/,
+      ...anchored('// plop:paths'),
       template:
         "  {{camelCase name}}: route('/{{kebabCase name}}', () => '/{{kebabCase name}}'),\n$1",
     },
     {
       type: 'modify',
       path: 'src/app/router.tsx',
-      pattern: /( *\/\/ plop:routes)/,
+      ...anchored('// plop:routes'),
       template:
         "{\n  path: paths.{{camelCase name}}.pattern,\n  lazy: () => import('./routes/{{kebabCase name}}'),\n  handle: titled((i18n) => i18n.t('common:pages.{{camelCase name}}')),\n},\n$1",
     },
@@ -391,8 +442,8 @@ export default function (plop) {
     ...locales.map((code) => ({
       type: 'modify',
       path: `src/locales/${code}/common.json`,
-      pattern: new RegExp(`("pages": \\{${EOL})`),
-      template: '$1    "{{camelCase name}}": {{{json title}}},\n',
+      ...anchored('"pages": {'),
+      template: '$1\n    "{{camelCase name}}": {{{json title}}},',
     })),
   ];
 
@@ -419,6 +470,11 @@ export default function (plop) {
               pattern: '^  {{camelCase name}}:',
               message: 'paths.{{camelCase name}} already exists',
             },
+            ...locales.map((code) => ({
+              path: `src/locales/${code}/common.json`,
+              json: ['pages', '{{camelCase name}}'],
+              message: 'pages.{{camelCase name}} already exists',
+            })),
           ],
         }),
         {
