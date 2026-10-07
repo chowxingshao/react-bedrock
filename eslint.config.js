@@ -125,6 +125,19 @@ const LAYER_ZONES = [
     from: './src/features',
     message: 'Shared code must not depend on features.',
   },
+  {
+    target: [
+      './src/config',
+      './src/lib',
+      './src/core',
+      './src/components',
+      './src/hooks',
+      './src/stores',
+    ],
+    from: './src/api',
+    message:
+      'The generated API client is for features and src/app. It imports core/api, so an import back from shared code would be a cycle.',
+  },
 ];
 
 const STORAGE_HINT = 'Use `localStore` / `sessionStore` from @/core/storage.';
