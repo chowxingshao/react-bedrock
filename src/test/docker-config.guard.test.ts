@@ -28,9 +28,14 @@ describe('Docker configuration (spec §10.4)', () => {
     );
 
     expect(sorted(Object.keys(defaults))).toEqual(sorted(ENV_KEYS));
-    expect(parseEnv({ buildTime: defaults, mode: PROD }).env).toEqual(
-      parseEnv({ buildTime: {}, mode: PROD }).env,
-    );
+
+    // parseEnv never throws: for an invalid value it returns the app's own defaults, which would make the
+    // comparison below pass. The container would write that value into config.js, and the production bundle
+    // would refuse to start. So the defaults must be valid first.
+    const result = parseEnv({ buildTime: defaults, mode: PROD });
+    expect(result.issues).toEqual([]);
+    expect(result.ok).toBe(true);
+    expect(result.env).toEqual(parseEnv({ buildTime: {}, mode: PROD }).env);
   });
 
   it('passes every variable through to the dev container', () => {
