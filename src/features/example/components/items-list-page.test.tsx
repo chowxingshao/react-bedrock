@@ -8,7 +8,7 @@ import { notify } from '@/core/notify';
 import { apiUrl } from '@/mocks/api-url';
 import { mockDb } from '@/mocks/db';
 import { server } from '@/mocks/server';
-import { act, render, screen, waitFor, within } from '@/test/render';
+import { act, fireEvent, render, screen, waitFor, within } from '@/test/render';
 
 import { ItemsListPage } from './items-list-page';
 
@@ -18,6 +18,7 @@ const renderList = (route = '/items', auth: 'admin' | 'viewer' = 'admin') =>
 describe('ItemsListPage', () => {
   const originalFlags = getFeatureFlagSource();
   afterEach(() => {
+    vi.useRealTimers(); // a failing assertion in a fake-timer test must not leak the fake clock
     setFeatureFlagSource(originalFlags);
   });
 
@@ -29,12 +30,23 @@ describe('ItemsListPage', () => {
   });
 
   it('searches once typing pauses, and keeps the search in the URL', async () => {
-    const user = userEvent.setup();
     const { router } = renderList();
     await screen.findByRole('link', { name: 'Desk lamp' });
 
-    await user.type(screen.getByRole('searchbox', { name: 'Search items' }), 'desk');
-    expect(router.state.location.search).toBe(''); // nothing is committed while typing
+    // Fake only the debounce timer (never queueMicrotask: see docs/testing.md), so the check does not depend
+    // on how fast this machine renders. A debounce that is too short or too long fails one of the two checks.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search items' }), {
+      target: { value: 'desk' },
+    });
+    act(() => {
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS - 1);
+    });
+    expect(router.state.location.search).toBe(''); // nothing is committed before the pause
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    vi.useRealTimers();
 
     await waitFor(() => {
       expect(router.state.location.search).toBe('?q=desk');

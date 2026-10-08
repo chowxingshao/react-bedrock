@@ -66,6 +66,9 @@ export default defineConfig(({ mode }) => {
       setupFiles: ['./src/test/setup.ts'],
       include: ['src/**/*.test.{ts,tsx}'],
       restoreMocks: true,
+      // Route-level tests import lazy chunks and click through several pages; on a loaded CI runner they need
+      // more than the 5 s default. A hang still fails, just later.
+      testTimeout: 15_000,
       env: {
         // Tests must not depend on a developer's VITE_API_BASE_URL: an absolute one makes every request
         // cross-origin, and jsdom then sends CORS preflights that the MSW handlers do not answer.
