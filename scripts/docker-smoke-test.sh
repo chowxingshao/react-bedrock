@@ -14,7 +14,7 @@ BASE="http://127.0.0.1:18080"
 PROXY_BASE="http://127.0.0.1:18081"
 
 cleanup() {
-  docker rm -f "$NAME" "$NAME-proxy" "$NAME-https" "$NAME-invalid" "$NAME-injected" "$NAME-readonly" >/dev/null 2>&1 || true
+  docker rm -f "$NAME" "$NAME-proxy" "$NAME-https" "$NAME-invalid" "$NAME-injected" "$NAME-csp" "$NAME-origin" "$NAME-readonly" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
@@ -67,8 +67,11 @@ docker run -d --name "$NAME" -p 18080:8080 \
 wait_healthy "$BASE"
 pass "/healthz answers ok"
 
-[ "$(docker exec "$NAME" id -u)" != "0" ] || fail "the container must not run as root"
-pass "runs as a non-root user"
+# Assert the documented UID (docs/security.md), not just "not 0": an exec that fails prints nothing, and an empty
+# string differs from "0".
+uid=$(docker exec "$NAME" id -u) || fail "could not run id in the container"
+[ "$uid" = "101" ] || fail "the container must run as the unprivileged nginx user, UID 101 (got '$uid')"
+pass "runs as the unprivileged user (UID 101)"
 
 contains "$(curl -fsS "$BASE/")" '<div id="root">' || fail "/ must serve index.html"
 contains "$(curl -fsS "$BASE/items/42")" '<div id="root">' || fail "client-side routes must fall back to index.html"
@@ -167,6 +170,29 @@ injected_logs=$(docker logs "$NAME-injected" 2>&1)
 contains "$injected_logs" "letters, digits, '.', '-', '_' and ':' only" || fail "the container must say why the API_PROXY_TARGET with a line break is invalid"
 if contains "$injected_logs" 'proxying /api/'; then fail "an API_PROXY_TARGET with a line break must never reach nginx"; fi
 pass "an API_PROXY_TARGET with a line break is rejected"
+
+# The policy is pasted into a double-quoted nginx string: a quote ends the string, so the rest of the value would be
+# read as nginx directives (this value is balanced, so nginx would start with an extra header). The container must
+# refuse the value and say why.
+docker run -d --name "$NAME-csp" -e "CONTENT_SECURITY_POLICY=default-src 'self'\"; add_header X-Injected 1; add_header X-Pad \"" "$IMAGE" >/dev/null
+sleep 3
+[ "$(docker inspect -f '{{.State.Running}}' "$NAME-csp")" = "false" ] || fail "a CONTENT_SECURITY_POLICY with a double quote must stop the container"
+csp_logs=$(docker logs "$NAME-csp" 2>&1)
+contains "$csp_logs" 'CONTENT_SECURITY_POLICY must not contain double quotes' || fail "the container must say why the CONTENT_SECURITY_POLICY is invalid"
+if contains "$csp_logs" 'Content-Security-Policy:'; then fail "a CONTENT_SECURITY_POLICY with a double quote must never reach nginx"; fi
+pass "a CONTENT_SECURITY_POLICY with a double quote is rejected"
+
+# The origin in connect-src must be the one the browser derives from the same value (src/config/env.ts): credentials
+# end at the first of / ? # @, leading white space is ignored, and the scheme and the host are case-insensitive.
+for value in 'https://api.example.com?x=@evil.example' 'https://api.example.com#@evil.example' ' https://api.example.com' 'HTTPS://API.EXAMPLE.COM'; do
+  docker rm -f "$NAME-origin" >/dev/null 2>&1 || true
+  docker run -d --name "$NAME-origin" -e "VITE_API_BASE_URL=$value" "$IMAGE" >/dev/null
+  wait_exec_healthy "$NAME-origin"
+  origin_conf=$(docker exec "$NAME-origin" cat /etc/nginx/conf.d/default.conf)
+  contains "$origin_conf" "connect-src 'self' https://api.example.com;" || fail "VITE_API_BASE_URL='$value' must allow exactly https://api.example.com in connect-src"
+  if contains "$origin_conf" 'evil.example'; then fail "VITE_API_BASE_URL='$value' must not allow evil.example in connect-src"; fi
+done
+pass "the CSP origin of VITE_API_BASE_URL matches the one the browser uses"
 
 # A read-only /usr/share/nginx/html cannot take the generated config.js. Serving the one built into the image would
 # silently ignore every VITE_* variable, so the container must stop instead.

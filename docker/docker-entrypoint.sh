@@ -28,9 +28,15 @@ json_escape() {
 }
 
 # scheme://host[:port] of an absolute http(s) URL, without credentials. Prints nothing for a path such as /api.
-# The host part is cut at the first character a host cannot contain, so nothing else can reach the CSP header.
+# It agrees with src/config/env.ts and the browser: leading white space is ignored, the scheme and the host are
+# case-insensitive (the result is lower-case), and credentials end at the first of / ? # @ (so "?x=@evil" is
+# not a user name). The host part is cut at the first character a host cannot contain, so nothing else can
+# reach the CSP header. The scheme is matched with bracket classes: the image's sed is BusyBox's, which has no
+# case-insensitive flag.
 origin_of() {
-  printf '%s' "$1" | sed -nE 's|^(https?://)([^/@]*@)?([][A-Za-z0-9._:-]+).*|\1\3|p'
+  printf '%s' "$1" \
+    | sed -nE -e 's|^[[:space:]]+||' -e 's|^([Hh][Tt][Tt][Pp][Ss]?://)([^/?#@]*@)?([][A-Za-z0-9._:-]+).*|\1\3|p' \
+    | tr '[:upper:]' '[:lower:]'
 }
 
 # 1. Runtime configuration for the browser (read by src/config/env.ts).
@@ -72,6 +78,12 @@ SENTRY_ORIGIN=$(origin_of "$(printenv VITE_SENTRY_DSN || true)")
 SCRIPT_HASHES=$(cat "$APP_DIR/csp-script-hashes" 2>/dev/null || true)
 DEFAULT_CSP="default-src 'self'; script-src 'self'${SCRIPT_HASHES:+ $SCRIPT_HASHES}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'${API_ORIGIN:+ $API_ORIGIN}${SENTRY_ORIGIN:+ $SENTRY_ORIGIN}; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
 CONTENT_SECURITY_POLICY=${CONTENT_SECURITY_POLICY:-$DEFAULT_CSP}
+# The policy is pasted into a double-quoted nginx string: a quote would end the string, a backslash would escape
+# the next character, "$name" would be read as an nginx variable and a line break would reach the header. As for
+# API_PROXY_TARGET, a shell pattern matches the whole value, line breaks included.
+case "$CONTENT_SECURITY_POLICY" in
+  *'"'* | *'$'* | *'\'* | *[[:cntrl:]]*) fail "CONTENT_SECURITY_POLICY must not contain double quotes, '\$', backslashes or control characters such as line breaks (nginx would read them as configuration); when it is not set, the default is built from VITE_API_BASE_URL and VITE_SENTRY_DSN" ;;
+esac
 export API_PROXY_TARGET CONTENT_SECURITY_POLICY
 
 if [ -n "$API_PROXY_TARGET" ]; then
