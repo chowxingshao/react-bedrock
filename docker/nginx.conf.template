@@ -1,0 +1,78 @@
+# nginx server configuration for the production image (spec §10.4).
+# docker/docker-entrypoint.sh renders it into /etc/nginx/conf.d/default.conf at every container start:
+#   - envsubst fills in only the CONTENT_SECURITY_POLICY and API_PROXY_TARGET placeholders, so nginx's
+#     own $variables are left alone;
+#   - the block between the api-proxy markers is removed when API_PROXY_TARGET is empty.
+
+# Cache rules (spec §10.4), applied through one variable. nginx drops inherited add_header directives in any
+# location that declares its own, so every header is set once, at server level.
+# Only a successful response is cached for a year: a missing /assets/ file must not be remembered as missing.
+map "$status:$uri" $app_cache_control {
+    default                          "";
+    ~^(?:200|206|304):/assets/       "public, max-age=31536000, immutable";
+    ~^(?:200|206|304):/index\.html$  "no-store";
+    ~^(?:200|206|304):/config\.js$   "no-store";
+}
+
+# Keep the original scheme when a TLS-terminating proxy sits in front (backends use it for Secure cookies).
+map $http_x_forwarded_proto $app_forwarded_proto {
+    default        $http_x_forwarded_proto;
+    ""             $scheme;
+}
+
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+    server_tokens off;
+    # Redirects keep the host and port the browser used (the container's 8080 is usually mapped).
+    absolute_redirect off;
+
+    # gzip for every text asset. brotli is not built into the official nginx images (Deviation 10).
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 6;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/javascript application/javascript application/json image/svg+xml;
+
+    add_header Cache-Control $app_cache_control always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    # Built at container start (docs/security.md): scripts only from this origin plus the hashes of the
+    # inline scripts in index.html; API calls only to this origin plus the VITE_API_BASE_URL and
+    # VITE_SENTRY_DSN origins. Set CONTENT_SECURITY_POLICY to replace the whole policy.
+    add_header Content-Security-Policy "${CONTENT_SECURITY_POLICY}" always;
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # A missing hashed file is a 404, never index.html (which the browser would then cache as that file).
+    location /assets/ {
+        try_files $uri =404;
+    }
+
+    # api-proxy:begin
+    # Same-origin API: the browser calls /api/* on this server and nginx forwards the request unchanged,
+    # so the backend needs no CORS setup and httpOnly session cookies just work.
+    location /api/ {
+        proxy_pass ${API_PROXY_TARGET};
+        proxy_http_version 1.1;
+        proxy_ssl_server_name on;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $app_forwarded_proto;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_read_timeout 60s;
+    }
+    # api-proxy:end
+
+    # SPA fallback: client-side routes such as /items/42 get index.html.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

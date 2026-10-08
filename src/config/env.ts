@@ -2,6 +2,11 @@ import { z } from 'zod';
 
 import { SUPPORTED_LOCALES } from './constants';
 
+// Zod otherwise probes `new Function('')` when its first object schema is built (this file builds the first
+// one). A Content-Security-Policy without 'unsafe-eval', like the Docker image's, reports that probe as a
+// violation on every page load. Parsing stays correct, just not JIT-compiled.
+z.config({ jitless: true });
+
 export const APP_ENVIRONMENTS = ['development', 'staging', 'production'] as const;
 export const LOG_LEVELS = ['debug', 'info', 'warn', 'error'] as const;
 export type AppEnvironment = (typeof APP_ENVIRONMENTS)[number];

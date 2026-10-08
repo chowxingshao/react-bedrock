@@ -1,0 +1,24 @@
+# Build context for the Docker images: everything the build needs, nothing it produces.
+.git
+node_modules
+dist
+coverage
+.vitest
+playwright-report
+test-results
+blob-report
+storybook-static
+stats.html
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+.superpowers
+.claude
+.idea
+.vscode
+Dockerfile
+Dockerfile.dev
+docker-compose.yml
+.dockerignore

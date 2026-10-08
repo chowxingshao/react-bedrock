@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
 import envExample from '/.env.example?raw';
 
@@ -92,5 +93,13 @@ describe('.env.example', () => {
     const documented = [...envExample.matchAll(/^#?\s*(VITE_[A-Z_]+)=/gm)].map((match) => match[1]);
 
     expect(new Set(documented)).toEqual(new Set(ENV_KEYS));
+  });
+});
+
+describe('Zod configuration', () => {
+  it('keeps the JIT off, so a Content-Security-Policy without unsafe-eval is never reported', () => {
+    // With the JIT on, Zod probes `new Function('')` when the first object schema is built, and the Docker
+    // image's policy reports that as a violation on every page load (docs/security.md).
+    expect(z.config().jitless).toBe(true);
   });
 });
