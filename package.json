@@ -26,6 +26,9 @@
     "gen": "plop",
     "storybook": "storybook dev -p 6006 --no-open",
     "storybook:build": "storybook build -o storybook-static",
+    "docker:up": "docker compose up --build",
+    "docker:dev": "docker compose --profile dev up --build web-dev",
+    "docker:down": "docker compose --profile dev down",
     "prepare": "husky"
   },
   "dependencies": {

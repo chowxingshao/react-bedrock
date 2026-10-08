@@ -1,0 +1,86 @@
+# Run the app with only Docker installed (docs/docker.md):
+#   docker compose up                  production build on http://localhost:8080 (mock API, no .env needed)
+#   docker compose --profile dev up    also starts the Vite dev server with hot reload on http://localhost:5173
+#   docker compose down                stop the production service (after `--profile dev up`: use
+#                                      `docker compose --profile dev down` or `pnpm docker:down`)
+# Every setting has a default below. Override it in your shell or in an optional .env file (see .env.example).
+
+services:
+  web:
+    build:
+      context: .
+      args:
+        APP_VERSION: ${APP_VERSION:-}
+        GIT_SHA: ${GIT_SHA:-}
+    image: react-bedrock:local
+    ports:
+      - '${WEB_PORT:-8080}:8080'
+    environment:
+      # Written to /config.js at start: PUBLIC, visible to every browser. Empty = the app's own default.
+      VITE_APP_NAME: ${VITE_APP_NAME:-React Bedrock}
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+      VITE_APP_ENV: ${VITE_APP_ENV:-}
+      VITE_DEFAULT_LOCALE: ${VITE_DEFAULT_LOCALE:-en}
+      VITE_DEFAULT_CURRENCY: ${VITE_DEFAULT_CURRENCY:-USD}
+      VITE_ENABLE_MOCKS: ${VITE_ENABLE_MOCKS:-true}
+      VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+      VITE_LOG_LEVEL: ${VITE_LOG_LEVEL:-}
+      VITE_FEATURE_FLAGS: ${VITE_FEATURE_FLAGS:-}
+      # Used by nginx only; never sent to the browser.
+      API_PROXY_TARGET: ${API_PROXY_TARGET:-}
+      CONTENT_SECURITY_POLICY: ${CONTENT_SECURITY_POLICY:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8080/healthz']
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+
+  web-dev:
+    profiles: ['dev']
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: react-bedrock-dev:local
+    ports:
+      - '${DEV_PORT:-5173}:5173'
+    environment:
+      # No value: taken from your shell when set there; otherwise Vite reads .env / .env.local from the source.
+      - VITE_APP_NAME
+      - VITE_API_BASE_URL
+      - VITE_APP_ENV
+      - VITE_DEFAULT_LOCALE
+      - VITE_DEFAULT_CURRENCY
+      - VITE_ENABLE_MOCKS
+      - VITE_SENTRY_DSN
+      - VITE_LOG_LEVEL
+      - VITE_FEATURE_FLAGS
+      - API_PROXY_TARGET
+      # Bind-mounted files emit no change events on Windows/WSL hosts, so poll instead.
+      - CHOKIDAR_USEPOLLING=${CHOKIDAR_USEPOLLING:-true}
+    volumes:
+      - .:/app
+      # The container's Linux dependencies stay in a volume and never mix with the host's node_modules.
+      - node_modules:/app/node_modules
+
+  # ── Your backend in this Compose project ─────────────────────────────────────────────
+  # Uncomment, set the image and port, and add `depends_on: [backend]` to `web`. Then start with
+  #   API_PROXY_TARGET=http://backend:3000 VITE_ENABLE_MOCKS=false docker compose up
+  #
+  # backend:
+  #   image: your-registry/your-api:latest
+  #   expose:
+  #     - '3000'
+
+volumes:
+  node_modules:
+
+# ── Your backend in another Compose project ─────────────────────────────────────────────
+# Join that project's network (`docker network ls`) and use its service name, e.g.
+#   API_PROXY_TARGET=http://their-api:3000 VITE_ENABLE_MOCKS=false docker compose up
+#
+# networks:
+#   default:
+#     name: other-project_default
+#     external: true
