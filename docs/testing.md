@@ -46,11 +46,11 @@ Two timing notes. Asynchronous Testing Library helpers (`findBy…`, `waitFor`) 
 
 The same handlers (`src/mocks/handlers.ts`) power three things:
 
-| Where                                                                   | How                                                                                                               |
-| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev`, and the Docker demo (planned) when `VITE_ENABLE_MOCKS=true` | `src/mocks/browser.ts` (service worker, started in `main.tsx`)                                                    |
-| Vitest                                                                  | `src/mocks/server.ts`, started in `src/test/setup.ts`. **An unmocked request is rejected and its URL is logged.** |
-| Playwright E2E (planned)                                                | the preview build runs with mocks on                                                                              |
+| Where                                                           | How                                                                                                               |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`, and the Docker image while `VITE_ENABLE_MOCKS=true` | `src/mocks/browser.ts` (service worker, started in `main.tsx`)                                                    |
+| Vitest                                                          | `src/mocks/server.ts`, started in `src/test/setup.ts`. **An unmocked request is rejected and its URL is logged.** |
+| Playwright E2E                                                  | the preview build runs with mocks on                                                                              |
 
 An unmocked request makes MSW reject it (`onUnhandledFrame: 'error'`) and log its URL. A test fails only if that rejection reaches it, so a component that catches the error can still pass, with a console error.
 
@@ -91,3 +91,28 @@ Mock handlers load in every test file (`setup.ts` starts the server, which regis
 Compare prices with `formatCurrency()`, not a literal `$9.50`: the currency comes from `VITE_DEFAULT_CURRENCY`. A test that needs a feature flag off sets an explicit source (`setFeatureFlagSource(createEnvFlagSource([]))`), because the default one reads `VITE_FEATURE_FLAGS`.
 
 Always build handler URLs with `apiUrl()`: it resolves paths the same way the shared HTTP client does, whatever `VITE_API_BASE_URL` is. After upgrading `msw`, run `pnpm exec msw init public` to refresh `public/mockServiceWorker.js`.
+
+## End-to-end tests (Playwright)
+
+- **First time** (and after upgrading `@playwright/test`): install the browser once with `pnpm exec playwright install chromium`. A Linux CI runner installs it with `--with-deps`, which also adds the system libraries.
+- `pnpm test:e2e` builds the app (the Playwright `webServer` runs `pnpm build`) and runs `e2e/*.spec.ts` against `vite preview` (port 4173) with the **mock API on**, so no backend is needed. `pnpm test:e2e:ui` does the same in the interactive runner. Port 4173 must be free: a preview that is already running would serve an older build, so Playwright never reuses one.
+- **The build is pinned:** `playwright.config.ts` sets every `VITE_*` variable for the build to its default (a variable in the environment beats the `.env*` files), so a `.env.local` on your machine (mocks off, another app name or language) cannot change what the tests see.
+- **Covered:**
+  - sign-in and redirects, sign-out, and session persistence
+  - sidebar navigation, titles and 404
+  - Items: search, filter and URL state; create, edit and delete; optimistic rollback; read-only users on `/items/new` and `/items/:id/edit`
+  - the language switch
+  - the dark theme without a flash
+- **Accessibility:** `a11y.spec.ts` runs axe (WCAG 2.1 A/AA) on the login page in light and dark, on the app pages in light (the dashboard, the Items list, new, detail and edit, and the 404 page inside the shell), on the Items list in Spanish and dark mode, and with the user menu, the page-size select and the delete dialog open. Tests run with reduced motion, so axe never samples a half-faded colour or a closing menu. While a Radix menu or select is open, axe reports `aria-hidden-focus` for the page behind it: Radix hides that page from assistive technology and traps focus inside the menu, but the controls behind it stay focusable. That one rule is switched off for the user menu and the select, and no other; the delete dialog is scanned with every rule. Keyboard checks (skip link, focus) are in `navigation.spec.ts`. Storybook's a11y panel covers individual components.
+- **Helpers:** `e2e/fixtures.ts` provides `signIn(page, 'admin' | 'viewer')` and the `makeAxeBuilder` fixture. `ACCOUNTS` copies the demo accounts of `src/mocks/fixtures/users.ts`, because `e2e/` cannot import from `src/`; `src/test/e2e-fixtures.guard.test.ts` fails when they differ.
+- **Waiting:** a test that signs out and signs in again waits for `/login` in between (`await expect(page).toHaveURL(/\/login$/)`). Navigating earlier can load `/login` before the sign-out has finished, and the old session then sends the page back to the dashboard.
+- **Reports:** failures leave a report in `playwright-report/`, with traces on retry. CI uploads it as an artifact.
+
+## What to test where
+
+| Change                                      | Test it with                                                                     |
+| ------------------------------------------- | -------------------------------------------------------------------------------- |
+| Pure function, schema, store                | Vitest unit test next to the file                                                |
+| Component or hook                           | Vitest + Testing Library (`@/test/render`), with MSW for data                    |
+| A feature flow across pages                 | an integration test with the real route tree (`src/app/router.test.tsx`), or E2E |
+| Critical user journeys, visual states, a11y | Playwright (`e2e/`)                                                              |
