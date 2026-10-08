@@ -99,11 +99,16 @@ Always build handler URLs with `apiUrl()`: it resolves paths the same way the sh
 - **The build is pinned:** `playwright.config.ts` sets every `VITE_*` variable for the build to its default (a variable in the environment beats the `.env*` files), so a `.env.local` on your machine (mocks off, another app name or language) cannot change what the tests see.
 - **Covered:**
   - sign-in and redirects, sign-out, and session persistence
-  - sidebar navigation, titles and 404
-  - Items: search, filter and URL state; create, edit and delete; optimistic rollback; read-only users on `/items/new` and `/items/:id/edit`
+  - sidebar navigation (which stays in view on a long page), titles and 404
+  - Items: search, filter and URL state; create, edit and delete; optimistic rollback; where focus goes after a delete (the next row, and back to the button when the server refuses); read-only users on `/items/new` and `/items/:id/edit` (the denied page has its own h1)
   - the language switch
   - the dark theme without a flash
 - **Accessibility:** `a11y.spec.ts` runs axe (WCAG 2.1 A/AA) on the login page in light and dark, on the app pages in light (the dashboard, the Items list, new, detail and edit, and the 404 page inside the shell), on the Items list in Spanish and dark mode, and with the user menu, the page-size select and the delete dialog open. Tests run with reduced motion, so axe never samples a half-faded colour or a closing menu. While a Radix menu or select is open, axe reports `aria-hidden-focus` for the page behind it: Radix hides that page from assistive technology and traps focus inside the menu, but the controls behind it stay focusable. That one rule is switched off for the user menu and the select, and no other; the delete dialog is scanned with every rule. Keyboard checks (skip link, focus) are in `navigation.spec.ts`. Storybook's a11y panel covers individual components.
+- **Accessibility decisions:** what the checks leave out on purpose.
+  - Axe runs the WCAG 2.1 A and AA rules only. Best-practice rules are not part of the gate. One of them, `region`, reports the brand text above the card on the login page and on the 404 page of a signed-out visitor, because it sits outside any landmark.
+  - After signing in, focus stays at the start of the document, like after a page load: "Skip to main content" is the first Tab stop. A route change inside the app moves focus to the main content (`src/app/router.test.tsx`).
+  - Neither axe nor Playwright can tell whether a screen reader announces a live region. The `PageLoader` and skeleton regions are checked by reading the code, and still need a manual pass with a screen reader. The offline banner is covered by a test of its always-present `role="status"` region.
+  - The physical-direction utilities (`ml-*`, `pl-*`, `left-*`, `right-*`, `text-left`), most of them in `components/ui` and the dropdown menu above all, stay as they are. Right-to-left layouts are a known limitation (docs/i18n.md), and none of the checks above runs in one.
 - **Helpers:** `e2e/fixtures.ts` provides `signIn(page, 'admin' | 'viewer')` and the `makeAxeBuilder` fixture. `ACCOUNTS` copies the demo accounts of `src/mocks/fixtures/users.ts`, because `e2e/` cannot import from `src/`; `src/test/e2e-fixtures.guard.test.ts` fails when they differ.
 - **Waiting:** a test that signs out and signs in again waits for `/login` in between (`await expect(page).toHaveURL(/\/login$/)`). Navigating earlier can load `/login` before the sign-out has finished, and the old session then sends the page back to the dashboard.
 - **Reports:** failures leave a report in `playwright-report/`, with traces on retry. CI uploads it as an artifact.

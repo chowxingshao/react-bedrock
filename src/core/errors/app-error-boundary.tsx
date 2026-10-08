@@ -14,7 +14,7 @@ function RootErrorFallback({ error, reset }: ErrorBoundaryFallbackProps) {
   return (
     <main className="flex min-h-svh items-center justify-center bg-background p-6">
       <div className="grid w-full max-w-xl justify-items-center gap-2">
-        <ErrorState error={error} onRetry={reset} className="w-full" />
+        <ErrorState error={error} onRetry={reset} headingLevel={1} className="w-full" />
         <Button
           variant="link"
           onClick={() => {

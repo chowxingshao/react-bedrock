@@ -45,7 +45,7 @@ The page generator (`pnpm gen page <name> <Title>`, docs/generators.md) does ste
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `<RequireAuth>`                                 | Signed-out users go to `/login?returnTo=<where they were>` and come back after signing in   |
 | `<RequireGuest>`                                | Signed-in users are sent from login to `returnTo` (only same-origin paths) or the dashboard |
-| `<RequirePermission permission="items.create">` | Renders the 403 state without the permission                                                |
+| `<RequirePermission permission="items.create">` | Renders the 403 state without the permission (its title is the page's h1)                   |
 
 Guards wrap an `<Outlet />` by default, or take children. `returnTo` always goes through `safeReturnTo` before anyone navigates to it (docs/security.md); the login page does not navigate by itself, `<RequireGuest>` does it once the session is set.
 
@@ -61,7 +61,7 @@ Guards wrap an `<Outlet />` by default, or take children. `returnTo` always goes
 
 - **Lazy chunks:** the first page load shows `PageLoader`; later navigations show a thin progress bar.
 - **Suspense:** pages may call `useSuspenseQuery`. `PageBoundary` (`src/app/routes/page-boundary.tsx`), the element of the page group, wraps every page in an `AsyncBoundary` that resets on navigation.
-- **Page errors:** a page that throws while it renders, or a `useSuspenseQuery` that fails, shows `ErrorState` inside the shell with **Try again** (it resets the failed queries and renders the page again) and **Reload page**. The error clears when the user navigates to another page.
+- **Page errors:** a page that throws while it renders, or a `useSuspenseQuery` that fails, shows `ErrorState` (its title is the page's h1, because the failed page took its own with it) inside the shell with **Try again** (it resets the failed queries and renders the page again) and **Reload page**. The error clears when the user navigates to another page.
 - **Router errors:** the page group's `errorElement` (`RouteError`) handles what only the router sees: a page chunk that fails to load, a thrown `Response` (a 404 renders the "not found" state) and a loader or action error. It is logged, and shows **Reload page**, which also fixes chunks that went stale after a deploy.
 
 The boundary has to sit below the router's `errorElement`: the router wraps the subtree of a route that has an `errorElement` in its own boundary, which would otherwise catch page errors before `PageBoundary` could offer **Try again**.

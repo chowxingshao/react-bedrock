@@ -41,13 +41,39 @@ test('creates, edits and deletes an item', async ({ page }) => {
   await expect(page).toHaveURL(/\/items$/);
 });
 
-test('rolls back an optimistic delete the server refuses', async ({ page }) => {
+test('moves focus to the next row after a row is deleted', async ({ page }) => {
+  await page.getByRole('button', { name: 'Delete Desk lamp' }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click();
+
+  await expect(page.getByText('Deleted Desk lamp')).toBeVisible();
+  // The delete button had focus and is gone with its row: focus must not fall back to the top of the page.
+  await expect(page.getByRole('link', { name: 'Notebook A5', exact: true })).toBeFocused();
+});
+
+test('rolls back an optimistic delete the server refuses, and gives focus back to its button', async ({
+  page,
+}) => {
   await page.getByRole('button', { name: 'Go to last page' }).click();
   await page.getByRole('button', { name: 'Delete Locked sample' }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click();
 
   await expect(page.getByText("This item is locked and can't be deleted.")).toBeVisible();
   await expect(page.getByRole('link', { name: 'Locked sample', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Delete Locked sample' })).toBeFocused();
+});
+
+test('gives focus back to the Delete button of a detail page when the server refuses', async ({
+  page,
+}) => {
+  await page.goto('/items/item-locked');
+  await expect(page.getByRole('heading', { level: 1, name: 'Locked sample' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Delete' }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click();
+
+  await expect(page.getByText("This item is locked and can't be deleted.")).toBeVisible();
+  // The button was disabled while the request ran, so the dialog could not give focus back to it.
+  await expect(page.getByRole('button', { name: 'Delete' })).toBeFocused();
 });
 
 test('read-only users see no write actions and get 403 on write pages', async ({ page }) => {
@@ -66,5 +92,9 @@ test('read-only users see no write actions and get 403 on write pages', async ({
     await expect(
       page.getByRole('heading', { name: "You don't have access to this page" }),
     ).toBeVisible();
+    // The denied page has no page title of its own, so this message is its h1.
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      "You don't have access to this page",
+    );
   }
 });

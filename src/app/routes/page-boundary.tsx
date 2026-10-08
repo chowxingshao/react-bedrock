@@ -9,7 +9,7 @@ function PageErrorFallback({ error, reset }: ErrorBoundaryFallbackProps) {
   const { t } = useTranslation();
   return (
     <div className="grid justify-items-center gap-2">
-      <ErrorState error={error} onRetry={reset} className="w-full" />
+      <ErrorState error={error} onRetry={reset} headingLevel={1} className="w-full" />
       <Button
         type="button"
         variant="link"

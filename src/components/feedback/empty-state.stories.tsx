@@ -29,3 +29,12 @@ export const NoSearchResults: Story = {
     description: 'Try a different search term or clear the filters.',
   },
 };
+
+/** When the view is the whole page (no PageHeader above it), its title is the page's h1. */
+export const AsWholePage: Story = {
+  args: {
+    title: 'No items yet',
+    description: 'Create your first item to get started.',
+    headingLevel: 1,
+  },
+};

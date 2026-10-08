@@ -18,6 +18,11 @@ export interface ErrorStateProps {
   retryLabel?: string;
   /** Show technical details. Default: development only (spec Principle 7). */
   showDetails?: boolean;
+  /**
+   * Level of the title: 2 under the page's own h1 (default), 1 when this view stands in for the
+   * whole page and there is no other h1.
+   */
+  headingLevel?: 1 | 2;
   className?: string;
 }
 
@@ -29,9 +34,11 @@ export function ErrorState({
   onRetry,
   retryLabel,
   showDetails = env.isDev,
+  headingLevel = 2,
   className,
 }: ErrorStateProps) {
   const { t } = useTranslation(['common', 'errors']);
+  const Heading = headingLevel === 1 ? 'h1' : 'h2';
 
   return (
     <div
@@ -45,7 +52,7 @@ export function ErrorState({
         <TriangleAlertIcon aria-hidden="true" className="size-6" />
       </div>
       <div className="grid gap-1">
-        <h2 className="text-lg font-semibold">{title ?? t('errors:generic.title')}</h2>
+        <Heading className="text-lg font-semibold">{title ?? t('errors:generic.title')}</Heading>
         <p className="text-sm text-muted-foreground">
           {description ??
             (error === undefined ? t('errors:generic.description') : getErrorMessage(error))}

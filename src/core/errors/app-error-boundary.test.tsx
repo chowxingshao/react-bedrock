@@ -53,6 +53,10 @@ describe('AppErrorBoundary', () => {
     );
 
     expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong');
+    // The whole page is this message, so it is the page's h1.
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Something went wrong' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reload page' })).toBeInTheDocument();
     expect(logError).toHaveBeenCalledWith(

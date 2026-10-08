@@ -39,7 +39,11 @@ export function Sidebar({ items, collapsed, collapsible = false, onNavigate }: S
               <NavLink
                 to={item.to}
                 end={item.end}
-                onClick={onNavigate}
+                onClick={(event) => {
+                  // A modified click opens the link in another tab or window: this page keeps its sheet.
+                  if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+                  onNavigate?.();
+                }}
                 className={({ isActive }) =>
                   cn(
                     'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-3 focus-visible:ring-ring',

@@ -15,6 +15,19 @@ describe('ErrorState', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong');
   });
 
+  it('is a level 2 heading, or the level 1 heading of a page it stands in for', () => {
+    const { rerender } = render(<ErrorState />);
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Something went wrong' }),
+    ).toBeInTheDocument();
+
+    rerender(<ErrorState headingLevel={1} />);
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Something went wrong' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
+  });
+
   it('does not repeat its title in the message for an error that is not an API error', () => {
     render(<ErrorState error={new Error('Kaboom')} showDetails={false} />);
 

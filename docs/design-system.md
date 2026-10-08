@@ -121,17 +121,19 @@ Button sizes are `sm | md | lg | icon` (default `md`). Button variants are `defa
 
 ## Async state components (`@/components/feedback`)
 
-| Component                                                                         | Use it for                                                                      |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `Spinner`                                                                         | Inline loading (buttons, small areas)                                           |
-| `PageLoader`                                                                      | Full-page (`variant="page"`) or section loading; the lazy-route fallback        |
-| `Skeleton`                                                                        | A base shimmer block                                                            |
-| `TableSkeleton`, `CardSkeleton`, `ListSkeleton`, `FormSkeleton`, `DetailSkeleton` | Ready-made skeletons                                                            |
-| `EmptyState`                                                                      | Icon, title, description and an optional action                                 |
-| `ErrorState`                                                                      | Friendly message and **Try again**. Technical details show in development only. |
-| `QueryState`, `AsyncBoundary`                                                     | Pick the right state automatically (docs/data-fetching.md)                      |
-| `ForbiddenState`, `NotFoundState`                                                 | The 403 and 404 views (guards, detail pages whose record is missing)            |
-| `OfflineBanner`                                                                   | A banner under the header while the browser is offline                          |
+| Component                                                                         | Use it for                                                                                                                         |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `Spinner`                                                                         | Inline loading (buttons, small areas)                                                                                              |
+| `PageLoader`                                                                      | Full-page (`variant="page"`) or section loading; the lazy-route fallback                                                           |
+| `Skeleton`                                                                        | A base shimmer block                                                                                                               |
+| `TableSkeleton`, `CardSkeleton`, `ListSkeleton`, `FormSkeleton`, `DetailSkeleton` | Ready-made skeletons                                                                                                               |
+| `EmptyState`                                                                      | Icon, title, description and an optional action. The title is an h2, or the page's h1 with `headingLevel={1}`                      |
+| `ErrorState`                                                                      | Friendly message and **Try again**. Technical details show in development only. `headingLevel={1}` when it replaces the whole page |
+| `QueryState`, `AsyncBoundary`                                                     | Pick the right state automatically (docs/data-fetching.md)                                                                         |
+| `ForbiddenState`, `NotFoundState`                                                 | The 403 and 404 views (guards, detail pages whose record is missing). Both take `headingLevel`                                     |
+| `OfflineBanner`                                                                   | A banner under the header while the browser is offline, inside a `role="status"` region that is always in the page                 |
+
+A page has exactly one h1. `PageHeader` renders it, and the state components sit under it with an h2 title. A view that **replaces the whole page** has no `PageHeader`, so it takes the h1 itself: `<ForbiddenState headingLevel={1} />` (what `RequirePermission` renders), `<ErrorState headingLevel={1} />` (the page and root error boundaries and `RouteError`) and `<NotFoundState headingLevel={1} />` (a router-level 404). `headingLevel` defaults to 2, so a caller that does not pass it keeps its markup. `PageHeader` takes a `titleRef`: it makes the h1 focusable by code (`tabIndex={-1}`, not a Tab stop) and hands it out, for a page that must move focus there (the Items list does after its last row is deleted).
 
 `PageLoader` and `QueryState` wait 200 ms (`SKELETON_DELAY_MS`) before showing a loading indicator, so fast responses never flash a skeleton. The `DataTable` skeleton (`isLoading`) shows immediately: render the table inside `QueryState`, or drive `isLoading` from a delayed flag, to keep that behaviour.
 

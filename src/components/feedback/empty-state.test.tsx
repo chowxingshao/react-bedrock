@@ -9,6 +9,15 @@ describe('EmptyState', () => {
     expect(screen.getByRole('heading', { name: 'Nothing here yet' })).toBeInTheDocument();
   });
 
+  it('is a level 2 heading, or the level 1 heading of a page it stands in for', () => {
+    const { rerender } = render(<EmptyState title="No items" />);
+    expect(screen.getByRole('heading', { level: 2, name: 'No items' })).toBeInTheDocument();
+
+    rerender(<EmptyState title="No items" headingLevel={1} />);
+    expect(screen.getByRole('heading', { level: 1, name: 'No items' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
+  });
+
   it('shows a custom title, description and action', () => {
     render(
       <EmptyState

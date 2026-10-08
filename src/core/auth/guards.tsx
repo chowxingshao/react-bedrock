@@ -27,7 +27,10 @@ export function RequireGuest({ children }: { children?: ReactNode }) {
   return children ?? <Outlet />;
 }
 
-/** Renders a 403 view when the user lacks `permission`. */
+/**
+ * Renders a 403 view when the user lacks `permission`. The view takes the place of the whole page, so its
+ * title is the page's h1.
+ */
 export function RequirePermission({
   permission,
   children,
@@ -36,6 +39,6 @@ export function RequirePermission({
   children?: ReactNode;
 }) {
   const { hasPermission } = useAuth();
-  if (!hasPermission(permission)) return <ForbiddenState />;
+  if (!hasPermission(permission)) return <ForbiddenState headingLevel={1} />;
   return children ?? <Outlet />;
 }

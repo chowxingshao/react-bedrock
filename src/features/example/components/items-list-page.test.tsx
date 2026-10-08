@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SEARCH_DEBOUNCE_MS } from '@/config/constants';
 import { createEnvFlagSource, getFeatureFlagSource, setFeatureFlagSource } from '@/config/features';
+import { notify } from '@/core/notify';
 import { apiUrl } from '@/mocks/api-url';
 import { mockDb } from '@/mocks/db';
 import { server } from '@/mocks/server';
@@ -230,5 +231,103 @@ describe('ItemsListPage', () => {
       'Phone stand',
       'Locked sample',
     ]);
+  });
+});
+
+describe('ItemsListPage focus after a delete (WCAG 2.4.3)', () => {
+  /** Holds every DELETE until released, like a server that takes a moment: the row is gone by then. */
+  function holdDeletes() {
+    let release = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = () => {
+        resolve();
+      };
+    });
+    server.use(
+      mock.delete(apiUrl('/items/:itemId'), async () => {
+        await held; // falls through to the real handler once released
+      }),
+    );
+    return release;
+  }
+
+  async function confirmDelete(user: ReturnType<typeof userEvent.setup>, name: string) {
+    await user.click(await screen.findByRole('button', { name: `Delete ${name}` }));
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
+    );
+    // The row disappears at once; the server has not answered yet.
+    await waitFor(() => {
+      expect(screen.queryByRole('link', { name })).not.toBeInTheDocument();
+    });
+  }
+
+  it("moves focus to the next row's link", async () => {
+    const release = holdDeletes();
+    const user = userEvent.setup();
+    renderList();
+
+    await confirmDelete(user, 'Desk lamp');
+    release();
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Notebook A5' })).toHaveFocus();
+    });
+  });
+
+  it("moves focus to the previous row's link when the last row is deleted", async () => {
+    const release = holdDeletes();
+    const user = userEvent.setup();
+    renderList('/items?q=desk'); // Desk lamp, Standing desk, Desk mat
+
+    await confirmDelete(user, 'Desk mat');
+    release();
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Standing desk' })).toHaveFocus();
+    });
+  });
+
+  it('moves focus to the page title when no row is left', async () => {
+    const release = holdDeletes();
+    const user = userEvent.setup();
+    renderList('/items?q=lamp'); // Desk lamp only
+
+    await confirmDelete(user, 'Desk lamp');
+    release();
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1, name: 'Items' })).toHaveFocus();
+    });
+  });
+
+  it('gives focus back to the delete button when the server refuses, after the row came back', async () => {
+    const release = holdDeletes();
+    const user = userEvent.setup();
+    renderList('/items?page=3'); // ends with the locked item
+
+    await confirmDelete(user, 'Locked sample');
+    release();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Delete Locked sample' })).toHaveFocus();
+    });
+  });
+
+  it('leaves focus where the user has put it meanwhile', async () => {
+    const success = vi.spyOn(notify, 'success');
+    const release = holdDeletes();
+    const user = userEvent.setup();
+    renderList();
+
+    await confirmDelete(user, 'Desk lamp');
+    const search = screen.getByRole('searchbox', { name: 'Search items' });
+    await user.click(search);
+    release();
+
+    await waitFor(() => {
+      expect(success).toHaveBeenCalledWith('Deleted Desk lamp');
+    });
+    expect(search).toHaveFocus();
   });
 });

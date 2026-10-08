@@ -15,3 +15,6 @@ export const Default: Story = {};
 export const CustomCopy: Story = {
   args: { title: 'Item not found', description: 'It may have been deleted.' },
 };
+
+/** When the view is the whole page, as for a router-level 404, its title is the page's h1. */
+export const AsWholePage: Story = { args: { headingLevel: 1 } };

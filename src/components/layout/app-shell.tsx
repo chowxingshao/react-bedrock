@@ -69,7 +69,12 @@ export function AppShell({ navItems, children }: AppShellProps) {
         {t('a11y.skipToContent')}
       </a>
 
-      <aside className={cn('hidden shrink-0 border-e md:block', collapsed ? 'md:w-16' : 'md:w-64')}>
+      <aside
+        className={cn(
+          'hidden shrink-0 border-e md:sticky md:top-0 md:block md:h-svh md:overflow-y-auto',
+          collapsed ? 'md:w-16' : 'md:w-64',
+        )}
+      >
         <Sidebar items={navItems} collapsed={collapsed} collapsible />
       </aside>
 

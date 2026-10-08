@@ -18,3 +18,6 @@ export const WithTechnicalDetails: Story = {
 };
 
 export const WithoutRetry: Story = { args: { onRetry: undefined } };
+
+/** When the view replaces the whole page, its title is the page's h1. */
+export const AsWholePage: Story = { args: { headingLevel: 1 } };

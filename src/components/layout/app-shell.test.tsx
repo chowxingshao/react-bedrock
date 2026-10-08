@@ -45,6 +45,19 @@ describe('AppShell', () => {
     expect(within(nav).queryByRole('link', { name: 'Items' })).not.toBeInTheDocument();
   });
 
+  it('keeps the desktop sidebar in view while the page scrolls', async () => {
+    renderShell('admin');
+    const nav = await screen.findByRole('navigation', { name: 'Main navigation' });
+
+    // A sticky column as tall as the viewport (and scrollable itself), so a long page never scrolls it away.
+    expect(nav.closest('aside')).toHaveClass(
+      'md:sticky',
+      'md:top-0',
+      'md:h-svh',
+      'md:overflow-y-auto',
+    );
+  });
+
   it('collapses the desktop sidebar', async () => {
     const user = userEvent.setup();
     renderShell('admin');
@@ -104,6 +117,30 @@ describe('AppShell mobile navigation', () => {
       expect(document.activeElement).toBe(document.body);
     },
   );
+
+  it('stays open on a modified click, which opens the link in another tab', async () => {
+    // The browser opens the link in a new tab; jsdom cannot, and would log "Not implemented: navigation".
+    const modifiedClicks: boolean[] = [];
+    const swallowDefault = (event: MouseEvent) => {
+      modifiedClicks.push(event.ctrlKey);
+      event.preventDefault();
+    };
+    document.addEventListener('click', swallowDefault);
+    const user = userEvent.setup();
+    renderShell('admin');
+
+    await user.click(await screen.findByRole('button', { name: 'Open navigation' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Main navigation' });
+    await user.keyboard('{Control>}');
+    await user.click(within(dialog).getByRole('link', { name: 'Items' }));
+    await user.keyboard('{/Control}');
+    document.removeEventListener('click', swallowDefault);
+
+    // Closing is asynchronous (Radix animates it): wait past that before asserting that nothing happened.
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    expect(modifiedClicks).toContain(true); // the Ctrl-click reached the link
+    expect(screen.getByRole('dialog', { name: 'Main navigation' })).toBeInTheDocument();
+  });
 
   it('closes when the viewport grows past the md breakpoint', async () => {
     let wide = false;

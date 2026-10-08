@@ -34,3 +34,20 @@ test('is keyboard navigable: the skip link comes first and moves focus to the co
 
   await expect(page.locator('#main-content')).toBeFocused();
 });
+
+test('keeps the sidebar in view while a long page scrolls', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 400 });
+  await signIn(page);
+  await page.goto('/items');
+  await expect(page.getByRole('link', { name: 'Desk lamp', exact: true })).toBeVisible();
+
+  await page.evaluate(() => {
+    window.scrollTo(0, document.documentElement.scrollHeight);
+  });
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
+
+  await expect(page.locator('aside')).toBeInViewport();
+  // Still at the top of the window (the scroll offset may leave half a pixel of rounding).
+  const top = (await page.locator('aside').boundingBox())?.y ?? Number.NaN;
+  expect(Math.abs(top)).toBeLessThan(1);
+});

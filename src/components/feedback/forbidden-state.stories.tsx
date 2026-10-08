@@ -9,5 +9,8 @@ const meta = { title: 'Feedback/ForbiddenState', component: ForbiddenState } sat
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** What <RequirePermission> renders when the signed-in user lacks the permission. */
+/** Under a page title, as on the /403 page. */
 export const Default: Story = {};
+
+/** What <RequirePermission> renders when the signed-in user lacks the permission: the whole page. */
+export const AsWholePage: Story = { args: { headingLevel: 1 } };

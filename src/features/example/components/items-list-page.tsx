@@ -36,6 +36,8 @@ export function ItemsListPage() {
   const { t } = useTranslation('items');
   const [filters, setFilters] = useUrlState(FILTERS_SHAPE);
   const { pagination, setPagination } = usePagination();
+  // Where focus goes after a delete when no row is left to take it.
+  const titleRef = useRef<HTMLHeadingElement>(null);
 
   // The input answers every keystroke; the URL (and therefore the request) updates when typing pauses.
   const [search, setSearch] = useState(filters.q);
@@ -95,6 +97,7 @@ export function ItemsListPage() {
     <>
       <PageHeader
         title={t('list.title')}
+        titleRef={titleRef}
         description={t('list.description')}
         actions={
           <>
@@ -149,6 +152,7 @@ export function ItemsListPage() {
               data={data}
               pagination={pagination}
               onPaginationChange={setPagination}
+              focusFallbackRef={titleRef}
               sorting={sorting}
               onSortingChange={(updater) => {
                 const [next] = typeof updater === 'function' ? updater(sorting) : updater;

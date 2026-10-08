@@ -85,6 +85,10 @@ describe('app routes', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Access denied' }),
     ).toBeInTheDocument();
+    // The page has its own h1, so the 403 view under it stays a level 2 heading.
+    expect(
+      screen.getByRole('heading', { level: 2, name: "You don't have access to this page" }),
+    ).toBeInTheDocument();
   });
 
   it('navigates from the sidebar to the items list, then to an item', async () => {
@@ -105,7 +109,13 @@ describe('app routes', () => {
       mockDb.sessionUserId = MOCK_USER_IDS.viewer;
       renderApp(url);
 
-      expect(await screen.findByText("You don't have access to this page")).toBeInTheDocument();
+      // The denied page has no PageHeader, so its message is the page's only h1.
+      expect(
+        await screen.findByRole('heading', {
+          level: 1,
+          name: "You don't have access to this page",
+        }),
+      ).toBeInTheDocument();
       expect(screen.queryByRole('textbox', { name: 'Name' })).not.toBeInTheDocument();
     },
   );
@@ -262,6 +272,10 @@ describe('errors on a page inside the app shell', () => {
 
     const retry = await screen.findByRole('button', { name: 'Try again' });
     expectShell();
+    // The failed page replaces the whole page, h1 included: its message takes that place.
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Something went wrong' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reload page' })).toBeInTheDocument();
 
     healthy = true;
@@ -318,6 +332,9 @@ describe('errors on a page inside the app shell', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong');
     expectShell();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Something went wrong' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reload page' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
   });
@@ -326,7 +343,7 @@ describe('errors on a page inside the app shell', () => {
     renderPage('/page-errors/response');
 
     expect(
-      await screen.findByRole('heading', { level: 2, name: "We couldn't find that page" }),
+      await screen.findByRole('heading', { level: 1, name: "We couldn't find that page" }),
     ).toBeInTheDocument();
     expectShell();
   });

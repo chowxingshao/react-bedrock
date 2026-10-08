@@ -80,8 +80,9 @@ describe('guards', () => {
       </RequirePermission>,
       { auth: 'viewer' },
     );
+    // It stands in for the whole page, so its title is the page's h1.
     expect(
-      await screen.findByRole('heading', { name: "You don't have access to this page" }),
+      await screen.findByRole('heading', { level: 1, name: "You don't have access to this page" }),
     ).toBeInTheDocument();
   });
 

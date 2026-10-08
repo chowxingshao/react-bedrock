@@ -10,6 +10,11 @@ export interface EmptyStateProps {
   icon?: LucideIcon;
   /** Optional call to action, e.g. <Button>Create item</Button>. */
   action?: ReactNode;
+  /**
+   * Level of the title: 2 under the page's own h1 (default), 1 when this view stands in for the
+   * whole page and there is no other h1.
+   */
+  headingLevel?: 1 | 2;
   className?: string;
 }
 
@@ -19,9 +24,11 @@ export function EmptyState({
   description,
   icon: Icon = InboxIcon,
   action,
+  headingLevel = 2,
   className,
 }: EmptyStateProps) {
   const { t } = useTranslation();
+  const Heading = headingLevel === 1 ? 'h1' : 'h2';
 
   return (
     <div
@@ -34,7 +41,7 @@ export function EmptyState({
         <Icon aria-hidden="true" className="size-6" />
       </div>
       <div className="grid gap-1">
-        <h2 className="text-lg font-semibold">{title ?? t('states.empty.title')}</h2>
+        <Heading className="text-lg font-semibold">{title ?? t('states.empty.title')}</Heading>
         <p className="text-sm text-muted-foreground">
           {description ?? t('states.empty.description')}
         </p>
