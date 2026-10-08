@@ -3,3 +3,17 @@
 allowBuilds:
   esbuild: true
   unrs-resolver: true
+
+# Security advisories in dev and test tooling that no upstream release has fixed yet (pnpm audit). Remove an
+# override when the package that pulls it in ships a fixed range.
+overrides:
+  # @tanstack/react-query-devtools > solid-js pins seroval to ~1.5; fixed in 1.6.3 (GHSA-p6vx-979v-rg4c, GHSA-jp82-f5mq-hwhp)
+  seroval: '>=1.6.3'
+  # postcss (Vite, Tailwind, jsdom) > source-map-js; fixed in 1.2.2 (GHSA-68fv-2mgg-jv7q)
+  source-map-js: '>=1.2.2'
+
+auditConfig:
+  ignoreGhsas:
+    # braces <=3.0.3 via plop > liftoff > findup-sync > micromatch: no patched version exists. Only the plop CLI
+    # (pnpm gen) uses it, on the developer's own patterns; it is not part of the app or the image.
+    - GHSA-vfj7-8cjw-p6xm

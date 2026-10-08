@@ -1,0 +1,39 @@
+name: Deploy
+
+# Staging on every push to main, production on every published release (spec §10.3).
+# PLACEHOLDER: the template assumes no hosting provider. The job is skipped until the repository
+# variable DEPLOY_ENABLED is 'true'. Replace the "Deploy" step first (docs/deployment.md).
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ github.event_name == 'release' && 'production' || 'staging' }}
+    concurrency:
+      group: deploy-${{ github.event_name == 'release' && 'production' || 'staging' }}
+      cancel-in-progress: false
+    env:
+      TARGET: ${{ github.event_name == 'release' && 'production' || 'staging' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: Build once for every environment (settings are applied where it is deployed)
+        run: pnpm build
+        env:
+          GIT_SHA: ${{ github.sha }}
+      - name: Deploy (placeholder)
+        run: |
+          echo "::warning::No deployment is configured for $TARGET. Replace this step in .github/workflows/deploy.yml (docs/deployment.md)."
+          # Static hosting: upload dist/, then write config.js for $TARGET next to index.html.
+          # Containers: deploy ghcr.io/${{ github.repository }} (pushed by docker-publish.yml)
+          #             and set the VITE_* variables on the $TARGET service.

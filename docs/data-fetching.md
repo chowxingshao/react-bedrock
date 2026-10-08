@@ -31,7 +31,7 @@ Requests time out after `HTTP_TIMEOUT_MS` (30 s, `src/config/constants.ts`) with
 
 **Errors for users:** `getErrorMessage(error)` returns a translated message. Add `errors:codes.<YOUR_CODE>` to the locale files to translate backend-specific error codes; server codes must be UPPER_SNAKE_CASE, any other code is never used as a translation key.
 
-**Cross-origin APIs:** `X-Request-Id` is a custom header, so browsers send a CORS preflight. The backend must allow it (`Access-Control-Allow-Headers: X-Request-Id, Accept-Language, Content-Type`) and may expose `X-Request-Id` in its responses. The same-origin `/api` proxy of the Docker setup (planned) avoids all of this.
+**Cross-origin APIs:** `X-Request-Id` is a custom header, so browsers send a CORS preflight. The backend must allow it (`Access-Control-Allow-Headers: X-Request-Id, Accept-Language, Content-Type`) and may expose `X-Request-Id` in its responses. The same-origin `/api` proxy of the Docker setup (the production image and `docker compose up`, configured with `API_PROXY_TARGET`: docs/docker.md) avoids all of this.
 
 ## Server state with TanStack Query
 

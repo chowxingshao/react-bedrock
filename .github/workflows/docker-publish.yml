@@ -1,0 +1,50 @@
+name: Publish Docker image
+
+# Pushes the production image to GitHub Container Registry for every published release:
+#   ghcr.io/<owner>/<repo>:<version>, :<major>.<minor>, :latest and :sha-<commit>  (docs/deployment.md)
+# Run it manually to push a sha-tagged image of any branch.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Build and push
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+          flavor: latest=auto
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+      # The Node stages run on the build platform, so arm64 needs no emulation (see the Dockerfile).
+      # If an arm64 build ever fails with "exec format error", a RUN step was added to the runtime stage:
+      # add docker/setup-qemu-action before buildx.
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # A newer push to a pull request cancels its older run. A run on main is never cancelled once it has started.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test:coverage
+      - run: pnpm build
+      - name: Check that src/api/generated matches openapi/openapi.yaml
+        run: |
+          pnpm codegen:api
+          if [ -n "$(git status --porcelain -- src/api/generated)" ]; then
+            echo "::error::src/api/generated is out of date. Run pnpm codegen:api and commit the result."
+            git status --porcelain -- src/api/generated
+            exit 1
+          fi
+      - name: Upload the coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  e2e:
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm exec playwright install --with-deps chromium
+      # Playwright's webServer builds the app, then tests against `vite preview` with the mock API on
+      # (playwright.config.ts, spec §10.3). There is no separate build step.
+      - run: pnpm test:e2e
+      - name: Upload the Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  generators:
+    name: Generators produce lint-clean code
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: Run every generator
+        run: |
+          pnpm gen feature purchase-orders purchase-order y
+          pnpm gen component status-pill ui
+          pnpm gen page reports Reports
+          pnpm gen hook window-size
+          pnpm gen store filters
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - name: Build the production image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: react-bedrock:ci
+          build-args: |
+            APP_VERSION=0.0.0-ci
+            GIT_SHA=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      # The smoke test calls `node`, which is preinstalled on the runner (no setup step needed).
+      - name: Smoke test
+        run: bash scripts/docker-smoke-test.sh react-bedrock:ci

@@ -1,0 +1,44 @@
+# Weekly dependency updates (spec §10.3). npm minor and patch updates arrive as one grouped pull request;
+# every major update gets its own.
+version: 2
+updates:
+  - package-ecosystem: npm # covers pnpm-lock.yaml too
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Held back until eslint-plugin-react, eslint-plugin-jsx-a11y and typescript-eslint support them
+      # (docs/contributing.md → Dependency updates).
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@eslint/js'
+        update-types: ['version-update:semver-major']
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      # The Node.js types follow the major version in .nvmrc.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: github-actions
+    directories: ['/', '/.github/actions/*']
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+    commit-message:
+      prefix: ci
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build

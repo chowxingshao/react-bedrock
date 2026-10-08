@@ -1,0 +1,43 @@
+name: Storybook
+
+# Builds the component catalogue on every push to main. Publishing to GitHub Pages is opt-in:
+# set the repository variable STORYBOOK_PAGES to 'true' and choose "GitHub Actions" as the Pages source.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: storybook
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Storybook
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm storybook:build
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: storybook-static
+
+  publish:
+    name: Publish to GitHub Pages
+    needs: build
+    if: ${{ vars.STORYBOOK_PAGES == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
