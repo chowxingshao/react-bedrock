@@ -2,7 +2,7 @@
 #   docker compose --profile dev up web-dev    (or: pnpm docker:dev)
 # docker-compose.yml bind-mounts the source into /app and keeps node_modules in a named volume,
 # so the container's Linux dependencies never mix with the host's (important on macOS and Windows).
-FROM node:24-alpine
+FROM node:26-alpine
 WORKDIR /app
 ENV HUSKY=0
 COPY package.json ./

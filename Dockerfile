@@ -4,7 +4,7 @@
 # platforms (e.g. linux/arm64) need no emulation.
 
 # ---- deps: install dependencies (cached until package.json or the lockfile change)
-FROM --platform=$BUILDPLATFORM node:24-alpine AS deps
+FROM --platform=$BUILDPLATFORM node:26-alpine AS deps
 WORKDIR /app
 ENV HUSKY=0
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
