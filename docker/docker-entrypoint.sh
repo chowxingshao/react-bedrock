@@ -60,8 +60,11 @@ if [ -n "$API_PROXY_TARGET" ]; then
   case "${API_PROXY_TARGET#*://}" in
     */*) fail "API_PROXY_TARGET must be scheme://host[:port] with no path (got '$API_PROXY_TARGET')" ;;
   esac
-  printf '%s' "${API_PROXY_TARGET#*://}" | grep -Eq '^[][A-Za-z0-9._:-]+$' ||
-    fail "API_PROXY_TARGET must be scheme://host[:port] with letters, digits, '.', '-', '_' and ':' only (got '$API_PROXY_TARGET')"
+  # A shell pattern matches the whole value, line breaks included. (grep works line by line: one clean line
+  # followed by "; proxy_set_header ..." on the next would pass, and nginx would read it as a directive.)
+  case "${API_PROXY_TARGET#*://}" in
+    '' | *[!][A-Za-z0-9._:-]*) fail "API_PROXY_TARGET must be scheme://host[:port] with letters, digits, '.', '-', '_' and ':' only (got '$API_PROXY_TARGET')" ;;
+  esac
 fi
 
 API_ORIGIN=$(origin_of "$(printenv VITE_API_BASE_URL || true)")
@@ -72,9 +75,20 @@ CONTENT_SECURITY_POLICY=${CONTENT_SECURITY_POLICY:-$DEFAULT_CSP}
 export API_PROXY_TARGET CONTENT_SECURITY_POLICY
 
 if [ -n "$API_PROXY_TARGET" ]; then
-  envsubst '${API_PROXY_TARGET} ${CONTENT_SECURITY_POLICY}' \
-    < "$APP_DIR/nginx.conf.template" > /etc/nginx/conf.d/default.conf
-  log "proxying /api/ to $API_PROXY_TARGET"
+  case "$API_PROXY_TARGET" in
+    https://*)
+      # The template's upstream-TLS lines stay: nginx checks the upstream certificate (docs/security.md).
+      envsubst '${API_PROXY_TARGET} ${CONTENT_SECURITY_POLICY}' \
+        < "$APP_DIR/nginx.conf.template" > /etc/nginx/conf.d/default.conf
+      log "proxying /api/ to $API_PROXY_TARGET (the upstream certificate is verified)"
+      ;;
+    *)
+      # Plain http: there is no TLS to verify, so the lines are left out.
+      sed '/# api-proxy-tls:begin/,/# api-proxy-tls:end/d' "$APP_DIR/nginx.conf.template" \
+        | envsubst '${API_PROXY_TARGET} ${CONTENT_SECURITY_POLICY}' > /etc/nginx/conf.d/default.conf
+      log "proxying /api/ to $API_PROXY_TARGET"
+      ;;
+  esac
 else
   sed '/# api-proxy:begin/,/# api-proxy:end/d' "$APP_DIR/nginx.conf.template" \
     | envsubst '${CONTENT_SECURITY_POLICY}' > /etc/nginx/conf.d/default.conf

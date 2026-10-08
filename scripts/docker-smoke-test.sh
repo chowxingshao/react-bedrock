@@ -14,7 +14,7 @@ BASE="http://127.0.0.1:18080"
 PROXY_BASE="http://127.0.0.1:18081"
 
 cleanup() {
-  docker rm -f "$NAME" "$NAME-proxy" "$NAME-invalid" "$NAME-readonly" >/dev/null 2>&1 || true
+  docker rm -f "$NAME" "$NAME-proxy" "$NAME-https" "$NAME-invalid" "$NAME-injected" "$NAME-readonly" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
@@ -41,6 +41,17 @@ wait_healthy() {
     sleep 1
   done
   fail "$1/healthz did not answer 'ok' within 30 seconds"
+}
+
+# For a container without a published port: succeeds once nginx answers on /healthz inside it.
+wait_exec_healthy() {
+  for _ in $(seq 1 30); do
+    if docker exec "$1" wget -q -O /dev/null http://127.0.0.1:8080/healthz 2>/dev/null; then
+      return 0
+    fi
+    sleep 1
+  done
+  fail "$1 did not answer on /healthz within 30 seconds"
 }
 
 size=$(docker image inspect "$IMAGE" --format '{{.Size}}')
@@ -123,11 +134,39 @@ status=$(curl -s -o /dev/null -w '%{http_code}' "$PROXY_BASE/api/items")
 [ "$status" = "502" ] || fail "with API_PROXY_TARGET set, /api/ must be proxied (expected 502 from the closed port, got $status)"
 pass "API proxy"
 
+# There is no TLS to verify on an http:// upstream, so the rendered config must not carry the verification lines.
+proxy_conf=$(docker exec "$NAME-proxy" cat /etc/nginx/conf.d/default.conf)
+contains "$proxy_conf" 'proxy_pass http://127.0.0.1:9;' || fail "the rendered config must proxy /api/ to the http:// target"
+if contains "$proxy_conf" 'proxy_ssl_verify'; then fail "an http:// upstream must not get the proxy_ssl_verify lines"; fi
+pass "an http:// API_PROXY_TARGET gets no TLS directives"
+
+# An https:// upstream must be verified (otherwise nginx accepts any certificate), and nginx must accept the config
+# (nginx -t also fails when the CA bundle file is missing). 127.0.0.1 needs no DNS; nothing listens there.
+docker run -d --name "$NAME-https" -e API_PROXY_TARGET=https://127.0.0.1:9 "$IMAGE" >/dev/null
+wait_exec_healthy "$NAME-https"
+https_conf=$(docker exec "$NAME-https" cat /etc/nginx/conf.d/default.conf)
+for directive in 'proxy_pass https://127.0.0.1:9;' 'proxy_ssl_verify on;' 'proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;' 'proxy_ssl_verify_depth 3;'; do
+  contains "$https_conf" "$directive" || fail "the rendered config of an https:// upstream must contain: $directive"
+done
+nginx_test=$(docker exec "$NAME-https" nginx -t 2>&1) || fail "nginx -t must accept the config of an https:// upstream: $nginx_test"
+pass "an https:// API_PROXY_TARGET verifies the upstream certificate"
+
+# The value is pasted into an nginx directive: anything but scheme://host[:port] stops the container.
 docker run -d --name "$NAME-invalid" -e API_PROXY_TARGET=backend:3000 "$IMAGE" >/dev/null
 sleep 3
 [ "$(docker inspect -f '{{.State.Running}}' "$NAME-invalid")" = "false" ] || fail "an invalid API_PROXY_TARGET must stop the container"
 contains "$(docker logs "$NAME-invalid" 2>&1)" 'API_PROXY_TARGET must start with http://' || fail "the container must say why API_PROXY_TARGET is invalid"
 pass "an invalid API_PROXY_TARGET is rejected"
+
+# A line break must not smuggle a second line past the check: nginx would read the second line as a directive.
+injected=$(printf 'http://127.0.0.1:9\n;proxy_set_header X-Injected 1')
+docker run -d --name "$NAME-injected" -e "API_PROXY_TARGET=$injected" "$IMAGE" >/dev/null
+sleep 3
+[ "$(docker inspect -f '{{.State.Running}}' "$NAME-injected")" = "false" ] || fail "an API_PROXY_TARGET with a line break must stop the container"
+injected_logs=$(docker logs "$NAME-injected" 2>&1)
+contains "$injected_logs" "letters, digits, '.', '-', '_' and ':' only" || fail "the container must say why the API_PROXY_TARGET with a line break is invalid"
+if contains "$injected_logs" 'proxying /api/'; then fail "an API_PROXY_TARGET with a line break must never reach nginx"; fi
+pass "an API_PROXY_TARGET with a line break is rejected"
 
 # A read-only /usr/share/nginx/html cannot take the generated config.js. Serving the one built into the image would
 # silently ignore every VITE_* variable, so the container must stop instead.
