@@ -56,7 +56,7 @@ The **default policy** (`docker/docker-entrypoint.sh`):
 
 - Start from the effective policy the container logs at start-up (`docker compose logs web`).
 - Keep the `'sha256-…'` source. Without it the theme script is blocked: the app still works, but flashes the light theme while loading.
-- The value must not contain double quotes or `$`.
+- The value must not contain double quotes, `$`, backslashes or control characters (line breaks included): the container refuses to start with a message, because nginx would read them as part of its own configuration.
 - **Third-party services** (analytics, fonts, maps): add their origins to the matching directive (`script-src`, `connect-src`, `img-src`, …). Test with the browser console open, where blocked requests are reported.
 
 `pnpm dev` and `pnpm preview` send no CSP, so check policy changes in the Docker image (`docker compose up --build`).
@@ -70,7 +70,7 @@ The **default policy** (`docker/docker-entrypoint.sh`):
 
 ## Container image
 
-- nginx runs as an unprivileged user (UID 101) on port 8080. The only files it can change are `config.js` and its own server config, which are rewritten at every start.
+- nginx runs as an unprivileged user (UID 101) on port 8080. UID 101 can write `config.js`, its configuration under `/etc/nginx`, and its cache and temp folders (`/var/cache/nginx` and `/tmp`). The app's other files (the static files, the nginx template and the CSP hashes) are root-owned and read-only to it. The entrypoint rewrites `config.js` and the server config at every start.
 - A container that cannot write `config.js` (for example on a read-only file system) stops with a `cannot write` message. Serving the `config.js` built into the image would silently ignore every variable, `VITE_ENABLE_MOCKS=false` included. Make that one file writable, for example with a volume mounted at its path.
 - The runtime image contains only nginx and the built static files: no Node.js, no source code, no dependencies. It is well under 50 MB (about 31 MB as built from this template).
 - A `HEALTHCHECK` probes `/healthz`, and `scripts/docker-smoke-test.sh` checks the whole runtime contract in CI.
@@ -79,4 +79,4 @@ The **default policy** (`docker/docker-entrypoint.sh`):
 - **Private certificate authority.** The image has no setting for extra CAs. nginx reads the bundle file when it starts, so you can replace that file: mount a PEM file over `/etc/ssl/certs/ca-certificates.crt` (read-only is fine; UID 101 must be able to read it). Start from the image's own bundle and append your CA's certificate: `docker run --rm --entrypoint cat react-bedrock:local /etc/ssl/certs/ca-certificates.crt > bundle.pem`, then `cat my-ca.pem >> bundle.pem`, then `docker run -v "$PWD/bundle.pem:/etc/ssl/certs/ca-certificates.crt:ro" -e API_PROXY_TARGET=https://… react-bedrock:local`. Your upstream's certificate needs the host name from `API_PROXY_TARGET` as a subject alternative name. The bundled roots only change when you rebuild the image on a newer base image.
 - **Request size.** nginx's default limit of 1 MB applies to request bodies sent through `/api/`, and larger ones get `413`. Add `client_max_body_size` to `docker/nginx.conf.template` for uploads.
 - **IPv4 only.** The server block says `listen 8080;`. The entrypoint replaces the base image's start-up script, the one that would add an IPv6 listener. A cluster that is IPv6-only needs `listen [::]:8080;` as well.
-- **Base images are floating tags** (`node:24-alpine` and `nginxinc/nginx-unprivileged:stable-alpine-slim`, no digest). Each build picks up the latest patch release, so builds are not byte-for-byte reproducible. The pnpm version is exact: the Dockerfile installs the one pinned in `package.json#packageManager`. Pin the base images by digest if you need reproducible builds, and update the digests yourself, since Dependabot cannot bump a moving tag.
+- **Base images are floating tags** (`node:24-alpine` and `nginxinc/nginx-unprivileged:stable-alpine-slim`, no digest). A build uses whatever the tag points to when the builder pulls it: `docker build --pull` always fetches the current image, a builder that already has the image may keep using its copy, and a fresh CI builder pulls the current one. Builds are therefore not byte-for-byte reproducible. The pnpm version is exact: the Dockerfile installs the one pinned in `package.json#packageManager`. Pin the base images as `image:tag@sha256:…` if you need reproducible builds; Dependabot then proposes digest updates.

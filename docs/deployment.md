@@ -10,7 +10,7 @@
 | `workflows/storybook.yml`      | push to `main`, or manually                              | Builds Storybook, and publishes it to GitHub Pages when the repository variable `STORYBOOK_PAGES` is `true`                                                                                                         |
 | `dependabot.yml`               | weekly                                                   | Grouped updates for dependencies, GitHub Actions and base images (configuration for Dependabot, not a workflow)                                                                                                     |
 
-The shared setup lives in `actions/setup`: pnpm from `package.json`, Node.js from `.nvmrc`, and a cached install.
+The shared setup lives in `.github/actions/setup`: pnpm from `package.json`, Node.js from `.nvmrc`, and a cached install.
 
 Two repository variables switch on the optional parts (Settings → Secrets and variables → Actions → Variables). Without them the repository still builds and tests:
 
@@ -30,7 +30,7 @@ Builds contain no environment-specific values. Each deployment supplies its sett
 | The Docker image                       | Environment variables on the container, written to `config.js` at start (docs/docker.md) |
 | Static files (object storage + CDN, …) | A `config.js` that your deploy step writes next to `index.html`                          |
 
-So the artifact that passed QA on staging is exactly the one that goes to production.
+So one artifact can be promoted unchanged from staging to production. As shipped, the workflows do not do that: `deploy.yml` runs its own build for every push to `main` and every release (once `DEPLOY_ENABLED` is `true`), and `docker-publish.yml` builds only for a release or a manual run. When you wire up the deploy step, promote the same `sha-<commit>` image (a manual run of `docker-publish.yml` pushes one for any branch) or one `dist` artifact instead of building again.
 
 **Set `VITE_ENABLE_MOCKS=false` on every real deployment.** Unset means `true`: the app then answers from the built-in mock API and accepts the demo accounts, with only a console warning. The image always contains the mock worker and the demo accounts. The variable decides whether they run, and the mock chunk (about 400 kB) is downloaded only when they do.
 
