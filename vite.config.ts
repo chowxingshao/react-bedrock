@@ -4,36 +4,61 @@ import { fileURLToPath, URL } from 'node:url';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig, loadEnv } from 'vite';
+import { visualizer } from 'rollup-plugin-visualizer';
+import { defineConfig, loadEnv, type PluginOption } from 'vite';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as {
   version: string;
 };
 
+/** Build metadata from the environment. Docker passes build args that were not provided as empty strings. */
+function buildArg(name: 'APP_VERSION' | 'GIT_SHA'): string | undefined {
+  const value = process.env[name];
+  return value === '' ? undefined : value;
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  // Server-side only, never exposed to the browser: forwards /api to a real backend when set.
-  const apiProxyTarget = loadEnv(mode, process.cwd(), '').API_PROXY_TARGET;
+  // Server-side settings, never exposed to the browser (read from .env files and the shell).
+  const serverEnv = loadEnv(mode, process.cwd(), '');
+  // Forwards /api to a real backend when set.
+  const apiProxyTarget = serverEnv.API_PROXY_TARGET;
   const proxy = apiProxyTarget
     ? { '/api': { target: apiProxyTarget, changeOrigin: true } }
     : undefined;
+  // Docker on Windows/WSL: bind-mounted files emit no change events, so poll instead.
+  const watch =
+    serverEnv.CHOKIDAR_USEPOLLING === 'true' ? { usePolling: true, interval: 300 } : undefined;
 
   // env.test.ts reads `.env.example` through Vite (`?raw`), and Vite's default `server.fs.deny` blocks
   // `.env.*`. Relax that for the test run only: the dev and preview servers keep the secure defaults.
   const fs = mode === 'test' ? { deny: ['*.{crt,pem}', '**/.git/**'] } : undefined;
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      // `pnpm analyze`: a treemap of everything in the bundle, with gzip and brotli sizes. It opens in the
+      // browser, except in CI, where there is none.
+      mode === 'analyze' &&
+        (visualizer({
+          filename: 'stats.html',
+          template: 'treemap',
+          gzipSize: true,
+          brotliSize: true,
+          open: !process.env.CI,
+        }) as PluginOption),
+    ],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
     },
     define: {
-      __APP_VERSION__: JSON.stringify(process.env.APP_VERSION ?? pkg.version),
-      __GIT_SHA__: JSON.stringify(process.env.GIT_SHA ?? 'local'),
+      __APP_VERSION__: JSON.stringify(buildArg('APP_VERSION') ?? pkg.version),
+      __GIT_SHA__: JSON.stringify(buildArg('GIT_SHA') ?? 'local'),
     },
-    server: { proxy, fs },
+    server: { proxy, watch, fs },
     preview: { proxy },
     test: {
       environment: 'jsdom',
@@ -66,6 +91,11 @@ export default defineConfig(({ mode }) => {
           'src/main.tsx',
         ],
         reporter: ['text', 'html', 'lcov'],
+        // Spec §10.2: at least ~70% on the infrastructure and utility layers. Raise these as coverage grows.
+        thresholds: {
+          'src/core/**': { lines: 70, functions: 70, branches: 70, statements: 70 },
+          'src/lib/**': { lines: 70, functions: 70, branches: 70, statements: 70 },
+        },
       },
     },
   };

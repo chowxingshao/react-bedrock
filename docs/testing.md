@@ -121,3 +121,9 @@ Always build handler URLs with `apiUrl()`: it resolves paths the same way the sh
 | Component or hook                           | Vitest + Testing Library (`@/test/render`), with MSW for data                    |
 | A feature flow across pages                 | an integration test with the real route tree (`src/app/router.test.tsx`), or E2E |
 | Critical user journeys, visual states, a11y | Playwright (`e2e/`)                                                              |
+
+## Coverage
+
+`pnpm test:coverage` writes a report to `coverage/` (open `coverage/index.html`). It **fails** when coverage of `src/core/**` or `src/lib/**` drops below 70% for lines, functions, branches or statements. Each folder is measured as a whole, not file by file. Tests, stories, `.d.ts` files, `src/test`, `src/mocks`, `src/api/generated` and `src/main.tsx` are left out of the report. CI runs it on every pull request and uploads the report.
+
+Raise the thresholds in `vite.config.ts` as coverage grows. Never lower them to make a change pass.

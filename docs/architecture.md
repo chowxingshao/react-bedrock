@@ -88,3 +88,20 @@ Rules:
 - Features never import another feature's internals. Move shared code to `src/components`, `src/hooks` or `src/lib`.
 - A feature owns its i18n namespace and its mock handlers file. Both files take the kebab-case name of the feature's data (`src/locales/<locale>/<name>.json`, `src/mocks/handlers/<name>.ts`), and the namespace is that name in camelCase: `purchase-orders` gives `purchase-orders.json`, `handlers/purchase-orders.ts` and the namespace `purchaseOrders`. For a one-word name they coincide: `items` for the `example` feature.
 - A mock handler reads the feature's contract from its `schemas/` and `types/` files, not from its index (ESLint allows that deep import under `src/mocks` only, and only for `schemas/` and `types/`: an import of `api/`, `hooks/` or `components/` fails lint there too). The test setup loads every handler, and the index also exports the pages: going through it would load the whole UI into every test file, and a test could no longer `vi.mock` a module the UI uses.
+
+## Performance
+
+- **Code splitting:** every page is a lazy route (`lazy: () => import(…)` in `src/app/router.tsx`), so users download only what they open. The Sentry SDK and the mock API are separate chunks, loaded only when enabled.
+- **Bundle analysis:** `pnpm analyze` builds and opens `stats.html`, a treemap of every module by size, with gzip and brotli sizes. Check it before and after adding a dependency. The file is git-ignored. With `CI=true` set, the command writes it without opening a browser.
+- **Bundle:**
+  - The template does not split vendor libraries into chunks of their own: the build has no warning (apart from the `%VITE_APP_NAME%` notice) and its largest chunk, the mock API, is about 396 kB. A project that wants cache-friendly vendor chunks can configure `build.rolldownOptions.output.codeSplitting.groups` in `vite.config.ts`. That would shrink the entry chunk, about 213 kB today, to about 7 kB.
+  - The first load of `/login` is about 814 kB of JavaScript (262 kB gzip): the entry chunk, React, the router and the login page, with the chunks they share.
+  - `src/app/routes/login.tsx` imports `@/mocks/fixtures/users`, so the demo accounts are in every build, even with `VITE_ENABLE_MOCKS=false`. The login page only shows them when the mocks are on. `dist` also holds the mock API chunk and `mockServiceWorker.js`, which a browser downloads only when the mocks are on. This is deliberate and not gated: the mock chunk carries the same fixtures, so a guard on the import would remove nothing. Set `VITE_ENABLE_MOCKS=false` on every real deployment.
+- **Caching:** in the production Docker image, hashed files under `/assets/` are cached for a year, while `index.html` and `config.js` are never cached. A new deployment is therefore live on the next page load.
+- **Images:**
+  - Prefer SVG for icons and illustrations; lucide icons are already inline SVG.
+  - Use AVIF or WebP for photos, sized for the largest display they appear at.
+  - Import images from `src/` (`import heroUrl from './hero.webp'`) to get hashed, long-cached URLs. Put files in `public/` only when they need a fixed URL.
+  - Always set `width` and `height` (or an aspect ratio) to avoid layout shift.
+  - Add `loading="lazy"` and `decoding="async"` to images below the fold.
+- **Web Vitals:** optional; see docs/error-handling-and-logging.md.
