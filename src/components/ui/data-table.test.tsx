@@ -1,5 +1,6 @@
 import type { PaginationState, SortingState, Updater } from '@tanstack/react-table';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { render, screen, within } from '@/test/render';
@@ -68,6 +69,50 @@ describe('DataTable', () => {
 
     const update = onChange.mock.calls[0]?.[0];
     expect(update && apply(update, state)).toEqual({ pageIndex: 1, pageSize: 2 });
+  });
+
+  it('keeps focus on a pager button that becomes unavailable', async () => {
+    const onChange = vi.fn<(updater: Updater<PaginationState>) => void>();
+    const user = userEvent.setup();
+
+    function PagedTable() {
+      const [state, setState] = useState<PaginationState>({ pageIndex: 0, pageSize: 2 });
+      return (
+        <DataTable
+          columns={columns}
+          data={people}
+          pagination={{
+            state,
+            onChange: (updater) => {
+              onChange(updater);
+              setState((previous) => apply(updater, previous));
+            },
+            rowCount: 4,
+          }}
+        />
+      );
+    }
+
+    render(<PagedTable />);
+
+    const last = screen.getByRole('button', { name: 'Go to last page' });
+    await user.click(last);
+
+    expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
+    // A button that is disabled while it has focus drops focus to the page, so it stays focusable instead.
+    expect(last).toHaveAttribute('aria-disabled', 'true');
+    expect(last).not.toBeDisabled();
+    expect(last).toHaveFocus();
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    await user.click(last);
+
+    expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Go to first page' })).toHaveAttribute(
+      'aria-disabled',
+      'false',
+    );
   });
 
   it('exposes the pager as a labelled navigation landmark', () => {

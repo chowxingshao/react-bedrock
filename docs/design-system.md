@@ -184,3 +184,5 @@ function ItemsTable() {
 `placeholderData: keepPreviousData` keeps the previous page on screen while the next one loads. That keeps the table and its pager mounted, so keyboard focus and scroll position survive page and sort changes. Without it, every page or sort change is a new query with no data yet, `QueryState` swaps the table for its loader, and focus falls back to the page.
 
 `QueryState` supplies the loading, empty and error states (including **Try again**); a failed query must never fall through to the table's "Nothing here yet". Omit `sorting` to disable sorting, or `pagination` to hide the pager. The table keeps `pageIndex` when the sort changes, so reset it in your `onChange` if the sort should return to page 1. For small static tables, use the plain `Table` primitive.
+
+Pager buttons that cannot be used are marked `aria-disabled` rather than disabled, so a keyboard user who reaches the last page keeps focus there.

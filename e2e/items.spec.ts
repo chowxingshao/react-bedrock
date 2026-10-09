@@ -21,6 +21,18 @@ test('search, filter, sort and paging live in the URL', async ({ page }) => {
   await expect(page.getByRole('combobox', { name: 'Filter by status' })).toHaveText('Archived');
 });
 
+test('keeps focus on the pager when it reaches the last page', async ({ page }) => {
+  const last = page.getByRole('button', { name: 'Go to last page' });
+  await last.focus();
+  await page.keyboard.press('Enter');
+
+  await expect(page).toHaveURL(/page=\d+/);
+  // Check the attribute first: it waits for the re-render, so the focus check cannot run before the browser
+  // would have dropped focus from a disabled button.
+  await expect(last).toHaveAttribute('aria-disabled', 'true');
+  await expect(last).toBeFocused();
+});
+
 test('creates, edits and deletes an item', async ({ page }) => {
   await page.getByRole('link', { name: 'New item' }).click();
   await page.getByLabel('Name').fill('E2E lamp');

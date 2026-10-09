@@ -195,6 +195,10 @@ function DataTablePagination<TData extends RowData>({
   const labelId = useId();
   const { pageIndex, pageSize } = table.state.pagination;
   const pageCount = Math.max(table.getPageCount(), 1);
+  // Unavailable pager buttons are `aria-disabled`, not `disabled`: a button that is disabled while it has
+  // focus drops focus to the page, so an unavailable pager button stays focusable and does nothing.
+  const canPreviousPage = table.getCanPreviousPage();
+  const canNextPage = table.getCanNextPage();
   // The Select renders blank for a value it has no item for (e.g. a URL-driven ?pageSize=25).
   const sizes = [...new Set([...pageSizeOptions, pageSize])].sort((a, b) => a - b);
 
@@ -235,10 +239,11 @@ function DataTablePagination<TData extends RowData>({
             type="button"
             variant="outline"
             size="icon"
+            className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
             aria-label={t('pagination.firstPage')}
-            disabled={!table.getCanPreviousPage()}
+            aria-disabled={!canPreviousPage}
             onClick={() => {
-              table.firstPage();
+              if (canPreviousPage) table.firstPage();
             }}
           >
             <ChevronsLeftIcon aria-hidden="true" />
@@ -247,10 +252,11 @@ function DataTablePagination<TData extends RowData>({
             type="button"
             variant="outline"
             size="icon"
+            className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
             aria-label={t('pagination.previousPage')}
-            disabled={!table.getCanPreviousPage()}
+            aria-disabled={!canPreviousPage}
             onClick={() => {
-              table.previousPage();
+              if (canPreviousPage) table.previousPage();
             }}
           >
             <ChevronLeftIcon aria-hidden="true" />
@@ -259,10 +265,11 @@ function DataTablePagination<TData extends RowData>({
             type="button"
             variant="outline"
             size="icon"
+            className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
             aria-label={t('pagination.nextPage')}
-            disabled={!table.getCanNextPage()}
+            aria-disabled={!canNextPage}
             onClick={() => {
-              table.nextPage();
+              if (canNextPage) table.nextPage();
             }}
           >
             <ChevronRightIcon aria-hidden="true" />
@@ -271,10 +278,11 @@ function DataTablePagination<TData extends RowData>({
             type="button"
             variant="outline"
             size="icon"
+            className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
             aria-label={t('pagination.lastPage')}
-            disabled={!table.getCanNextPage()}
+            aria-disabled={!canNextPage}
             onClick={() => {
-              table.lastPage();
+              if (canNextPage) table.lastPage();
             }}
           >
             <ChevronsRightIcon aria-hidden="true" />
