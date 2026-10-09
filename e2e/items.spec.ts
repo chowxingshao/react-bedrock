@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Desk lamp', exact: true })).toBeVisible();
 });
 
-test('search, filter, sort and paging live in the URL', async ({ page }) => {
+test('search and filter live in the URL and survive a reload', async ({ page }) => {
   await page.getByRole('searchbox', { name: 'Search items' }).fill('desk');
   await expect(page).toHaveURL(/\?q=desk$/);
   await expect(page.getByText('3 total')).toBeVisible();
@@ -47,7 +47,7 @@ test('creates, edits and deletes an item', async ({ page }) => {
   await page.getByRole('button', { name: 'Save changes' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'E2E lamp XL' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Delete' }).click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click();
   await expect(page.getByText('Deleted E2E lamp XL')).toBeVisible();
   await expect(page).toHaveURL(/\/items$/);
@@ -80,12 +80,12 @@ test('gives focus back to the Delete button of a detail page when the server ref
   await page.goto('/items/item-locked');
   await expect(page.getByRole('heading', { level: 1, name: 'Locked sample' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Delete' }).click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click();
 
   await expect(page.getByText("This item is locked and can't be deleted.")).toBeVisible();
   // The button was disabled while the request ran, so the dialog could not give focus back to it.
-  await expect(page.getByRole('button', { name: 'Delete' })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Delete', exact: true })).toBeFocused();
 });
 
 test('read-only users see no write actions and get 403 on write pages', async ({ page }) => {
