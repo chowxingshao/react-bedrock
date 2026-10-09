@@ -97,8 +97,8 @@ jobs:
           build-args: |
             APP_VERSION=0.0.0-ci
             GIT_SHA=${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=ci
+          cache-to: type=gha,mode=max,scope=ci
       # The smoke test calls `node`, which is preinstalled on the runner (no setup step needed).
       - name: Smoke test
         run: bash scripts/docker-smoke-test.sh react-bedrock:ci

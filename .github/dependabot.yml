@@ -40,5 +40,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # .nvmrc, "engines", @types/node and the Docker base images move to a new Node.js major together.
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
     commit-message:
       prefix: build

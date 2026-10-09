@@ -12,6 +12,11 @@ permissions:
   contents: read
   packages: write
 
+# Publish runs never overlap: a later run waits for the running one (GitHub keeps only the newest waiting run).
+concurrency:
+  group: docker-publish
+  cancel-in-progress: false
+
 jobs:
   publish:
     name: Build and push
@@ -46,5 +51,5 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             GIT_SHA=${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=release
+          cache-to: type=gha,mode=max,scope=release

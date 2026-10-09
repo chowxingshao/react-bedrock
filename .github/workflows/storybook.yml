@@ -12,7 +12,8 @@ permissions:
 
 concurrency:
   group: storybook
-  cancel-in-progress: true
+  # A newer push waits for a deployment that is already running instead of cancelling it half way.
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -32,6 +33,7 @@ jobs:
     needs: build
     if: ${{ vars.STORYBOOK_PAGES == 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       pages: write
       id-token: write
