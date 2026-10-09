@@ -132,9 +132,14 @@ describe('AuthProvider', () => {
       'Sign-out request failed; the local session was cleared anyway',
       { error: expect.objectContaining({ name: 'AppError', status: 500 }) as unknown },
     );
-    // The session cookie is still valid on the server, so the user has to be told.
+    // The session cookie is still valid on the server, so the user has to be told, and the notice
+    // stays until they close it (an auto-dismissing toast could be gone before it is read).
     expect(notice).toHaveBeenCalledExactlyOnceWith(
       "You're signed out here, but we couldn't reach the server. Close the browser to end the session on this computer.",
+      expect.objectContaining({
+        duration: Infinity,
+        action: expect.objectContaining({ label: 'Close' }) as unknown,
+      }),
     );
   });
 
@@ -154,6 +159,10 @@ describe('AuthProvider', () => {
     expect(await screen.findByText('Signed out')).toBeInTheDocument();
     expect(notice).toHaveBeenCalledExactlyOnceWith(
       'Has cerrado la sesión aquí, pero no pudimos comunicarnos con el servidor. Cierra el navegador para terminar la sesión en este equipo.',
+      expect.objectContaining({
+        duration: Infinity,
+        action: expect.objectContaining({ label: 'Cerrar' }) as unknown,
+      }),
     );
   });
 

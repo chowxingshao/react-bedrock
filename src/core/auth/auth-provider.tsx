@@ -94,7 +94,11 @@ export function AuthProvider({ children, strategy = authStrategy }: AuthProvider
       });
       // The httpOnly session cookie is still valid on the server (only the app forgot the user), so a
       // reload would sign them back in: say so.
-      notify.warning(i18n.t('auth.signOutIncomplete'));
+      // The only sign that this computer may stay signed in: keep it until the user closes it.
+      notify.warning(i18n.t('auth.signOutIncomplete'), {
+        duration: Infinity,
+        action: { label: i18n.t('actions.close'), onClick: () => undefined },
+      });
     } finally {
       endSession();
     }
