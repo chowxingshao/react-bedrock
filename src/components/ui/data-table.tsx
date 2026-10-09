@@ -196,7 +196,8 @@ function DataTablePagination<TData extends RowData>({
   const { pageIndex, pageSize } = table.state.pagination;
   const pageCount = Math.max(table.getPageCount(), 1);
   // Unavailable pager buttons are `aria-disabled`, not `disabled`: a button that is disabled while it has
-  // focus drops focus to the page, so an unavailable pager button stays focusable and does nothing.
+  // focus drops focus to the page, so an unavailable pager button stays focusable and does nothing. Only its
+  // content is dimmed: opacity on the button would also fade its border and focus ring, which stay full strength.
   const canPreviousPage = table.getCanPreviousPage();
   const canNextPage = table.getCanNextPage();
   // The Select renders blank for a value it has no item for (e.g. a URL-driven ?pageSize=25).
@@ -239,7 +240,7 @@ function DataTablePagination<TData extends RowData>({
             type="button"
             variant="outline"
             size="icon"
-            className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
+            className="aria-disabled:pointer-events-none aria-disabled:*:opacity-50"
             aria-label={t('pagination.firstPage')}
             aria-disabled={!canPreviousPage}
             onClick={() => {
@@ -252,7 +253,7 @@ function DataTablePagination<TData extends RowData>({
             type="button"
             variant="outline"
             size="icon"
-            className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
+            className="aria-disabled:pointer-events-none aria-disabled:*:opacity-50"
             aria-label={t('pagination.previousPage')}
             aria-disabled={!canPreviousPage}
             onClick={() => {
@@ -265,7 +266,7 @@ function DataTablePagination<TData extends RowData>({
             type="button"
             variant="outline"
             size="icon"
-            className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
+            className="aria-disabled:pointer-events-none aria-disabled:*:opacity-50"
             aria-label={t('pagination.nextPage')}
             aria-disabled={!canNextPage}
             onClick={() => {
@@ -278,7 +279,7 @@ function DataTablePagination<TData extends RowData>({
             type="button"
             variant="outline"
             size="icon"
-            className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
+            className="aria-disabled:pointer-events-none aria-disabled:*:opacity-50"
             aria-label={t('pagination.lastPage')}
             aria-disabled={!canNextPage}
             onClick={() => {

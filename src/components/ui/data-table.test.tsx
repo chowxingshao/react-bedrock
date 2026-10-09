@@ -115,6 +115,28 @@ describe('DataTable', () => {
     );
   });
 
+  it.each([
+    { name: 'Go to first page', pageIndex: 0 },
+    { name: 'Go to previous page', pageIndex: 0 },
+    { name: 'Go to next page', pageIndex: 1 },
+    { name: 'Go to last page', pageIndex: 1 },
+  ])('does nothing when "$name" is unavailable', async ({ name, pageIndex }) => {
+    const onChange = vi.fn<(updater: Updater<PaginationState>) => void>();
+    const user = userEvent.setup();
+    const state = { pageIndex, pageSize: 2 };
+    render(
+      <DataTable columns={columns} data={people} pagination={{ state, onChange, rowCount: 4 }} />,
+    );
+
+    const button = screen.getByRole('button', { name });
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+
+    await user.click(button);
+    await user.keyboard('{Enter}');
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it('exposes the pager as a labelled navigation landmark', () => {
     const state = { pageIndex: 0, pageSize: 2 };
     render(

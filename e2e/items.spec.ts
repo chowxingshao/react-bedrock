@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Desk lamp', exact: true })).toBeVisible();
 });
 
-test('search and filter live in the URL and survive a reload', async ({ page }) => {
+test('search and filter live in the URL, and the filter survives a reload', async ({ page }) => {
   await page.getByRole('searchbox', { name: 'Search items' }).fill('desk');
   await expect(page).toHaveURL(/\?q=desk$/);
   await expect(page.getByText('3 total')).toBeVisible();
@@ -30,6 +30,8 @@ test('keeps focus on the pager when it reaches the last page', async ({ page }) 
   // Check the attribute first: it waits for the re-render, so the focus check cannot run before the browser
   // would have dropped focus from a disabled button.
   await expect(last).toHaveAttribute('aria-disabled', 'true');
+  // A really disabled button stays the active element for a frame or two before focus drops, so rule it out.
+  await expect(last).toHaveJSProperty('disabled', false);
   await expect(last).toBeFocused();
 });
 

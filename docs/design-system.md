@@ -185,4 +185,4 @@ function ItemsTable() {
 
 `QueryState` supplies the loading, empty and error states (including **Try again**); a failed query must never fall through to the table's "Nothing here yet". Omit `sorting` to disable sorting, or `pagination` to hide the pager. The table keeps `pageIndex` when the sort changes, so reset it in your `onChange` if the sort should return to page 1. For small static tables, use the plain `Table` primitive.
 
-Pager buttons that cannot be used are marked `aria-disabled` rather than disabled, so a keyboard user who reaches the last page keeps focus there.
+Pager buttons that cannot be used are marked `aria-disabled` rather than disabled, so a keyboard user who reaches the last page keeps focus there. They stay in the tab order and do nothing, so a list with a single page has four inert tab stops: that is the trade-off of the `aria-disabled` pattern. Only their content is dimmed (not the button itself), so the border and the focus ring keep full strength.
