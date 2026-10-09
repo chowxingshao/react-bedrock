@@ -183,8 +183,9 @@ if contains "$csp_logs" 'Content-Security-Policy:'; then fail "a CONTENT_SECURIT
 pass "a CONTENT_SECURITY_POLICY with a double quote is rejected"
 
 # The origin in connect-src must be the one the browser derives from the same value (src/config/env.ts): credentials
-# end at the first of / ? # @, leading white space is ignored, and the scheme and the host are case-insensitive.
-for value in 'https://api.example.com?x=@evil.example' 'https://api.example.com#@evil.example' ' https://api.example.com' 'HTTPS://API.EXAMPLE.COM'; do
+# end at the last @ before the first / ? # or \ (as in the browser), leading white space is ignored, and the scheme and
+# the host are case-insensitive.
+for value in 'https://api.example.com?x=@evil.example' 'https://api.example.com#@evil.example' ' https://api.example.com' 'HTTPS://API.EXAMPLE.COM' 'https://api.example.com\@evil.example' 'https://a@b@api.example.com'; do
   docker rm -f "$NAME-origin" >/dev/null 2>&1 || true
   docker run -d --name "$NAME-origin" -e "VITE_API_BASE_URL=$value" "$IMAGE" >/dev/null
   wait_exec_healthy "$NAME-origin"

@@ -29,13 +29,13 @@ json_escape() {
 
 # scheme://host[:port] of an absolute http(s) URL, without credentials. Prints nothing for a path such as /api.
 # It agrees with src/config/env.ts and the browser: leading white space is ignored, the scheme and the host are
-# case-insensitive (the result is lower-case), and credentials end at the first of / ? # @ (so "?x=@evil" is
-# not a user name). The host part is cut at the first character a host cannot contain, so nothing else can
-# reach the CSP header. The scheme is matched with bracket classes: the image's sed is BusyBox's, which has no
-# case-insensitive flag.
+# case-insensitive (the result is lower-case), and credentials end at the last @ before the first of / ? # \
+# (so "?x=@evil" is not a user name, "a@b@host" is host, and a backslash ends the host, as for the browser).
+# The host part is cut at the first character a host cannot contain, so nothing else can reach the CSP header.
+# The scheme is matched with bracket classes: the image's sed is BusyBox's, which has no case-insensitive flag.
 origin_of() {
   printf '%s' "$1" \
-    | sed -nE -e 's|^[[:space:]]+||' -e 's|^([Hh][Tt][Tt][Pp][Ss]?://)([^/?#@]*@)?([][A-Za-z0-9._:-]+).*|\1\3|p' \
+    | sed -nE -e 's|^[[:space:]]+||' -e 's|^([Hh][Tt][Tt][Pp][Ss]?://)([^/?#\\]*@)?([][A-Za-z0-9._:-]+).*|\1\3|p' \
     | tr '[:upper:]' '[:lower:]'
 }
 
