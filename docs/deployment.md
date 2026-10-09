@@ -46,7 +46,7 @@ Typical settings:
 
 ## Images (GitHub Container Registry)
 
-Publishing the GitHub release `v1.4.0` pushes `ghcr.io/<owner>/<repo>` with the tags `1.4.0`, `1.4`, `latest` and `sha-<commit>`. The `latest` tag follows every published release, so a hotfix release of an older line moves it too: pin a version tag in production. Run one anywhere:
+Publishing the GitHub release `v1.4.0` pushes `ghcr.io/<owner>/<repo>` with the tags `1.4.0`, `1.4`, `latest` and `sha-<commit>`. The `latest` tag follows the most recently published stable release, even when that release belongs to an older line, so a hotfix of an older line moves it too: pin a version tag in production. Run one anywhere:
 
 ```bash
 docker run -p 8080:8080 -e VITE_ENABLE_MOCKS=false -e API_PROXY_TARGET=http://api.internal:3000 ghcr.io/<owner>/<repo>:1.4.0

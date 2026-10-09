@@ -12,9 +12,11 @@ permissions:
   contents: read
   packages: write
 
-# Publish runs never overlap: a later run waits for the running one (GitHub keeps only the newest waiting run).
+# One run per ref at a time: a release run uses refs/tags/<tag>, so different releases never cancel each other,
+# only a re-run of the same ref waits, and a manual run on a branch cannot replace a pending release run.
+# `latest` can in theory land out of order when two releases finish close together: pin a version tag in production.
 concurrency:
-  group: docker-publish
+  group: docker-publish-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
