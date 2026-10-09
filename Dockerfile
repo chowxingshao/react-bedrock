@@ -8,7 +8,7 @@ FROM --platform=$BUILDPLATFORM node:24-alpine AS deps
 WORKDIR /app
 ENV HUSKY=0
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-# The exact pnpm version pinned in package.json#packageManager (installed with npm; Deviation 13).
+# The exact pnpm version pinned in package.json#packageManager (installed with npm: Node.js no longer ships Corepack from version 25).
 RUN npm install -g "pnpm@$(node -p "require('./package.json').packageManager.split('@')[1].split('+')[0]")"
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --store-dir /pnpm/store

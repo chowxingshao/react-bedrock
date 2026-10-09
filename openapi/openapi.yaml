@@ -3,7 +3,7 @@ info:
   title: React Bedrock example API
   version: 1.0.0
   description: >
-    Local fixture that mirrors the mock API in src/mocks (owner decision 3).
+    Local fixture that mirrors the mock API in src/mocks.
     Replace this file (or point orval.config.ts at your backend's spec URL) for a real project.
 servers:
   - url: /api
@@ -140,7 +140,7 @@ paths:
 components:
   responses:
     Error:
-      description: Error (the assumed contract, owner decision 2).
+      description: Error (the error body the template assumes).
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }

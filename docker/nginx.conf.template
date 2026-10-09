@@ -30,7 +30,7 @@ server {
     # Redirects keep the host and port the browser used (the container's 8080 is usually mapped).
     absolute_redirect off;
 
-    # gzip for every text asset. brotli is not built into the official nginx images (Deviation 10).
+    # gzip for every text asset. brotli is not built into the official nginx images.
     gzip on;
     gzip_vary on;
     gzip_comp_level 6;

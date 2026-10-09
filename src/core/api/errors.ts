@@ -60,7 +60,7 @@ export function isAppError(value: unknown): value is AppError {
   }
 }
 
-/** Assumed backend error body (owner decision 2). Adapt HERE if your backend differs. */
+/** The error body the template assumes: `{ code?, message?, details? }`. Adapt HERE if your backend differs. */
 const errorBodySchema = z.object({
   code: z.string().optional(),
   message: z.string().optional(),
@@ -156,7 +156,8 @@ function classify(error: unknown): AppError {
 /**
  * A translated, user-friendly message for any error (spec §6.1):
  * 1. a translation for the error code (`errors:codes.<CODE>`, UPPER_SNAKE_CASE; add keys for backend-specific codes),
- * 2. otherwise the server's own message for 4xx responses,
+ * 2. otherwise the server's own message for a 4xx response (reached only when the body's code has no
+ *    translation: a missing code is derived from the status),
  * 3. otherwise a generic translated message. 5xx server messages are never shown.
  */
 export function getErrorMessage(error: unknown): string {

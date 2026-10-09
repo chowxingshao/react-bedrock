@@ -20,7 +20,7 @@ const sessionUserSchema = z.object({
 const toSessionUser = (data: unknown): SessionUser => sessionUserSchema.parse(data);
 
 /**
- * httpOnly-cookie session (owner decision 1): the server sets the session cookie and the browser
+ * httpOnly-cookie session (docs/auth.md): the server sets the session cookie and the browser
  * attaches it. The frontend never sees a token.
  */
 export const cookieSessionStrategy: AuthStrategy = {
