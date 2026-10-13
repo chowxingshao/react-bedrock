@@ -78,7 +78,7 @@ Git hooks install themselves on `pnpm install`: lint-staged on commit, and commi
 
 ```
 src/
-├── api/          generated API clients (Orval), never edited by hand
+├── api/          generated API clients (Orval), never edited by hand; plus the hand-written generated-client.test.tsx
 ├── app/          composition root: providers, router, thin route pages, navigation
 ├── config/       validated env, constants, typed paths, permissions, feature flags
 ├── core/         infrastructure: api, auth, errors, i18n, logger, notify, storage
@@ -86,13 +86,15 @@ src/
 ├── features/     business features, e.g. example/ (the reference "Items" feature)
 ├── hooks/  lib/  stores/  locales/  mocks/  styles/  test/  types/
 docs/             developer documentation
+                  (docs/superpowers/ holds the plan the template was built from; the new-project guide removes it)
 e2e/              Playwright tests
 docker/           container entrypoint and nginx template
 openapi/          the API spec used by `pnpm codegen:api`
 plop/             generator templates (the generators are defined in plopfile.js)
 public/           static files: favicon, the runtime-config stub, the mock service worker
 scripts/          repository tooling (shadcn import, CSP hashes, Docker smoke test)
-.github/          CI and deploy workflows, Dependabot, the shared setup action
+.github/          workflows, Dependabot, the shared setup action, the pull request template
+.husky/           Git hook scripts: lint-staged on commit, commitlint on the message
 .storybook/       Storybook configuration
 Dockerfile, Dockerfile.dev, docker-compose.yml
                   the production image, the dev container and the Compose services

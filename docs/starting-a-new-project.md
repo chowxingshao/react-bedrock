@@ -71,7 +71,7 @@ Check: `pnpm storybook` shows every component in the new look, in light and dark
   git grep -l -E "'es'|\"es\"|Español" -- src e2e ":!src/locales" ":!src/api/generated"
   ```
 
-  These are `format.test.ts`, `detect.test.ts`, `i18n.test.ts`, `start-language.test.ts`, `translate-key.test.ts`, `zod-error-map.test.ts`, `errors.test.ts`, `form-errors.test.ts`, `auth-provider.test.tsx`, `language-switcher.test.tsx`, `error-state.test.tsx`, `built-in-labels.test.tsx`, `date-picker.test.tsx`, `e2e/i18n.spec.ts` and `e2e/a11y.spec.ts`. Point each at your second language (its expected strings change too), or drop its Spanish cases.
+  These are `format.test.ts`, `detect.test.ts`, `i18n.test.ts`, `start-language.test.ts`, `translate-key.test.ts`, `zod-error-map.test.ts`, `errors.test.ts`, `form-errors.test.ts`, `auth-provider.test.tsx`, `language-switcher.test.tsx`, `error-state.test.tsx`, `built-in-labels.test.tsx`, `date-picker.test.tsx`, `e2e/i18n.spec.ts` and `e2e/a11y.spec.ts`. Point each at your second language (its expected strings change too), or drop its Spanish cases. The command prints two more files: `src/config/constants.ts` (the `SUPPORTED_LOCALES` entry, which docs/i18n.md → Removing a language covers) and `src/core/i18n/detect.ts` (a comment, nothing to change).
 
 Check: the language switcher lists exactly your languages, and `pnpm lint && pnpm typecheck && pnpm test` pass.
 
@@ -80,7 +80,7 @@ Check: the language switcher lists exactly your languages, and `pnpm lint && pnp
 1. **Development:** in `.env.local`, set `API_PROXY_TARGET=http://localhost:<port>` (your backend) and `VITE_ENABLE_MOCKS=false`. Leave `VITE_API_BASE_URL=/api`, so calls stay same-origin. The proxy forwards the path unchanged, so your backend receives `/api/auth/login`: serve it under `/api`, or add a `rewrite` to the `proxy` in `vite.config.ts` (and to the nginx template for Docker, docs/docker.md). Restart `pnpm dev` after changing `.env.local`.
 2. **Error format:** the template expects `{ code, message, details? }`, with field errors in `details.fields`. If your backend's error body differs, adapt `errorBodySchema` and `getFieldErrors` in `src/core/api/errors.ts`; nothing else parses error bodies. Translate your backend's error codes under `errors:codes.<CODE>`.
 3. **Auth:** the template calls `POST /auth/login`, `POST /auth/logout`, `GET /auth/me` and `POST /auth/refresh` (docs/auth.md). Adjust the paths in `src/core/auth/cookie-strategy.ts`. For a different scheme, write another `AuthStrategy` and switch the one export in `src/core/auth/strategy.ts`.
-4. **Typed client:** replace `openapi/openapi.yaml` with your spec, or point `input.target` in `orval.config.ts` at its URL. Then run `pnpm codegen:api` and commit `src/api/generated`. If your spec lives at a URL, commit a copy of it (replace `openapi/openapi.yaml` with it) and keep `input.target` pointing at the copy, refreshing the copy when the backend changes: CI regenerates the client on every pull request, and a URL would make that check depend on your backend being reachable. Give your spec's auth operations the same `override.operations` entries as the template's `orval.config.ts` (docs/api-codegen.md).
+4. **Typed client:** replace `openapi/openapi.yaml` with your spec, or point both `input.target` entries in `orval.config.ts` (`api` and `apiZod`) at its URL. Then run `pnpm codegen:api` and commit `src/api/generated`. If your spec lives at a URL, commit a copy of it (replace `openapi/openapi.yaml` with it) and keep both `input.target` entries pointing at the copy, refreshing the copy when the backend changes: CI regenerates the client on every pull request, and a URL would make that check depend on your backend being reachable. Give your spec's auth operations the same `override.operations` entries as the template's `orval.config.ts` (docs/api-codegen.md).
 5. **Mocks:** tests and E2E run against `src/mocks`. As you build features, replace the demo handlers with ones shaped like your API.
 
 Check: with mocks off, you can sign in against your backend.
@@ -111,7 +111,7 @@ Then remove the example:
    - `src/app/navigation.ts`: the Items entry and its `PackageIcon` import
    - `src/app/routes/dashboard.tsx`: the "Browse items" link
    - `openapi/openapi.yaml`: the `items` tag, the `/items` paths and the item schemas. Then run `pnpm codegen:api`.
-3. **Permissions:** replace `items.*` in `src/config/permissions.ts` with your feature's permissions. Give the demo users in `src/mocks/fixtures/users.ts` the new ones. Guard the generated route with `<RequirePermission>` and add `permission` to its sidebar entry (docs/generators.md → After generating).
+3. **Permissions:** replace `items.*` in `src/config/permissions.ts` with your feature's permissions. Give the demo users in `src/mocks/fixtures/users.ts` the new ones. Guard the generated route with `<RequirePermission>` and add `permission` to its sidebar entry (the "After generating" list in docs/generators.md).
 4. **Let the tools list the rest:**
 
    ```bash
