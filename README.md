@@ -135,3 +135,7 @@ Follow [docs/starting-a-new-project.md](docs/starting-a-new-project.md): name it
 ## Contributing
 
 Branching, the commit convention and the pull-request checklist are in [docs/contributing.md](docs/contributing.md).
+
+## License
+
+MIT — see [LICENSE](LICENSE).

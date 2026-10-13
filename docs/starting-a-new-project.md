@@ -157,7 +157,7 @@ Set `VITE_SENTRY_DSN` per environment to turn on the Sentry transport (docs/erro
 
   Then run `pnpm format`: a longer or shorter name changes how Prettier lays out the tables.
 
-- Replace the licence: if the template carries a `LICENSE` file and a License section in `README.md`, use your own or remove them.
+- Replace the licence: the template ships an MIT `LICENSE` file and a License section in `README.md`. Keep MIT and put your own name in the copyright line, use your own licence, or remove both.
 
 ## 10. Final check
 
