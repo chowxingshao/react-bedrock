@@ -1,11 +1,31 @@
 # Starting a new project from this template
 
-Work through this list from top to bottom. Each step ends with something you can check. The commands are for a POSIX shell (on Windows, Git Bash).
+Work through steps 1 to 10 from top to bottom. Each step ends with something you can check. Step 11 is for later, each time the template publishes a new version. The commands are for a POSIX shell (on Windows, Git Bash).
 
 ## 1. Create the repository
 
-- On GitHub, click **Use this template** on the template repository. That gives you a fresh history; the template must be marked under Settings → General → Template repository.
-- Or clone it without history:
+Choose how to start. The choice decides whether you can pull the template's later updates (step 11), and you can't change it afterwards without conflicts in nearly every file.
+
+- **Keep the link to the template (recommended).** Clone the template with its remote named `upstream`:
+
+  ```bash
+  git clone -o upstream <template-url> my-app
+  cd my-app
+  ```
+
+  On GitHub, create an empty repository for your app (no README, no licence) and add it as `origin`. Step 8 pushes to it:
+
+  ```bash
+  git remote add origin <your-repo-url>
+  ```
+
+  Make sure a `git push` can never reach the template:
+
+  ```bash
+  git remote set-url --push upstream DISABLE
+  ```
+
+- **Or start clean, with no link.** On GitHub, click **Use this template** on the template repository (it must be marked under Settings → General → Template repository). Or clone it without history:
 
   ```bash
   git clone --depth 1 <template-url> my-app
@@ -13,6 +33,8 @@ Work through this list from top to bottom. Each step ends with something you can
   rm -rf .git
   git init -b main
   ```
+
+  Your history then shares nothing with the template's, so its updates can't be merged: step 11 says what to do instead.
 
 - Delete `docs/superpowers/`. It holds the plan the template was built from, which a new project doesn't need.
 - Before you change anything, check that everything works:
@@ -22,7 +44,7 @@ Work through this list from top to bottom. Each step ends with something you can
   pnpm lint && pnpm typecheck && pnpm test
   ```
 
-- Commit this starting point. Later steps use `git grep`, which searches only tracked files. The commit hooks lint every file, so this first commit takes a few minutes:
+- Commit this starting point. Later steps use `git grep`, which searches only tracked files. After a clean start the commit hooks lint every file, so this first commit takes a few minutes:
 
   ```bash
   git add -A
@@ -30,6 +52,8 @@ Work through this list from top to bottom. Each step ends with something you can
   ```
 
 ## 2. Name the app
+
+If you kept the link in step 1, make the rename one commit of its own. Every line it touches can conflict when you pull an update (step 11), and one commit keeps those conflicts easy to read.
 
 1. In `package.json`, set `name`. The `version` starts at `0.1.0`; the app footer shows it.
 2. Set `VITE_APP_NAME` in your `.env` files and in each environment's settings. That alone changes the tab title, the sidebar, the login page and the browser-storage prefix.
@@ -139,7 +163,7 @@ Set `VITE_SENTRY_DSN` per environment to turn on the Sentry transport (docs/erro
 
 ## 8. The repository, CI and deployment
 
-1. Push to GitHub, and check that the **CI** workflow passes.
+1. Push to GitHub (`git push -u origin main`, if you kept the link in step 1), and check that the **CI** workflow passes.
 2. Set up branch protection (docs/contributing.md).
 3. Fill in the deploy step in `.github/workflows/deploy.yml`, then set the repository variable `DEPLOY_ENABLED=true` (docs/deployment.md).
 4. Optional:
@@ -158,6 +182,7 @@ Set `VITE_SENTRY_DSN` per environment to turn on the Sentry transport (docs/erro
   Then run `pnpm format`: a longer or shorter name changes how Prettier lays out the tables.
 
 - Replace the licence: the template ships an MIT `LICENSE` file and a License section in `README.md`. Keep MIT and put your own name in the copyright line, use your own licence, or remove both.
+- `CHANGELOG.md` lists the template's changes, not yours. If you kept the link in step 1, leave the file as it is, so it never conflicts when you pull an update (step 11), and keep your own release notes elsewhere, for example in GitHub Releases. After a clean start, delete it.
 
 ## 10. Final check
 
@@ -167,3 +192,72 @@ docker compose up --build
 ```
 
 The first build takes a few minutes. Open http://localhost:8080 (if that port is taken, `WEB_PORT=8081 docker compose up --build` uses another one), sign in, and click through your first feature. Stop it with Ctrl+C, then clean up with `docker compose down`.
+
+## 11. Later: pull the template's updates
+
+Steps 1 to 10 are for the first day. This step is for every time the template publishes a new version. It works only if you kept the link in step 1: your project and the template then share their history, and git merges the changes for you.
+
+Check that the link is there:
+
+```bash
+git remote -v
+```
+
+It should list `upstream` with the template's address. If you started clean, there is no shared history and git refuses to merge ("unrelated histories"). Compare two versions on GitHub instead (`<template-url>/compare/<old-tag>...<new-tag>`) and copy over the changes you want.
+
+To hear about new versions, watch the template repository on GitHub (Watch → Custom → Releases).
+
+### Each update
+
+1. **Find out what changed.** The template tags every version `vX.Y.Z` and describes it in `CHANGELOG.md`. An entry marked **Action needed** asks you to do something after the merge, such as run a command or set a variable.
+
+   ```bash
+   git fetch upstream --tags
+   ```
+
+   ```bash
+   git show upstream/main:CHANGELOG.md
+   ```
+
+2. **Merge on a branch:**
+
+   ```bash
+   git switch -c update-template
+   ```
+
+   ```bash
+   git merge upstream/main
+   ```
+
+   To stop at one version, merge its tag instead (`git merge v0.2.0`). Merge, don't rebase: after a merge git knows which template commits you already have, so each conflict is resolved once. A rebase rewrites your history and replays all your commits against every new version.
+
+3. **Resolve the conflicts.** `git status` lists them. These are the usual ones:
+
+   | File                                                                                                                                       | What to do                                                                                                                                                   |
+   | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+   | `package.json`, `pnpm-workspace.yaml`                                                                                                      | Keep your name and version, and take the template's dependency and script changes                                                                            |
+   | `pnpm-lock.yaml`                                                                                                                           | After `package.json` is resolved, run `git checkout --theirs pnpm-lock.yaml` and then `pnpm install`: pnpm adds your dependencies to the template's lockfile |
+   | `openapi/openapi.yaml`, `src/api/generated`                                                                                                | Keep yours, run `pnpm codegen:api` and commit the result (CI reports a stale `src/api/generated`)                                                            |
+   | Files where you renamed the app (step 2)                                                                                                   | Keep your name and take the template's other changes                                                                                                         |
+   | `src/config/paths.ts`, `src/app/router.tsx`, `src/app/navigation.ts`, `src/core/i18n/resources.ts`, `src/mocks/handlers.ts`, `common.json` | The generators add lines at the `// plop:…` comments, and you and the template may both have added some there: keep both sides' lines. Keep the comments     |
+   | `docs/superpowers/`                                                                                                                        | You deleted it in step 1: keep it deleted (`git rm -r docs/superpowers`)                                                                                     |
+   | `README.md`, `CLAUDE.md`, `docs/`                                                                                                          | Keep your version (`git checkout --ours <file>`), then read the template's change (`git diff HEAD...upstream/main -- <file>`) and port what applies          |
+   | `CHANGELOG.md`                                                                                                                             | Take the template's (`git checkout --theirs CHANGELOG.md`). Don't edit it                                                                                    |
+
+   Mark each file as resolved with `git add <file>`.
+
+4. **Check.** Run the install and the usual gate, plus the E2E suite if a changelog entry touches a screen or a flow:
+
+   ```bash
+   pnpm install && pnpm lint && pnpm typecheck && pnpm test && pnpm build
+   ```
+
+   Then commit the merge (`git commit --no-edit` keeps git's message, which commitlint accepts), push the branch, and merge it through a pull request like any other change.
+
+### Keeping updates small
+
+- Put your code in features you generate (`pnpm gen feature`) and in your own files: new files never conflict.
+- Change the look in `src/styles/tokens.css` only, as step 3 says.
+- Don't move, rename or reformat template files you have no reason to change: every later fix to them conflicts.
+- Pull every version when it comes out. The longer you wait, the more your copy and the template's drift apart.
+- Never push to `upstream`; step 1 disabled it.

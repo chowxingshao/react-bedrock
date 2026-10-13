@@ -126,11 +126,14 @@ ESLint enforces which layer may import which; see [docs/architecture.md](docs/ar
 | Docker                                                | [docker.md](docs/docker.md)                                         |
 | CI/CD, images and environments                        | [deployment.md](docs/deployment.md)                                 |
 | Branching, commits and pull requests                  | [contributing.md](docs/contributing.md)                             |
-| Creating a project from this template                 | [starting-a-new-project.md](docs/starting-a-new-project.md)         |
+| Creating a project from this template, and updates    | [starting-a-new-project.md](docs/starting-a-new-project.md)         |
+| What changed in each version of the template          | [CHANGELOG.md](CHANGELOG.md)                                        |
 
 ## Starting a new project
 
 Follow [docs/starting-a-new-project.md](docs/starting-a-new-project.md): name it, brand it, connect your API, and remove the example feature.
+
+To keep receiving the template's updates, start from a clone that keeps the template as a remote (`git clone -o upstream <template-url>`), not from "Use this template". Step 1 shows how, and step 11 shows how to pull each new version; [CHANGELOG.md](CHANGELOG.md) says what changed.
 
 ## Contributing
 
