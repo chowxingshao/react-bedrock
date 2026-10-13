@@ -2,11 +2,11 @@
 
 `pnpm codegen:api` reads the OpenAPI spec and writes typed clients to `src/api/generated/`:
 
-| Output                     | Contents                                                                                                                                                                                                                                       |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `endpoints/<tag>/<tag>.ts` | request functions, query hooks (`useGetItem`, `useListItems`, `…Suspense` variants, `get…QueryKey` helpers) and mutation hooks (`useCreateItem`, `useUpdateItem`, `useDeleteItem`)                                                             |
-| `model/`                   | TypeScript types for every schema                                                                                                                                                                                                              |
-| `zod/`                     | Zod schemas for every request and success response (parameters, bodies and 2xx responses). They are not applied automatically: call `ListItemsResponse.parse(data)` yourself where you want the contract checked at runtime (spec Principle 6) |
+| Output                     | Contents                                                                                                                                                                                                                    |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `endpoints/<tag>/<tag>.ts` | request functions, query hooks (`useGetItem`, `useListItems`, `…Suspense` variants, `get…QueryKey` helpers) and mutation hooks (`useCreateItem`, `useUpdateItem`, `useDeleteItem`)                                          |
+| `model/`                   | TypeScript types for every schema                                                                                                                                                                                           |
+| `zod/`                     | Zod schemas for every request and success response (parameters, bodies and 2xx responses). They are not applied automatically: call `ListItemsResponse.parse(data)` yourself where you want the contract checked at runtime |
 
 - **Generated files are committed** and excluded from ESLint, Prettier, the design-token guard and test coverage. Never edit them by hand; change the spec and regenerate. The output is deterministic, so a clean `git status --porcelain -- src/api/generated` after `pnpm codegen:api` means the committed files are up to date. CI runs that check on every pull request (the `verify` job in `.github/workflows/ci.yml`). An Orval update changes the generated output, so the pull request that bumps Orval fails the check until you run `pnpm codegen:api` and commit the result.
 - **The spec:** `orval.config.ts` points at `openapi/openapi.yaml`, a local fixture that mirrors the MSW mocks: their success shapes, status codes and limits. For a real backend, set `input.target` to its spec file or URL, and put the server's base path in `VITE_API_BASE_URL` (generated URLs start at the path, e.g. `/items`).
@@ -25,7 +25,7 @@ Orval's **custom mutator** (`src/core/api/mutator.ts`) sends every generated cal
 
 - Sign in and out through `useAuth()`, not through the generated auth hooks.
 - A real spec's auth operations need the same `override.operations` entries under their own `operationId`s.
-- Any single call can set the options itself: `request: { skipAuthRefresh: true, silent: true }` (hooks) or the second argument of a generated function. They replace the defaults of the config.
+- Any single call can set the options itself: `request: { skipAuthRefresh: true, silent: true }` (hooks) or the second argument of a generated function. They are merged key by key: a key you pass wins, and the others keep the values from `orval.config.ts`.
 
 `src/api/generated-client.test.tsx` proves the headers, the `AppError` normalisation, the path encoding, that a mutation sends nothing until it is called and that a refused login keeps the session.
 

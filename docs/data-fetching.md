@@ -35,7 +35,7 @@ Requests time out after `HTTP_TIMEOUT_MS` (30 s, `src/config/constants.ts`) with
 
 ## Server state with TanStack Query
 
-All API data goes through TanStack Query (spec Principle 3). The client (`src/core/api/query-client.ts`) sets:
+All API data goes through TanStack Query. The client (`src/core/api/query-client.ts`) sets:
 
 | Setting                | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -70,7 +70,7 @@ Two limits of that delete, which a real feature may want to tighten:
 
 ## Rendering async state: `QueryState`
 
-Every async view handles loading, empty, error and success (spec Principle 4). `QueryState` does it for you:
+Every async view handles loading, empty, error and success. `QueryState` does it for you:
 
 ```tsx
 <QueryState
@@ -94,6 +94,8 @@ Every async view handles loading, empty, error and success (spec Principle 4). `
 - **No skeleton flash:** loading UI appears only after 200 ms (`SKELETON_DELAY_MS`), so fast responses never flash a skeleton.
 - **Cached data wins:** if a background refetch fails while data is cached, the cached data stays on screen and the failure is logged: a warning for a 4xx, an error for network errors, timeouts and 5xx (in production the console shows errors only, and Sentry gets a breadcrumb for each warning).
 - **Custom error slot:** pass `error={(err, retry) => …}` to take over the error view.
+- **The query must be able to run:** a disabled query (`enabled: false`) or a first load paused while offline stays `pending`, so `QueryState` shows its loader until it runs. Render something else until it is enabled.
+- **A custom loader is already delayed:** `QueryState` waits 200 ms before it renders `loading`, so give a `PageLoader` `delayMs={0}` (its own default would add another 200 ms).
 
 ## Suspense style: `AsyncBoundary`
 
@@ -107,7 +109,7 @@ For `useSuspenseQuery` (or lazy components), wrap the subtree once:
 
 `AsyncBoundary` combines `Suspense`, an error boundary and TanStack Query's `QueryErrorResetBoundary`, so **Try again** also refetches the failed queries. Use `resetKeys={[id]}` to clear the error automatically when the input changes.
 
-The `Suspense` fallback waits `SUSPENSE_FALLBACK_DELAY_MS` (350 ms) before it appears. That is longer than the 200 ms of `QueryState` because React holds a Suspense reveal for about 300 ms after the fallback mounts, so a shorter delay would still flash the loader on fast responses. A custom `loading` node is delayed the same way, and `loading={null}` renders nothing while suspended.
+The `Suspense` fallback waits `SUSPENSE_FALLBACK_DELAY_MS` (350 ms) before it appears. That is longer than the 200 ms of `QueryState` because React holds a Suspense reveal for about 300 ms after the fallback mounts, so a shorter delay would still flash the loader on fast responses. A custom `loading` node is delayed the same way (pass `delayMs={0}` to a `PageLoader`), and `loading={null}` renders nothing while suspended.
 
 ## Exporting rows as CSV
 

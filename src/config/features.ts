@@ -30,6 +30,10 @@ export function createEnvFlagSource(
 
 let source: FeatureFlagSource = createEnvFlagSource();
 
+/**
+ * Replaces the flag source. Call it before the first render: mounted `useFeature` consumers keep
+ * reading the old source until they re-render.
+ */
 export function setFeatureFlagSource(next: FeatureFlagSource): void {
   source = next;
 }

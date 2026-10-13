@@ -26,7 +26,7 @@
 - **CSRF:** `SameSite=Lax` blocks cross-site form posts from carrying the cookie. For defence in depth, have the backend also require a custom header on state-changing requests; every request from the shared client carries `X-Request-Id`, which a cross-site form cannot send. For a double-submit CSRF token instead, Axios's `xsrfCookieName` / `xsrfHeaderName` options work with the shared instance.
 - **Open redirects:** `returnTo` is honoured only for same-origin relative paths (`safeReturnTo`).
 - **Permissions in the UI are cosmetic.** The API must enforce them.
-- **After logout,** the query cache and sessionStorage are cleared, so the next user of a shared computer sees nothing of the previous one. That holds only when the logout request reaches the server. If it fails (offline, timeout, a 5xx), the app still signs the user out locally and warns them, but the httpOnly cookie is still valid: a reload signs the previous user back in until the server session expires. Keep server session lifetimes short. A cookie without `Max-Age` or `Expires` is dropped when the browser closes, which is what the warning asks the user to do; a persistent cookie lasts until it expires.
+- **After logout,** the query cache and sessionStorage are cleared, so the next user of a shared computer sees nothing of the previous one. That holds only when the logout request reaches the server. If it fails (offline, timeout, a 5xx), the app still signs the user out locally and warns them, but the httpOnly cookie may still be valid: a reload can sign the previous user back in until the server session expires. Keep server session lifetimes short. A cookie without `Max-Age` or `Expires` is dropped when the browser closes, which is what the warning asks the user to do; a persistent cookie lasts until it expires.
 
 ## HTTP headers and Content Security Policy (Docker image)
 
@@ -50,7 +50,7 @@ The **default policy** (`docker/docker-entrypoint.sh`):
 
 **When it is built.** The hashes are computed during the image build by `scripts/csp-script-hashes.mjs`, because they depend on the `index.html` that the build produces. The rest of the policy is assembled when the container starts, because `connect-src` depends on the runtime variables.
 
-**The app runs under this policy without a violation.** Zod's JIT compiler needs `'unsafe-eval'`, so it is switched off at the top of `src/config/env.ts` (`z.config({ jitless: true })`, guarded by a unit test). A Content Security Policy report in the browser console therefore means a real blocked request: allow its origin in the matching directive.
+**The app runs under this policy without a violation.** Zod's JIT compiler needs `'unsafe-eval'`, so it is switched off at the top of `src/config/env.ts` (`z.config({ jitless: true })`). It must run before the first `z.object` is built: `main.tsx` imports `@/core/i18n`, which loads `@/config/env` first. Keep it that way: the unit test checks the flag, not the order, so a module that builds a schema at import time ahead of `@/config/env` brings back one CSP report per page load. A Content Security Policy report in the browser console therefore means a real blocked request: allow its origin in the matching directive.
 
 **Changing it:** set `CONTENT_SECURITY_POLICY` to the full policy; it replaces the default.
 
@@ -66,7 +66,7 @@ The **default policy** (`docker/docker-entrypoint.sh`):
 - At start-up, the container writes the whitelisted `VITE_*` variables to `/config.js`, which every visitor downloads.
 - Server-side settings (`API_PROXY_TARGET`, `CONTENT_SECURITY_POLICY`) are used by nginx and never reach the browser.
 - Never pass secrets through `VITE_*` variables.
-- **Set `VITE_ENABLE_MOCKS=false` on every real deployment.** Unset means `true`: the image always contains the mock API worker and the demo accounts, so with the variable unset the app answers from the built-in mocks and accepts the demo accounts, with only a console warning.
+- **Set `VITE_ENABLE_MOCKS=false` on every real deployment.** Unset means `true`: the image always contains the mock API worker and the demo accounts, so with the variable unset the app answers from the built-in mocks and accepts the demo accounts. Nothing makes this visible: the app logs a warning, but a production build's console prints errors only (Sentry, when configured, gets it as a breadcrumb), and the login page lists the demo accounts.
 
 ## Container image
 

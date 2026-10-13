@@ -22,7 +22,7 @@
 
 ## The provider-aware `render`
 
-Prefer `@/test/render` when the component needs providers. It wraps a `QueryClientProvider`, a `ConfirmProvider` and a memory data router, so `Link`, `useParams`, `useBlocker` and `useConfirm()` work. Earlier tests import Testing Library directly, and that stays valid for components that need no providers:
+Prefer `@/test/render` when the component needs providers. It wraps a `QueryClientProvider`, a `ConfirmProvider` and a memory data router, so `Link`, `useParams`, `useBlocker` and `useConfirm()` work. A component that needs no providers can use Testing Library directly, as some tests do. With providers:
 
 ```tsx
 import { render, screen } from '@/test/render';
@@ -38,7 +38,7 @@ For a flow that crosses pages (a sidebar link, a redirect, where focus lands), `
 
 Finish a test with its requests done: an answer that arrives after the test has ended is handled during the next one, where the shared HTTP client may treat a 401 or a dropped request as part of that test's session. Wait for something the data produces (a total, a row), not for an element that was already on screen (a breadcrumb link, a heading).
 
-Two timing notes. Asynchronous Testing Library helpers (`findBy…`, `waitFor`) wait up to 3 s by default (`configure` in `setup.ts`), because the first import of a lazy route chunk can be slow. And do not fake `queueMicrotask` (for example `vi.useFakeTimers({ toFake: ['queueMicrotask'] })`): `useUrlState` clears its same-tick snapshot of the URL in a microtask, so a faked one leaves the snapshot stale and the next write starts from it instead of from the current URL.
+Three timing notes. A test may run for up to 15 s (`testTimeout` in `vite.config.ts`): route-level tests import lazy chunks and CI runners are slower, and a real hang still fails, only later. Asynchronous Testing Library helpers (`findBy…`, `waitFor`) wait up to 3 s by default (`configure` in `setup.ts`), because the first import of a lazy route chunk can be slow. And do not fake `queueMicrotask` (for example `vi.useFakeTimers({ toFake: ['queueMicrotask'] })`): `useUrlState` clears its same-tick snapshot of the URL in a microtask, so a faked one leaves the snapshot stale and the next write starts from it instead of from the current URL.
 
 `createTestQueryClient()` gives you the app's client (`createQueryClient()`, so the same global error handling) with retries off and no garbage collection, for tests that need one directly. Its `staleTime` stays 30 s: a test that remounts a component and expects a refetch must set `staleTime: 0`.
 

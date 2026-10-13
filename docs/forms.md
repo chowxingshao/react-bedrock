@@ -1,6 +1,6 @@
 # Forms
 
-Pattern (spec §7.7): a Zod schema in the feature's `schemas/` folder → `useForm` with `zodResolver` → the shadcn `Form` components.
+Pattern: a Zod schema in the feature's `schemas/` folder → `useForm` with `zodResolver` → the shadcn `Form` components.
 
 ```tsx
 const schema = z.object({ name: z.string().min(1).max(80), email: z.email() });
@@ -28,7 +28,7 @@ The message is translated when the field is validated. An error already on scree
 
 ### What the map does not cover
 
-- The issues `custom` (a bare `refine`), `invalid_union` and `not_multiple_of` are not translated: they fall back to Zod's own English text, also in `es`. Give them a message of your own, as above.
+- Every other issue is not translated, for example `custom` (a bare `refine`), `invalid_union`, `not_multiple_of` and `unrecognized_keys` (an unknown key in a `z.strictObject`): they fall back to Zod's own English text, also in `es`. Give them a message of your own, as above.
 - A count of one reads in the plural (`Select at least 1 items`, `Use at most 1 characters`; in `es`, `Selecciona al menos 1 elementos`). This is a known gap, left as it is.
 - `z.string().length(5)` reads as a minimum ("Use at least 5 characters") when the input is too short, and `z.literal(true)` (the usual consent checkbox) gets the generic "Choose one of the available options". Give those schemas their own message.
 - Bounds on numbers read "Must be at least 3", or "Must be greater than 0" for an exclusive bound such as `.positive()`. Date bounds are shown as medium dates in the current language.

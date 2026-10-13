@@ -1,6 +1,6 @@
 # State management
 
-Pick the home for a piece of state with this table (spec Principle 3):
+Pick the home for a piece of state with this table:
 
 | Kind of state                              | Where it lives                                                | Examples                                      |
 | ------------------------------------------ | ------------------------------------------------------------- | --------------------------------------------- |
