@@ -8,7 +8,7 @@
 | `workflows/docker-publish.yml` | every published release, or manually                     | Builds the image for `linux/amd64` and `linux/arm64` and pushes it to GitHub Container Registry                                                                                                                     |
 | `workflows/deploy.yml`         | push to `main` → staging; published release → production | **Placeholder.** Builds, then warns where the deploy step goes. Skipped until the repository variable `DEPLOY_ENABLED` is `true`                                                                                    |
 | `workflows/storybook.yml`      | push to `main`, or manually                              | Builds Storybook, and publishes it to GitHub Pages when the repository variable `STORYBOOK_PAGES` is `true`                                                                                                         |
-| `dependabot.yml`               | weekly                                                   | Grouped updates for dependencies, GitHub Actions and base images (configuration for Dependabot, not a workflow)                                                                                                     |
+| `dependabot.yml`               | weekly                                                   | Grouped updates for dependencies and GitHub Actions, and for the base images once they are pinned by digest (configuration for Dependabot, not a workflow)                                                          |
 
 The shared setup lives in `.github/actions/setup`: pnpm from `package.json`, Node.js from `.nvmrc`, and a cached install.
 

@@ -55,10 +55,10 @@ Dependabot (`.github/dependabot.yml`) opens pull requests every week, grouped wh
 - one grouped pull request for npm minor and patch updates
 - one per npm major update
 - one for GitHub Actions
-- one per Docker base image whose tag carries a version (`node:24-alpine` can move to a newer Node.js release). A moving tag such as `stable-alpine-slim` has no version to bump, so Dependabot reports nothing for it: rebuild the image to pick up a new release of the base image (docs/security.md)
+- none for the Docker base images as shipped: `node:24-alpine` names only a Node.js major, and Node.js majors are held back (below), while `stable-alpine-slim` has no version at all. Rebuild the image to pick up a new release of either base image, or pin both by digest (docs/security.md) and Dependabot proposes digest updates
 
 Review the changelog before merging a major update; CI checks the rest. One exception: an update of Orval changes the code in `src/api/generated`, so the `codegen:api` check of the CI fails that pull request until you run `pnpm codegen:api` and commit the result.
 
-- **Held back on purpose:** ESLint majors, and TypeScript minor and major releases. They wait until `eslint-plugin-react`, `eslint-plugin-jsx-a11y` and `typescript-eslint` support them. Remove the matching `ignore` entry when they do.
+- **Held back on purpose:** ESLint majors, and TypeScript minor and major releases, wait until `eslint-plugin-react`, `eslint-plugin-jsx-a11y` and `typescript-eslint` support them; remove the matching `ignore` entry when they do. Node.js majors (`@types/node` and the `node` image of both Dockerfiles) are never proposed: move `.nvmrc`, `engines`, `@types/node` and both Dockerfiles to a new major together, by hand.
 - If Dependabot reports that it doesn't support the pinned pnpm version, update by hand until it does: `pnpm outdated`, then `pnpm update --interactive --latest`.
 - **Audit exceptions:** `pnpm-workspace.yaml` holds two version overrides and one ignored advisory that keep `pnpm audit --audit-level high` at exit 0 (the comments there say why). Remove an entry when the package that needs it ships a fixed release, and run `pnpm audit` after every major update.
