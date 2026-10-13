@@ -22219,7 +22219,8 @@ The plan above is the text the template was built from, kept as it was written. 
 - **Licence:** MIT, with the GitHub account name that will own the repository as copyright holder.
 - **Final Docker checks skipped:** the Docker engine was stopped during the final verification pass, and the owner asked to skip the Docker-only checks rather than start it. They had passed earlier: the image build and smoke test at the Phase 10 gate and again after the entrypoint fix of Phase 11, and compose-from-nothing plus the README's Docker commands in the Phase 11 pre-flight. The local image was not rebuilt after the pager commits of Phase 11, but the GitHub CI built that code into the image and passed the smoke test.
 - **Neutrality scan:** no organisation names were added to the scan beyond those the build already knew.
-- **Publishing target:** a public GitHub repository under the owner's account, pushed only after the owner's explicit approval (Task 11.4 Step 4).
+- **Publishing target:** the repository existed as a private GitHub repository during the build, where the owner pushed and the CI ran. At the end the owner kept it private for now and chose to push the final commits themselves; making it public, and the template-repository setting, are left to the owner.
+- **Specification published:** the owner asked for `TEMPLATE_BUILD_SPEC.md` to be added next to the plan, as `docs/superpowers/TEMPLATE_BUILD_SPEC.md`, so the `spec §N` references in code comments and the plan's header path `../TEMPLATE_BUILD_SPEC.md` resolve inside the repository.
 
 ### Deviations 18 and up
 
@@ -22430,7 +22431,7 @@ The full deferred list was triaged before publishing: 234 items, of which 26 wer
 - **MSW:** Task 5.2 did not fall back to MSW 2; the template runs MSW 3, so there is nothing to return to. After an MSW upgrade, run `pnpm exec msw init public` again.
 - **Deploy:** fill in the deploy step in `.github/workflows/deploy.yml`, then set the repository variable `DEPLOY_ENABLED=true` (`docs/deployment.md`).
 - **Add an audit job to CI:** CI does not run `pnpm audit`; `docs/security.md` asks for it before a release and after every major update.
-- **Publish the specification next to this plan,** or drop the references: about 100 code comments cite "spec §N" of a specification that is not in the repository.
+- **Pulling later template updates:** a repository made with GitHub's "Use this template" has an unrelated history and no link to the template, so GitHub offers no way to pull later template changes into it. The options are to clone with history and keep the template as a second remote (merges conflict once the app is renamed and the example feature removed), or to extract `src/core` into a shared package (spec §13, decision 10), which is the intended answer to template drift.
 - **Windows-friendly Docker examples:** the README and most of `docs/docker.md` set variables in POSIX form (`VAR=value docker compose up`), with a single PowerShell note, and the private-CA recipe in `docs/security.md` redirects with `>`, which in Windows PowerShell 5.1 writes UTF-16.
 
 ### Final verification
