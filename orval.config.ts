@@ -2,7 +2,8 @@ import { defineConfig } from 'orval';
 
 /**
  * API codegen (spec §6.3, docs/api-codegen.md). Run `pnpm codegen:api` after the spec changes.
- * `input.target` may also be your backend's spec URL, e.g. 'https://api.example.com/openapi.json'.
+ * Both `input.target` entries (`api` and `apiZod`) may also be your backend's spec URL, e.g.
+ * 'https://api.example.com/openapi.json'.
  */
 export default defineConfig({
   api: {
