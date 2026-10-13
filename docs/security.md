@@ -77,7 +77,7 @@ The **default policy** (`docker/docker-entrypoint.sh`):
 - At start-up, the container writes the whitelisted `VITE_*` variables to `/config.js`, which every visitor downloads.
 - Server-side settings (`API_PROXY_TARGET`, `CONTENT_SECURITY_POLICY`) are used by nginx and never reach the browser.
 - Never pass secrets through `VITE_*` variables.
-- **Set `VITE_ENABLE_MOCKS=false` on every real deployment.** Unset means `true`: the image always contains the mock API worker and the demo accounts, so with the variable unset the app answers from the built-in mocks and accepts the demo accounts. Nothing makes this visible: the app logs a warning, but a production build's console prints errors only (Sentry, when configured, gets it as a breadcrumb), and the login page lists the demo accounts.
+- **Set `VITE_ENABLE_MOCKS=false` on every real deployment.** Unset means `true`: the image always contains the mock API worker and the demo accounts, so with the variable unset the app answers from the built-in mocks and accepts the demo accounts. This is easy to miss: the app logs a warning (only when `VITE_APP_ENV` is `production`, the default), but a production build's console prints errors only (Sentry, when configured, gets it as a breadcrumb). The only visible sign is the login page, which lists the demo accounts.
 
 ## Container image
 

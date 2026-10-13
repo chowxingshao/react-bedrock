@@ -15,7 +15,7 @@ All colours, radii, fonts, shadows, z-index layers and animation durations are d
 
 Colours use **OKLCH** (`oklch(lightness chroma hue)`), so shades with the same lightness look equally bright.
 
-Durations reach a component through a `duration-fast`, `duration-normal` or `duration-slow` utility (Dialog, AlertDialog and Sheet use them), or through Tailwind's default transition duration, which `src/styles/globals.css` sets to `--duration-normal`: every plain `transition`, `transition-colors` or `transition-all` utility (buttons, inputs) follows that token. An enter/exit animation with no duration utility, such as the Popover, DropdownMenu, Select and Tooltip fades, uses tw-animate-css's own 150 ms default, which is not a token.
+Durations reach a component through a `duration-fast`, `duration-normal` or `duration-slow` utility (Dialog, AlertDialog and Sheet use them), or through Tailwind's default transition duration, which `src/styles/globals.css` sets to `--duration-normal`: every plain `transition`, `transition-colors` or `transition-all` utility follows that token (buttons use `transition-all`; inputs use `transition-[color,box-shadow]`, which follows the same default duration). An enter/exit animation with no duration utility, such as the Popover, DropdownMenu, Select and Tooltip fades, uses tw-animate-css's own 150 ms default, which is not a token.
 
 ### How to rebrand
 

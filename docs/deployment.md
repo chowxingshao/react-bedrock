@@ -32,7 +32,7 @@ Builds contain no environment-specific values. Each deployment supplies its sett
 
 So one artifact can be promoted unchanged from staging to production. As shipped, the workflows do not do that: `deploy.yml` runs its own build for every push to `main` and every release (once `DEPLOY_ENABLED` is `true`), and `docker-publish.yml` builds only for a release or a manual run. When you wire up the deploy step, promote the same `sha-<commit>` image (a manual run of `docker-publish.yml` pushes one for any branch) or one `dist` artifact instead of building again.
 
-**Set `VITE_ENABLE_MOCKS=false` on every real deployment.** Unset means `true`: the app then answers from the built-in mock API and accepts the demo accounts. Nothing makes this visible: the app logs a warning, but a production build's console prints errors only (Sentry, when configured, gets it as a breadcrumb), and the login page lists the demo accounts. The image always contains the mock worker and the demo accounts. The variable decides whether they run, and the mock chunk (about 400 kB) is downloaded only when they do.
+**Set `VITE_ENABLE_MOCKS=false` on every real deployment.** Unset means `true`: the app then answers from the built-in mock API and accepts the demo accounts. This is easy to miss: the app logs a warning (only when `VITE_APP_ENV` is `production`, the default), but a production build's console prints errors only (Sentry, when configured, gets it as a breadcrumb). The only visible sign is the login page, which lists the demo accounts. The image always contains the mock worker and the demo accounts. The variable decides whether they run, and the mock chunk (about 400 kB) is downloaded only when they do.
 
 Typical settings:
 
