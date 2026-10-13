@@ -22188,3 +22188,246 @@ Once the owner approves this plan, execute it phase by phase and stop at every p
 2. **Inline.** Execute the tasks in one session, with checkpoints at the phase gates (superpowers:executing-plans).
 
 Owner actions come first: Task 0.1, Steps 1–3 (Node.js 24, pnpm 12, and confirming the git identity).
+
+---
+
+## Execution record
+
+The plan above is the text the template was built from, kept as it was written. This record lists where the build differed from it: decisions taken during the build, deviations beyond Deviations 1-17, corrections to the plan's own text, the limitations that shipped, and the follow-ups left to the owner.
+
+### How it was executed
+
+- Phases 0 and 1 were run directly by the controlling session. From Phase 2 on, every phase followed the same loop, and each decision was written to a ledger as a ruling:
+  1. A read-only pre-flight scan replayed the phase's tasks in a scratch copy with the real tools and graded what would block, fail or be wrong; its verified fixes went into the task briefs.
+  2. One fresh implementer per task, then a task review (spec compliance, then quality); an Important finding got a fix round and a scoped re-review.
+  3. The phase gate, a whole-phase review, one fix wave and a scoped re-review of that wave.
+- Implementers and task reviewers ran on Sonnet; whole-phase reviews (and the task reviews of the image and the workflows) ran on Opus.
+- The owner got a report at the Phase 2 gate. From Phase 3 on they had the phases run without stopping, except for the pauses they asked for (after Phase 7, at the start of Phase 9 and after Phase 10). Phase 11 added two pre-flight scans (one checked every claim in the README, guide, security and CLAUDE.md texts; one triaged every deferred minor), four fix waves and two read-only verification passes.
+- Gates: every phase ran `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` (plus `pnpm storybook:build` when stories changed) and the plan's manual browser steps.
+  Later gates added the `pnpm codegen:api` drift check and `pnpm audit --audit-level high` (Phase 9), then `pnpm test:coverage`, the Playwright E2E suite, the image build and `scripts/docker-smoke-test.sh` (Phase 10).
+- Last full local run before this record: 101 test files / 693 tests, coverage thresholds met, 25 E2E tests on Edge, Storybook build, entry chunk 213.25 kB. The image was 31.4 MB (UID 101, port 8080) at the Phase 10 gate.
+- Every ruling (207, each with its reason and its cost if wrong) is listed in [2026-09-30-react-bedrock-template-rulings.md](2026-09-30-react-bedrock-template-rulings.md).
+
+### Owner decisions taken during the build
+
+- **Commit trailer:** `Co-Authored-By: Claude Sonnet 5.5`, as its own paragraph, instead of the Opus trailer in the Global Constraints.
+- **Git identity:** a repository-local identity with a GitHub no-reply address, so no personal or work e-mail address appears in the history.
+- **No stop at phase gates (2026-10-01):** after the Phase 2 report the owner had the remaining phases run straight through, overriding "STOP and post the Phase Report"; the public push still needed an explicit yes. The owner paused the work three times: after Phase 7, at the start of Phase 9 and after Phase 10.
+- **Differences reported at the Phase 2 gate,** after which the owner approved Phase 3: the protocol-based `Secure` cookie flag (Deviation 20), the Sheet opening in 300 ms (Deviation 23), and primitives keeping shadcn's size names and data-attribute variants (Deviation 26).
+- **E2E locally through the installed Microsoft Edge**, through a git-excluded local Playwright config, with no Chromium download. The committed `playwright.config.ts` keeps the Chromium project that CI uses, so Chromium has never run.
+- **Docker:** the owner approved pulling exactly the two base images. The build created and removed only `react-bedrock*` objects and never pruned; Docker Desktop itself is the owner's to manage (they restarted it by hand when it stopped). Because of the no-prune rule, the plan's `docker builder prune -f` (Task 11.3) was skipped.
+- **Licence:** MIT, with the GitHub account name that will own the repository as copyright holder.
+- **Final Docker checks skipped:** the Docker engine was stopped during the final verification pass, and the owner asked to skip the Docker-only checks rather than start it. They had passed earlier: the image build and smoke test at the Phase 10 gate and again after the entrypoint fix of Phase 11, and compose-from-nothing plus the README's Docker commands in the Phase 11 pre-flight. The image was not rebuilt after the last application commits (the pager and the sign-out notice of Phase 11).
+- **Neutrality scan:** no organisation names were added to the scan beyond those the build already knew.
+- **Publishing target:** a public GitHub repository under the owner's account, pushed only after the owner's explicit approval (Task 11.4 Step 4).
+
+### Deviations 18 and up
+
+The numbering continues the Deviations list above. Each entry says what the plan or the spec said, what was built, and why.
+
+18. **Library behaviour found while building.** The toolchain table was right about the versions but missed these behaviours:
+    - React 19.3 holds a Suspense reveal for about 300 ms after the fallback mounts (Deviation 28).
+    - MSW 3.0.0 does forward a mocked `Set-Cookie` into jsdom, so the MSW addendum above is wrong; `src/test/setup.ts` clears cookies after each test.
+    - Vitest 5 blanks CSS module ids, `?raw` included, unless `test.css.include` lists them.
+    - Testing Library's helper is `waitForElementToBeRemoved`; the snippets of Phases 3, 5 and 7 misspell it.
+    - Sentry 11's `dataCollection` does not cover URL queries, fragments or console breadcrumbs (Deviation 34).
+    - Zod 4 probes for `eval` (`Function('')`) when it builds its first object schema, which a CSP without `unsafe-eval` reports (Deviation 74).
+    - TanStack Table v9 sorts a numeric column descending on the first click.
+    - Axios with `allowAbsoluteUrls: false` rebases an absolute URL onto `baseURL` instead of rejecting it.
+    - In Vite 8.3, Rolldown's `advancedChunks` is deprecated in favour of `output.codeSplitting.groups`.
+    - The shadcn CLI cannot answer its overwrite question without a terminal, and plop cannot bypass a conditional prompt.
+    - `pnpm add` resolved Orval 8.40.0 (the table says 8.38).
+19. **Files added beyond Deviation 5:** `docs/hooks.md` (Deviation 58); `src/app/routes/page-boundary.tsx` (Deviation 55); `src/core/logger/transports/sentry-sdk.ts` and `strip-url.ts` (Deviation 34); `src/lib/summarise-cause.ts`, `safe-string.ts`, `focus.ts` and `format-locale.ts`; `src/features/example/hooks/use-row-focus.ts` (Deviation 70); `src/test/plop-anchors.guard.test.ts`, `src/test/e2e-fixtures.guard.test.ts` (the E2E accounts match the mock users) and `src/test/hostile-values.ts`; stories for Calendar, ForbiddenState, NotFoundState and AuthLayout; `LICENSE`. The plop template `locale.en.json.hbs` became `locale.json.hbs` (used for every locale), with `locale.es.json.hbs` kept as an optional per-language override.
+
+#### Phase 2: tokens, primitives, theme
+
+20. **The `Secure` cookie flag follows the protocol** (Task 2.1). Spec §6.5: `Secure` in production. Built: `Secure` whenever the page is served over https (the plan's code). Why: in browsers that refuse `Secure` cookies over plain http, a production build served that way (such as the Docker demo on localhost:8080) could not set the cookie at all; https deployments still get it.
+21. **Tooltip provides its own `TooltipProvider`** (Phase 2 review). Plan: shadcn's Tooltip, which throws without a provider, and no provider anywhere. Built: the primitive wraps itself in one (a hand fix that `pnpm ui:add tooltip --overwrite` discards, documented). Why: a provider in `AppProviders` would have been dropped by the later tasks that replace `providers.tsx`.
+22. **Persisted preferences are validated when read back** (Phase 2 review, Task 5.5). Plan: the stores trust what they read back. Built: a persist `merge` guard resets an unknown theme mode to `system` and keeps only a valid `sidebarCollapsed`. Why: a stale or hand-edited value made `ThemeToggle` throw on render.
+23. **Overlay durations come from the duration tokens** (Phase 2 review). Plan: shadcn's raw `duration-200/300/500`. Built: Dialog and AlertDialog use `duration-normal` and Sheet `duration-slow`, so the Sheet opens in 300 ms instead of 500 ms; `ui-add.mjs` rewrites them and the token guard refuses a raw `duration-<n>`. Why: every duration is a token (Principle 1); no new token was added.
+24. **Invalid controls keep a full-strength focus ring** (Phase 2 review). Plan: shadcn's `aria-invalid:ring-destructive/20` (`/40` in dark), which beat the focus ring. Built: `aria-invalid:focus-visible:ring-destructive` in six primitives and in `ui-add.mjs`. Why: a focused invalid field showed only a faint ring.
+25. **Tailwind does not scan `docs/` and `scripts/`** (Phase 2 review). Built: `@source not` lines in `globals.css`. Why: the scan of Markdown generated stale utility rules (built CSS 66.8 kB to 56.7 kB).
+26. **Sizes and variants follow shadcn outside Button, Badge and Tabs** (Task 2.4). Spec §5.3: `cva` variants and `sm | md | lg` sizes. Built: Button, Badge and Tabs use `cva`; Avatar, Switch, SelectTrigger and AlertDialogContent keep shadcn's `default` size and data-attribute variants (documented in `docs/design-system.md`). Why: put to the owner in the Phase 2 report and left as shadcn ships them.
+27. **Every visual prop of a primitive has a story** (Task 2.6). Plan: stories that left some variants out. Built: extra stories for Avatar sizes and groups, Switch sizes, the Tabs variants and vertical orientation, the small AlertDialog and a few more. Why: spec §5.3 asks for every variant in Storybook.
+
+#### Phase 3: feedback states and DataTable
+
+28. **Suspense fallbacks wait 350 ms** (Phase 3 review). Plan: `AsyncBoundary` shows `PageLoader` (200 ms delay) as the Suspense fallback. Built: `<Delayed delayMs={SUSPENSE_FALLBACK_DELAY_MS}>` (350 ms, a new constant) around `<PageLoader delayMs={0} />`; `loading={null}` renders nothing. Why: React holds the reveal about 300 ms, so the 200 ms loader still flashed (spec §5.4: loading states must not flash on fast responses). `QueryState` keeps 200 ms.
+29. **`ErrorBoundary` auto-resets only an error already on screen** (Task 3.4). Plan: reset whenever `resetKeys` change while an error is caught. Built: `componentDidUpdate` also requires the previous state to hold the error. Why: a key change in the render that threw reset the boundary at once, fired `onReset` and reported one failure twice.
+30. **DataTable's pager is a labelled `nav` with safe buttons** (Task 3.5). Plan: a bare `div`, buttons without `type`, page sizes only from `pageSizeOptions`. Built: `<nav aria-label>`, `type="button"` on all five buttons, and the options are the sorted union of `pageSizeOptions` and the current `pageSize`. Why: buttons inside a form submitted it, and a URL-driven `?pageSize=25` left the select blank.
+31. **`ErrorState`'s retry button has `type="button"`; the `Button` primitive still has no default `type`** (Phase 3 review). Plan: no `type` on the retry button. Why: a primitive-wide default would change every consumer, so each button inside a form sets its own type.
+32. **`describeError` keeps the message on Firefox and Safari stacks** (Phase 3 review). Plan: `error.stack` alone when there is one. Why: those stacks lack the "Name: message" line that V8 prepends.
+
+#### Phase 4: errors, logging, notifications
+
+33. **The logger de-duplicates by severity** (Task 4.1). Plan: an error object is reported once. Built: it is reported again only at a higher severity. Why: a cache's `warn` would otherwise swallow the boundary's later `error`, which is what reaches Sentry.
+34. **Sentry gets no URL queries, fragments or console breadcrumbs, and a smaller SDK chunk** (Phase 4 review). Plan: Sentry 11's `dataCollection` flags only. Built: `beforeSend`/`beforeBreadcrumb` strip query and fragment from every URL and drop console breadcrumbs; the transport loads a local `sentry-sdk.ts` that re-exports only the five functions it uses (446 kB to 88 kB raw). Why: `docs/security.md` promised the privacy, and the chunk is fetched at start-up whenever a DSN is set.
+35. **`useConfirm` returns focus** (Phase 4 review, Task 8.4). Plan: no focus handling. Built: the dialog refocuses the element that was active when `confirm()` was called, unless focus has already moved to another element outside it; a pending confirm resolves `false` when the provider unmounts; `destructive` uses `AlertDialogAction`'s `variant` prop. Why: focus fell to `body` (WCAG 2.4.3), and the plan's `className` variant lost to `bg-primary`.
+36. **The logger never throws** (Phase 4 review). Plan: no guard, and an unbounded queue. Built: a throwing context getter or a failed redaction is caught, and the Sentry queue is capped at 100 with a `try/catch` per send. Why: a logging failure must not break error handling.
+
+#### Phase 5: HTTP, query client, stores
+
+37. **An error's `cause` is logged and shown as a summary only** (Phases 4-5). Plan: `describeError` omitted `cause`, and the logger had no policy for it. Built: `{ name, message, code?, status? }` in both places through one guarded helper (`@/lib/summarise-cause`), with leak tests. Why: `AppError` wraps the Axios error as `cause`, and its config holds the request body (a login password) and headers.
+38. **Logged URLs never carry a query string or fragment** (Task 5.3). Plan: the request URL as it is. Built: the interceptor cuts the URL at the first `?` or `#` in its debug message and in every failure log. Why: tokens in query strings would reach the console and Sentry; a regex missed queries containing a line break.
+39. **Only `SCREAMING_SNAKE` server codes become translation keys** (Task 5.1; plan: any code), and an ESLint zone keeps `core/api` from importing components or `core/errors`. Why: codes such as `constructor` or `__proto__` returned functions from i18next.
+40. **The query and mutation caches normalise and classify failures** (Task 5.4). Plan: both handlers logged and toasted the raw thrown value at `warn`, and retried everything but 4xx. Built: `toAppError` first; cancellations are never toasted, logged or retried; failures that were not already an `AppError` are logged at `error`; `meta.silent` on a query skips only the cache's own log, on a mutation only the toast. Why: cancellations were toasted, raw Axios errors leaked their config into logs, and unexpected failures were invisible in production.
+41. **`toAppError` and `describeError` never throw** (Phase 5 review). Plan: they assumed well-formed thrown values. Why: both run while rendering the root error fallback and inside the query retryer, where an odd thrown value left a blank page or a query loading forever.
+42. **A transient refresh failure keeps the session** (Phase 5 review). Plan: any failed refresh ends the session. Built: a network error, timeout, cancellation or 5xx during the refresh is logged at `warn`, rethrown and shown as a connection problem; only other failures end the session. Why: a network blip would sign the user out.
+43. **`http` never sends credentials to another origin** (Phase 5 review). Plan: Axios's default, which follows absolute URLs. Built: `allowAbsoluteUrls: false`. Why: once an auth adapter attaches credentials, an absolute URL must not leak them.
+44. **`userMessage` is kept only below status 500** (Phase 5 review). Plan: for every status. Why: a 5xx body is raw server text, not copy for users.
+45. **The test config pins the environment** (Tasks 5.2, 5.4, 6.1). Plan: no pins. Built: `test.env` in `vite.config.ts` sets `VITE_API_BASE_URL`, `VITE_LOG_LEVEL` and `TZ`, next to the test-only `server.fs.deny` relaxation and `test.css.include`. Why: suites failed under a developer's `.env.local` or outside UTC.
+
+#### Phase 6: translations, formatting, forms
+
+46. **date-fns is imported by subpath and kept out of the start-up graph** (Phase 6 review, Task 8.4). Plan: barrel imports in `@/lib/format`, which `core/i18n` imports. Built: subpath imports, and `setFormatLocale`/`getFormatLocale` live in `src/lib/format-locale.ts`. Why: the barrels loaded in every test file, about doubling the test run (61 s before the fix, 32 s after), and the i18n import pulled date-fns into the eager bundle.
+47. **The DatePicker announces its value** (Task 6.5, Phase 6 review). Plan: the date as plain trigger text and English day labels. Built: the trigger's value or placeholder sits in a span named first in `aria-describedby`; day labels and the dialog name are translated; a `formatISODate` helper gives a local `yyyy-MM-dd`. Why: a labelled DatePicker announced only its label (WCAG 4.1.2), and `toISOString()` shifts the picked day across time zones.
+48. **Locale handling is stricter** (Tasks 6.1-6.3). Plan: three copies of `isLocale`, a crash on a non-string saved locale, a warning on every missing lookup. Built: one `isLocale` in `src/config/constants.ts`; a non-string saved locale falls back instead of crashing start-up; `navigator.languages ?? [navigator.language]`; a missing translation key is warned once per `ns:key`.
+49. **The Zod error map formats date bounds with `Intl.DateTimeFormat`** and gives exclusive bounds their own keys (Task 6.4). Plan: bounds formatted through `@/lib/format`. Why: going through `@/lib/format` would have pushed date-fns into the main chunk (509 kB).
+
+#### Phase 7: routing and authentication
+
+50. **Same-tick URL-state writes are merged** (Task 7.5). Plan: each write starts from the rendered URL. Built: `useUrlState` collects writes made in one tick in a module-level snapshot cleared by `queueMicrotask`. Why: two writes in one handler lost the first. Documented limit: compute the whole update first, and do not write across an `await`.
+51. **The session ends once, and a late 401 does not refresh twice** (Task 7.4). Plan: each refused request ended the session, and any 401 started a refresh. Built: `endSession` returns when already anonymous; each request carries the refresh epoch (`_refreshEpoch`), so a 401 for a request sent before a completed refresh retries without refreshing again. Why: concurrent refusals and rotating refresh tokens caused spurious sign-outs.
+52. **A failed sign-out still signs out locally and warns until the user closes the warning** (Task 7.4, Phase 7 review, Task 11.3). Plan: `logout()` let a failed `/auth/logout` through. Built: the failure is logged, the session ends locally, and `auth.signOutIncomplete` says the server session may survive; since Phase 11 the notice stays until closed. Why: the httpOnly cookie may still be valid, so a reload could sign the previous user back in (a shared computer).
+53. **`safeReturnTo` checks the origin** (Task 7.4). Plan: string checks only. Built: `new URL(value, location.origin).origin` must equal the current origin, and only `RequireGuest` reads `returnTo`. Why: values such as `/<TAB>/evil.example` passed the string checks (an open redirect).
+54. **Focus moves to the main content on navigation** (Tasks 7.6, 7.7). Plan: no focus handling on route changes. Built: `RootLayout` focuses `#main-content` after every non-REPLACE route change; the auth layout's `main` can take focus. Why: keyboard and screen-reader users otherwise stay on the old link.
+55. **Page errors land in a `PageBoundary` with Try again** (Phase 7 review). Plan (Deviation 7): layouts wrap `<Outlet/>` in `AsyncBoundary`. Built: the `errorElement` route renders `PageBoundary` (an `AsyncBoundary` keyed on the pathname, `ErrorState` with Try again and Reload page) below the router's own boundary, and `app-layout.tsx` no longer wraps the outlet. Why: the router's boundary sat between them, so a failed suspense query showed only "Reload page".
+56. **The mobile navigation sheet behaves like a dialog** (Task 7.6, Task 10.1). Plan: a store flag opens the sheet, with no focus return. Built: closing it returns focus to "Open navigation"; a link click, a route change or widening past `md` closes it without taking focus from the page; a modified (new-tab) click keeps it open; the desktop sidebar is sticky. Why: focus fell to `body`, and the sheet stayed open after navigating.
+57. **Shell accessibility details** (Tasks 7.6, 7.7): avatar initials use `text-foreground` (AA contrast); logical `border-e`/`start-*` utilities; the user-menu button's name includes the user's name; stories for ForbiddenState, NotFoundState and AuthLayout.
+58. **`docs/hooks.md` documents the shared hooks** (Task 7.7), an 18th docs file next to the 17 of spec §11.2. Why: the Global Constraint "every module ships a short docs entry" was not met for them.
+
+#### Phase 8: the reference feature
+
+59. **Mock handlers read a feature's `schemas/` and `types/` directly** (Task 8.2). Plan: features are imported only through their index. Built: an ESLint override for `src/mocks/**` allows exactly those two folders. Why: the index exports the pages and the test setup loads every handler, so the whole UI loaded into every test file (+22 s) and a chunk reached 509 kB.
+60. **The Items list keeps the URL honest** (Task 8.5). Plan: none of this. Built: a page past the end redirects (replace) to the last page; "No items yet" shows only when `total === 0`; the search box follows Back and Forward. Why: a stale `?page=N` showed an empty page, and Back left the box out of step with the list.
+61. **Deleting from the detail page does not flash "Item not found"** (Tasks 8.3, 8.5). Plan: remove every detail query of the deleted item. Built: `useDeleteItem` removes only inactive detail queries and marks the active one stale without refetching. Cost, documented: Back to the deleted item shows it for one round trip.
+62. **Server errors for fields the form does not have are toasted** (Task 8.4). Plan: `applyServerErrors` alone, which dropped them silently.
+
+#### Phase 9: code generation
+
+63. **Orval generates mutation hooks for writes and encodes path parameters** (Task 9.1, Phase 9 review). Plan: `override.query.useQuery: true` and raw path parameters. Built: no `useQuery: true` (reads get `useX`/`useXSuspense`, writes get mutation hooks), `urlEncodeParameters: true`, and `override.operations` gives login, logout and refresh the cookie strategy's options (`skipAuthRefresh`, `silent`). Why: `useQuery: true` sent POST, PATCH and DELETE on mount (`useLogout()` signed the user out), `a/b?x=1` split the path, and a wrong password through the generated `useLogin` ended the session.
+64. **The OpenAPI fixture matches the mocks** (Task 9.1): 401 and 403 on every items operation, `maximum: 1000000` on price and quantity.
+65. **The generators refuse instead of half-writing** (Task 9.2, Phase 9 review). Plan: plop's actions alone. Built: a `guard` action runs first and refuses, writing nothing, when an anchor is missing or duplicated, a file exists, or a name collides in `paths.ts`, `resources.ts`, the handlers or the translations; `src/test/plop-anchors.guard.test.ts` fails the suite when an anchor is deleted. Why: plop skips a `modify` whose pattern does not match, and does not undo earlier actions.
+66. **The generators follow `src/locales`** (Phase 9 review). Plan: templates for `en` and `es`. Built: one translation file per locale folder, a `// plop:resources-<code>` anchor per locale, and a refusal that says what to add. Why: after adding or removing a language (an expected first change) `pnpm gen feature` produced code that failed typecheck.
+67. **Generator details** (Task 9.2). Plan: `component <name> feature <feature>`, `titleCase` labels, a `^use-?` filter, Prettier before ESLint through a shell. Built: `pnpm gen component <name> feature:<feature>` (plop cannot bypass a conditional prompt); JSON-escaped titles and dash-free labels ("Purchase Orders"); the hook generator strips only a leading `use-`; the format action runs ESLint, then Prettier, through `node` without a shell, from any folder; story titles stay unique across features; the store generator does not touch `src/test/setup.ts` (documented: add the store to the reset list by hand).
+68. **`src/api` has a layer rule** (Phase 9 review): the shared layers (`core`, `components`, `hooks`, `stores`, `config`, `lib`) may not import the generated clients.
+
+#### Phase 10: E2E, coverage, Docker, CI
+
+69. **E2E builds its own server with pinned settings** (Task 10.1). Plan: `reuseExistingServer: !CI` and a build made from the developer's `.env*`. Built: the `webServer` builds and previews with every `VITE_*` pinned to its default (`BUILD_ENV`) and never reuses a server; `test:e2e` is `playwright test`; the a11y spec also covers the edit, 404, Spanish and dark pages and open menus, with only `aria-hidden-focus` disabled for open Radix menus and selects. Why: a developer's `.env.local` failed 15 of 17 tests, and a stale preview served an old build.
+70. **Focus after deletes, and an `h1` on every whole-page state** (Task 10.1). Plan: none of this (items carried from earlier phases). Built: after a confirmed row delete focus goes to the next row's link, else the previous one, else the list heading; a refused delete returns focus to its Delete button; `EmptyState` and `ErrorState` take `headingLevel` (default 2), and `RequirePermission`, `PageBoundary`, `RouteError` and `AppErrorBoundary` render an `h1`. Focus after sign-in stays at the document start, where the skip link is the first stop (documented). Why: WCAG items carried from Phases 3-8.
+71. **A test may run for 15 s** (Phase 10 review). Plan: Vitest's 5 s default. Built: `testTimeout: 15_000` and a fake-timer debounce test. Why: six load-sensitive tests failed on the 5 s default and would have turned the required CI check red.
+72. **`pnpm analyze` and the demo accounts** (Task 10.2). Plan: the visualizer opens a browser on every run; `docs/architecture.md` says components never import `@/mocks`, yet the plan's login page imports the demo accounts. Built: the browser opens only outside CI; the import is documented, not gated (a 0.36 kB chunk with the demo credentials ships in every build). No vendor chunk split was needed: the build has no size warning, and `docs/architecture.md` names `output.codeSplitting.groups`.
+73. **The image's entrypoint and nginx are hardened beyond the plan** (Task 10.3 and the Phase 10/11 fix waves). Plan: one cache header for every `/assets` response, no check that `config.js` was written, a loose `API_PROXY_TARGET` check, no upstream TLS verification, no `CONTENT_SECURITY_POLICY` validation. Built: `/assets` responses are cached for a year only when successful (a 404 is never `immutable`); the container stops when it cannot write `config.js`; `API_PROXY_TARGET` must be a whole-string `http(s)://host[:port]`, line breaks included; `https` upstreams are verified (`proxy_ssl_verify on` with the image's CA bundle; a private CA is mounted over it, documented); `CONTENT_SECURITY_POLICY` may not contain `"`, `$`, `\` or control characters; the CSP's API origin is derived as a browser would (credentials dropped, a backslash ends the host). The smoke test checks each one. Why: each was reproduced as an injected nginx directive, a silently ignored configuration, an unverified hop that carries session cookies, or a wrong CSP origin.
+74. **Zod runs without its JIT probe** (Task 10.3). Plan: Zod's default. Built: `z.config({ jitless: true })` at the top of `src/config/env.ts`, before the first schema is built. Why: the probe broke the image's CSP on every page load.
+75. **No `# syntax=` line in the Dockerfiles** (Task 10.3). Plan: `# syntax=docker/dockerfile:1` at the top of both. Why: it made BuildKit fetch a third, unapproved image, and nothing needs it.
+76. **`docker compose down` is not "stop everything"** (Task 10.4). Spec §10.4: it stops everything. Built: the README and `docs/docker.md` say that plain `docker compose down` stops the production service only and `pnpm docker:down` also stops the dev profile. Why: Compose leaves a started profile running.
+77. **Audit advisories are settled in `pnpm-workspace.yaml`** (Task 10.5). Plan: no decision. Built: `overrides` for `seroval` (`^1.6.3`) and `source-map-js` (`^1.2.2`), and `auditConfig.ignoreGhsas: [GHSA-vfj7-8cjw-p6xm]` for `braces` (dev-only through plop, no patched release). Why: four advisories in dev and test dependencies, and the plan had no decision for them.
+78. **CI adjustments** (Tasks 10.5, 11.3). Plan: `cancel-in-progress: true` for CI and Storybook, no concurrency group for Docker publishing, one shared cache scope. Built: `cancel-in-progress` only for pull requests; `actions/deploy-pages@v4` kept; Storybook publishing is never cancelled and has a 10-minute limit; Docker publishing is serialised per ref; the two image builds use separate `gha` cache scopes; Dependabot ignores Node major versions of the base image. Why: the plan's settings cancelled runs on `main` and in-flight Pages deploys, and Docker publishing had no concurrency control at all.
+79. **The Compose guard test also checks that the defaults are valid** (Task 10.4). Plan: it compared the defaults only. Why: `parseEnv` falls back to the app defaults, so an invalid Compose default compared as equal.
+
+#### Phase 11: documentation and release
+
+80. **The DataTable pager uses `aria-disabled`** (Task 11.3). Plan: `disabled` pager buttons. Built: an unavailable button stays focusable, does nothing and dims only its content, so its focus ring keeps full strength. Why: a button disabled while focused dropped keyboard focus to the page on the last page.
+81. **The README, guide, security notes and CLAUDE.md differ from the plan's texts** (Tasks 11.1-11.4). A scan checked 236 claims (5 wrong, 25 stale, 16 missing). The shipped texts add `src/api/`, the `docker compose down` row (Deviation 76), "an unset `VITE_ENABLE_MOCKS` means mocks on", the cost of the first commit (the hooks lint every file), the exact split between what ESLint, the tests and convention enforce (`react/jsx-no-literals` checks JSX text, not attributes), a "Dependencies" row in the security table, and "CI does not run `pnpm audit`".
+82. **Docs no longer cite the spec or the plan** (Task 11.3). Plan: docs and comments that cite spec sections, owner decisions and Deviations. Built: the "spec §N" references left the docs, and "owner decision N" and "Deviation N" left the source. About 100 code comments still cite "spec §N" (see the follow-ups).
+
+### Corrections to the plan's text
+
+Defects in the plan's own steps and snippets, found by the pre-flight scans and reviews and fixed during the build.
+
+| Phase | Task | What the plan text got wrong | What was done |
+|---|---|---|---|
+| 1 | 1.5 | `env.test.ts` imports `/.env.example?raw`, which Vite's default `server.fs.deny` refuses | A test-mode relaxation in `vite.config.ts`, kept by every later rewrite |
+| 2-11 | all | Many snippets and docs are not Prettier-clean; the Tailwind plugin sorts classes | `pnpm format` before `pnpm lint` in every task |
+| 2 | 2.1, 2.2 | Expected test counts 12 and 6 | 13 and 8, counted from the plan's tests |
+| 2 | 2.2 | Deviation 1 puts the `errors` namespace in 2.2; the task adds it in Phase 3 | Followed the task |
+| 2 | 2.3 | No `test.css.include`, so `tokens.css?raw` loads empty | `css: { include: [/tokens\.css\?raw/] }` |
+| 2 | 2.4 | shadcn output needs more hand fixes than Steps 13-14 list | Tabs height, table offset, pagination role and Form context check fixed by hand |
+| 2 | 2.4 | The button size test always matches (`size-4` is in the base classes) | Size-specific assertions |
+| 2 | 2.5 | The `eslint-disable` for the bootstrap script test is too narrow; the test failed with a custom `VITE_APP_NAME` | Two more rules; the test no longer depends on the name |
+| 2 | 2.2-2.6 | Tests depended on the developer's default locale | Language reset in `beforeEach`; suites run under `es` and a custom app name |
+| 3 | 3.3, 5.4, 7.x | `waitForElementToBeRemoval` | `waitForElementToBeRemoved`, with `act` still exported |
+| 3 | 3.4 | React 19 does not retry a `use()` suspend begun in a synchronous `act` | `await act(() => { render(...); return Promise.resolve(); })` |
+| 3 | 3.2 | `JSON.stringify(...) ?? String(value)` fails `no-unnecessary-condition` | Typed as possibly `undefined` |
+| 3 | 3.4 | The boundary reset in the render that threw | Deviation 29 |
+| 3 | 3.5 | The ServerDriven story shows a blank page-size select; the pager is a bare `div` | `pageSizeOptions: [5, 10, 20]`; Deviation 30 |
+| 3 | 3.5, review | Docs say DataTable skeletons are delayed; the example unmounts the table on each page change | Reworded; `placeholderData: keepPreviousData` |
+| 4 | 4.3 | An unhandled `ErrorEvent` after uninstall fails the Vitest run | An `error` listener around the dispatch |
+| 4 | 4.3, gate | React calls the root `onCaughtError` first, so the entry is "React error caught by a boundary", not "Unhandled render error" | Docs, gate and an integration test use the real entry |
+| 4 | 4.2 | `className={buttonVariants(...)}` on `AlertDialogAction` loses to `bg-primary` | The `variant` prop |
+| 4 | 4.1 | `logger.test.ts` assumes `VITE_APP_ENV=development` | Asserts against `env.VITE_APP_ENV` |
+| 4 | 4.3 | Docs said API errors are logged by caches that did not exist yet; a `console.error` mock hid React's act warning | Marked planned; the test asserts no `console.error` |
+| 4 | review | The carried "add `error.cause` to the logger" would copy the request body | Deviation 37 |
+| 5 | 5.2, 5.4 | `setup.ts` and `render.tsx` replaced wholesale, dropping earlier lines | Edited in place |
+| 5 | 5.5 | The store-reset loop over a union fails `tsc` | A generic `resetStore<State>()` |
+| 5 | 5.2 | `api-url.test` fails under a developer's `VITE_API_BASE_URL`; docs describe the Docker demo, E2E and generators as present | `test.env` pin; "(planned)" until they existed |
+| 5 | 5.3 | The 401 branches threw without logging; nothing tested the anti-loop guard | `warn` before each throw; an anti-loop test |
+| 5 | 5.4, 5.5 | `meta.silent` and the auth layer documented as doing what the code does not (yet) do | Docs corrected; Deviation 40 |
+| 6 | 6.1 | A second `env` key in the test config (TS1117) loses `TZ` | One merged `test.env` |
+| 6 | 6.5 | `pnpm ui:add calendar` waits for an answer; the generated `z-10` fails the token guard; DayPicker's `autoFocus` fails jsx-a11y | An "n" piped in; `z-sticky`; a reasoned disable |
+| 6 | 6.4, gate | The Form story's own error strings beat the Spanish messages the gate checks | Removed |
+| 6 | 6.1, 6.2 | Format tests assume `en`/`USD`; a non-string saved locale crashes start-up; missing-key warnings repeat | Assert against `env`; Deviation 48 |
+| 6 | 6.4 | `form-errors.test` deletes the real validation bundle; date bounds through `@/lib/format` | Real strings asserted; Deviation 49 |
+| 6 | 6.1-6.3, 6.6 | Three copies of `isLocale`; `docs/i18n.md` cites plan phases | One `isLocale`; neutral wording |
+| 7 | 7.3 | The MSW addendum says a mocked `Set-Cookie` does not reach jsdom | `clearCookies()` after each test |
+| 7 | 7.x | Untyped `renderHook` generics, async `act` callbacks (`require-await`), import order; 31 snippets not Prettier-clean | Typed, `Promise.resolve()`, `lint:fix`, format |
+| 7 | 7.2, 7.7 | Title tests assume the default app name; jsdom prints `scrollTo` errors | Assert against `env.VITE_APP_NAME`; a `scrollTo` stub |
+| 7 | 7.4, 7.5 | Overwritten same-tick writes; a session ended per request; a second refresh; a rejecting logout; an open redirect | Deviations 50-53, about 11 tests |
+| 7 | 7.6 | Initials below AA contrast; physical utilities; no focus return from the mobile sheet | Deviations 56-57 |
+| 7 | 7.2 | No docs entry for the shared hooks; a 101-character commit subject (commitlint allows 100) | Deviation 58; shortened |
+| 7 | review | The "refresh again later" half of the epoch logic had no test; docs said a failed logout ends the server session | A converse test; Deviation 52 |
+| 8 | 8.1 | `errors.test.ts` uses `ITEM_LOCKED`, which 8.1 translates, as an untranslated code | `ACCOUNT_FROZEN` |
+| 8 | 8.3-8.5 | The optimistic-delete test does not hold the request; the clipboard fake comes before `userEvent.setup()`; the sort test expects ascending first | Held DELETE; setup first; descending first |
+| 8 | 8.x | Lint and type errors in `csv.ts`, `items-api.ts` and the export test | `safeString`, a type-guard filter, a typed `vi.fn` |
+| 8 | 8.4, 8.5 | Tests depend on `VITE_FEATURE_FLAGS` and on `$` literals | An explicit flag source; `formatCurrency(...)` |
+| 8 | 8.2-8.5 | Handlers import the feature index; no past-the-end redirect; a not-found flash after delete; dropped field errors; physical `left-3`/`pl-9` in the toolbar | Deviations 59-62; `start-3`/`ps-9` |
+| 8 | review | The redirect, debounce, Clear and per-route 403s had no test | Tests, each mutation-checked |
+| 9 | 9.2 | Step 6's cleanup reverts the uncommitted edits of Steps 1-2 | Step 6 runs after the commit |
+| 9 | 9.2 | The format action runs Prettier before `eslint --fix`, leaving unformatted imports | ESLint first |
+| 9 | 9.1 | `useQuery: true`; raw path parameters; the fixture lacks 401/403 and maxima | Deviations 63-64 |
+| 9 | 9.2 | No bypass for the feature component; silent anchor misses; half-written collisions; unescaped titles; dashed labels; the handler template imports the feature index; `shell: true` on Windows | Deviations 65-67 |
+| 9 | 9.2 | The hook filter `^use-?` turns `user-prefs` into `r-prefs` | Strip only `use-` |
+| 9 | 9.1, 9.2 | Docs promise CI checks and a drop-in switch to the generated hooks | Planned until Phase 10; the switch claim removed |
+| 10 | 10.2 | The new `vite.config.ts` drops `server.fs`, two `test.env` pins and `css.include` | All kept |
+| 10 | 10.2 | The coverage bite check on `lines` cannot fail (lib lines are 100%) | `branches` |
+| 10 | 10.3 | A global `MSYS_NO_PATHCONV=1` makes curl exit 23 in Git Bash | Set for `docker` only |
+| 10 | 10.1 | Substring link locators, an axe scan during a closing menu and a sign-out race fail 5 of 17 specs | `exact: true`; wait for the close and for `/login` |
+| 10 | 10.1 | E2E depends on `.env.local` and reuses stale servers | Deviation 69 |
+| 10 | 10.3 | 404s cached as immutable; ignored `config.js` write failures; the Zod probe against the CSP; a third image via `# syntax=` | Deviations 73-75 |
+| 10 | 10.3 | "About 20 MB" image | 31.4 MB |
+| 10 | 10.4 | `docker compose down` "stops everything" | Deviation 76 |
+| 10 | 10.5 | No decision for four audit advisories; docs still call Docker and E2E planned | Deviation 77; docs updated |
+| 10 | reviews | A line break passes the proxy check; `https` upstreams unverified; an invalid Compose default passes the guard; load-sensitive tests | Deviations 73, 79, 71 |
+| 11 | 11.1-11.4 | Texts written before Phases 2-10 changed things | Deviation 81 |
+| 11 | 11.2 | The appended "Secrets and configuration" repeats an existing section | One sentence and a link |
+| 11 | 11.3 Step 1 | The command check's `builtins` lack `audit` | Added |
+| 11 | 11.3 Step 3 | Item 2 changes `:root` and `.dark` only, but the tokens test also checks the `prefers-color-scheme` fallback block | All three changed (the guide already says so) |
+| 11 | 11.3 Steps 3-4 | `docker builder prune -f`; a `bedrock-trial` clone outside the `react-bedrock*` names | No prune; the slug `react-bedrock-trial` |
+| 11 | 11.4 Step 2 | Copying a corrected plan over this one | This record, appended |
+
+### Known limitations (shipped as known)
+
+1. **Right-to-left layouts are not supported:** about 36 physical-direction utilities remain in 17 shipped primitives (the dropdown menu most of all), the Sheet's left side is fixed and the PanelLeft icons do not mirror.
+2. **Loading live regions are unverified with a screen reader:** `PageLoader` mounts `role="status"` together with its text, and skeletons use `aria-busy`.
+3. **A 4xx server message shows only for a code without a translation:** a body without `code` gets one from its status, and each of those has a translation (documented).
+4. **A transient `/auth/me` failure at start-up shows the login page** (no Retry); a reload restores the session.
+5. **Mocks are on by default:** an unset `VITE_ENABLE_MOCKS` means the mock API, every build carries the mock chunk and the demo accounts, and a production console prints no warning when a deployment forgets `VITE_ENABLE_MOCKS=false` (documented prominently).
+6. **Sentry integration gaps:** HTTP `AppError`s share one stack (one issue), exceptions lose the log message, Sentry's own global handlers duplicate the template's, `ResizeObserver` noise is reported, and ids reach the `route` tag.
+7. **Optimistic delete limits:** a refused earlier delete brings back a row deleted later, and Back to a deleted item shows it for one round trip (both documented).
+8. **CI has never run on GitHub.** The first run exercises for the first time the Chromium E2E project with `playwright install --with-deps`, the buildx `gha` cache, the multi-arch GHCR publish, the Pages job, and Dependabot with pnpm 12.8.1 and the `overrides`. `latest` follows the most recently published stable release.
+9. **One ignored advisory:** `auditConfig.ignoreGhsas: [GHSA-vfj7-8cjw-p6xm]` (`braces` through plop, dev-only, no patched release) silences it for the whole tree.
+10. **Test and guard gaps:** thin spots across storage, the logger and Sentry, the interceptors, hooks, DataTable, the mock handlers and the generators' pure logic; the design-token guard misses `border-s/e` palette colours, `rgb()`/`hsl()` and non-px arbitrary values; the built `index.html` keeps a literal `%VITE_APP_NAME%` meta when the variable is unset.
+
+Also known: all browser evidence comes from Microsoft Edge; the base images are floating tags (no digest); axe reports one "needs review" item (a form control's `aria-describedby` names a description that is not rendered, as in shadcn's `FormControl`); and the Docker-only checks were not repeated at the final commit (see the owner decisions).
+The full deferred list was triaged before publishing: 234 items, of which 26 were fixed, 65 were already fixed or obsolete, and 143 ship as known minors.
+
+### Follow-ups for the owner
+
+- **Node.js 26** becomes LTS on 2026-10-28: move `.nvmrc`, `engines`, `@types/node` and the Docker base images to it.
+- **ESLint 10 and TypeScript 6.1 or newer:** lift the version pins of Deviation 12 once the plugins support them.
+- **MSW:** Task 5.2 did not fall back to MSW 2; the template runs MSW 3, so there is nothing to return to. After an MSW upgrade, run `pnpm exec msw init public` again.
+- **Deploy:** fill in the deploy step in `.github/workflows/deploy.yml`, then set the repository variable `DEPLOY_ENABLED=true` (`docs/deployment.md`).
+- **Add an audit job to CI:** CI does not run `pnpm audit`; `docs/security.md` asks for it before a release and after every major update.
+- **Publish the specification next to this plan,** or drop the references: about 100 code comments cite "spec §N" of a specification that is not in the repository.
+- **Windows-friendly Docker examples:** the README and most of `docs/docker.md` set variables in POSIX form (`VAR=value docker compose up`), with a single PowerShell note, and the private-CA recipe in `docs/security.md` redirects with `>`, which in Windows PowerShell 5.1 writes UTF-16.
