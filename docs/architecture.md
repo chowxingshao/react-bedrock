@@ -25,7 +25,7 @@ An arrow means "may be imported by everything to its right". These rules are enf
 
 More rules:
 
-- **Features** are imported only through their public `index.ts`: `@/features/items`, never `@/features/items/components/x`. The one exception is `src/mocks/**`, where a mock handler reads the feature's `schemas/` and `types/` files only (see "Features" below); the `featureInternals` override in `eslint.config.js` allows those two folders there and nowhere else, so `api/`, `hooks/` and `components/` stay refused.
+- **Features** are imported only through their public `index.ts`: `@/features/example`, never `@/features/example/components/x`. The one exception is `src/mocks/**`, where a mock handler reads the feature's `schemas/` and `types/` files only (see "Features" below); the `featureInternals` override in `eslint.config.js` allows those two folders there and nowhere else, so `api/`, `hooks/` and `components/` stay refused.
 - **Core modules** are imported through their index (`@/core/api`) from outside `src/core`.
 - **Wrapped libraries** are only imported inside their wrapper. Use these instead:
 
