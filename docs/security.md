@@ -1,5 +1,16 @@
 # Security
 
+Decisions at a glance:
+
+| Topic              | Decision                                                                                  | Details                                                                                                                      |
+| ------------------ | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Auth token storage | An httpOnly session cookie set by the server. No tokens in JavaScript or browser storage  | [Browser storage](#browser-storage), [auth.md](auth.md)                                                                      |
+| CSRF               | `SameSite=Lax` cookie, plus a custom header on every request that the backend can require | [Authentication, CSRF and redirects](#authentication-csrf-and-redirects)                                                     |
+| XSS                | React escaping, no raw HTML, and a strict script CSP in the Docker image                  | [XSS](#xss), [HTTP headers](#http-headers-and-content-security-policy-docker-image)                                          |
+| Secrets            | None in the frontend: `VITE_*` values are public                                          | [Secrets and configuration](#secrets-and-configuration), [Runtime configuration is public](#runtime-configuration-is-public) |
+| Logging            | User ids only, with automatic redaction                                                   | [Logging and privacy](#logging-and-privacy)                                                                                  |
+| Dependencies       | A committed lockfile, reviewed install scripts, a one-day release delay                   | [Dependencies and supply chain](#dependencies-and-supply-chain)                                                              |
+
 ## Browser storage
 
 - Use `localStore` / `sessionStore` from `@/core/storage`, never `localStorage` or `sessionStorage` directly. ESLint enforces this.
@@ -80,3 +91,27 @@ The **default policy** (`docker/docker-entrypoint.sh`):
 - **Request size.** nginx's default limit of 1 MB applies to request bodies sent through `/api/`, and larger ones get `413`. Add `client_max_body_size` to `docker/nginx.conf.template` for uploads.
 - **IPv4 only.** The server block says `listen 8080;`. The entrypoint replaces the base image's start-up script, the one that would add an IPv6 listener. A cluster that is IPv6-only needs `listen [::]:8080;` as well.
 - **Base images are floating tags** (`node:24-alpine` and `nginxinc/nginx-unprivileged:stable-alpine-slim`, no digest). A build uses whatever the tag points to when the builder pulls it: `docker build --pull` always fetches the current image, a builder that already has the image may keep using its copy, and a fresh CI builder pulls the current one. Builds are therefore not byte-for-byte reproducible. The pnpm version is exact: the Dockerfile installs the one pinned in `package.json#packageManager`. Pin the base images as `image:tag@sha256:…` if you need reproducible builds; Dependabot then proposes digest updates.
+
+## XSS
+
+- React escapes every value it renders. Never use `dangerouslySetInnerHTML` with data you don't control; the template itself renders no raw HTML. If you must render user-supplied HTML, sanitise it first. A sanitiser such as DOMPurify is a new dependency, so add it deliberately (see [Dependencies and supply chain](#dependencies-and-supply-chain)).
+- i18next runs with `escapeValue: false` because React already escapes. Translations are rendered as text, never as HTML: don't pass a translated string to `dangerouslySetInnerHTML`, because its interpolated values are not escaped.
+- Check the scheme before building an `href` or `src` from user input, because `javascript:` URLs execute. Internal links use `paths.*`, and a `returnTo` redirect goes through `safeReturnTo` (see [Authentication, CSRF and redirects](#authentication-csrf-and-redirects)).
+- The Docker image's CSP allows only this origin's scripts plus the hashed theme script, so injected `<script>` tags and inline event handlers don't run (see [HTTP headers and Content Security Policy](#http-headers-and-content-security-policy-docker-image)). `pnpm dev` and `pnpm preview` send no CSP.
+
+## Secrets and configuration
+
+- The frontend holds **no secrets**. Every `VITE_*` value is downloaded by every visitor, whether it is built in or written to `config.js` at container start (see [Runtime configuration is public](#runtime-configuration-is-public)).
+- API keys for third-party services belong on the backend: the frontend calls your API, and your API calls the service.
+- `.env` and `.env.*` files are git-ignored and kept out of the Docker build context. The one exception is `.env.example`, which holds no secrets.
+- CI and deployment credentials live in GitHub, as repository or environment secrets (see [Wiring up deploy.yml](deployment.md#wiring-up-deployyml)). Never in the repository.
+
+## Dependencies and supply chain
+
+- `pnpm-lock.yaml` is committed, and CI and Docker install with `--frozen-lockfile`, so builds use exactly the reviewed versions.
+- Dependency install scripts run only when allowed in `pnpm-workspace.yaml` (`allowBuilds`). pnpm fails the install on any new one, so each is reviewed before it runs.
+- pnpm waits a day before installing a newly published version (`minimumReleaseAge`): when it resolves a dependency, it takes the newest release that is at least a day old. This blocks most attacks that rely on a compromised release.
+- Dependabot proposes updates weekly. Read the changelog before merging a major update.
+- Add dependencies deliberately: prefer the existing wrappers, and check a package's maintenance and its size (`pnpm analyze`) first.
+- **Audit.** CI does not run `pnpm audit`: run `pnpm audit --audit-level high` before a release and after every major update. One advisory is ignored on purpose, `GHSA-vfj7-8cjw-p6xm` (`auditConfig.ignoreGhsas` in `pnpm-workspace.yaml`): it is in `braces`, which only the `plop` generator CLI reaches, and no patched release exists. Remove the entry when one does (see [Dependency updates](contributing.md#dependency-updates)).
+- **Overrides.** The `overrides` block in `pnpm-workspace.yaml` forces patched releases of two transitive dependencies of development and build tooling: `seroval` (through the Query devtools) and `source-map-js` (through PostCSS). Each stays within its patched major (`^`), so a future major is never forced onto the packages that use it. Remove an override when the package that pulls it in ships a fixed range.
