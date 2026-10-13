@@ -3,6 +3,8 @@ name: Publish Docker image
 # Pushes the production image to GitHub Container Registry for every published release:
 #   ghcr.io/<owner>/<repo>:<version>, :<major>.<minor>, :latest and :sha-<commit>  (docs/deployment.md)
 # Run it manually to push a sha-tagged image of any branch.
+# Set the repository variable DOCKER_PUBLISH to 'false' to skip it, for releases and manual runs alike.
+# Any other value, or none, publishes. The template's own repository sets it, so its releases push no image.
 on:
   release:
     types: [published]
@@ -22,6 +24,7 @@ concurrency:
 jobs:
   publish:
     name: Build and push
+    if: ${{ vars.DOCKER_PUBLISH != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

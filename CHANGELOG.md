@@ -11,4 +11,4 @@ What changed in the template, newest first. If you started a project from it and
 
 ## [0.1.0] - 2026-10-13
 
-First version: the full template described in README.md. React 19, TypeScript 6 and Vite 8; design tokens and shadcn/ui components; TanStack Query with one Axios client, Zod and Orval; cookie-session auth with permissions; English and Spanish translations; MSW mocks; Vitest, Playwright and axe tests; code generators; Docker with nginx and runtime configuration; GitHub Actions and Dependabot.
+First version: the full template described in README.md. React 19, TypeScript 6 and Vite 8; design tokens and shadcn/ui components; TanStack Query with one Axios client, Zod and Orval; cookie-session auth with permissions; English and Spanish translations; MSW mocks; Vitest, Playwright and axe tests; code generators; Docker with nginx and runtime configuration; GitHub Actions (the image publish step can be switched off with the repository variable `DOCKER_PUBLISH=false`) and Dependabot.

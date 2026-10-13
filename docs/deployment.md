@@ -19,7 +19,7 @@ Two repository variables switch on the optional parts (Settings → Secrets and 
 | `DEPLOY_ENABLED`  | the `deploy` job of `deploy.yml`     | your deploy step (see "Wiring up `deploy.yml`")         |
 | `STORYBOOK_PAGES` | publishing Storybook to GitHub Pages | "GitHub Actions" as the Pages source (Settings → Pages) |
 
-`ci.yml` and `docker-publish.yml` need no variable and no secret of your own.
+`ci.yml` and `docker-publish.yml` need no variable and no secret of your own. One more variable switches a part off: `DOCKER_PUBLISH` (see "Images").
 
 ## One build, every environment
 
@@ -54,6 +54,7 @@ docker run -p 8080:8080 -e VITE_ENABLE_MOCKS=false -e API_PROXY_TARGET=http://ap
 
 - The workflow needs no secret: it uses the built-in `GITHUB_TOKEN`.
 - New container packages can start out private. Check the visibility in the package settings, or run `docker login ghcr.io` before pulling.
+- To publish no image, set the repository variable `DOCKER_PUBLISH` to `false` (Settings → Secrets and variables → Actions → Variables). The template's own repository does, so a release there only tags the code. Any other value, or none, publishes. The variable also skips manual runs: delete it, or set it to `true`, before you run the workflow by hand.
 
 ## Releasing
 

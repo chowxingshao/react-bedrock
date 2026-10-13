@@ -167,7 +167,7 @@ Set `VITE_SENTRY_DSN` per environment to turn on the Sentry transport (docs/erro
 2. Set up branch protection (docs/contributing.md).
 3. Fill in the deploy step in `.github/workflows/deploy.yml`, then set the repository variable `DEPLOY_ENABLED=true` (docs/deployment.md).
 4. Optional:
-   - Images are published on every release by `docker-publish.yml`, which works with GitHub Container Registry as is. The image is named after the repository.
+   - Images are published on every release by `docker-publish.yml`, which works with GitHub Container Registry as is. The image is named after the repository. To publish none, set `DOCKER_PUBLISH=false` (docs/deployment.md → Images).
    - To publish Storybook on GitHub Pages, set `STORYBOOK_PAGES=true` and choose "GitHub Actions" as the Pages source.
 
 ## 9. Documentation
