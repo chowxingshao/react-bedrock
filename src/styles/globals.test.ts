@@ -31,6 +31,12 @@ describe('globals.css motion utilities (Phase 4)', () => {
     expect(globals).toMatch(/animation:\s*exit-rise var\(--duration-fast\) var\(--ease-exit\)/);
   });
 
+  it('zeroes animation-delay under reduced motion so stagger children are not held invisible', () => {
+    expect(globals).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation-delay:\s*0s !important/,
+    );
+  });
+
   it('wires hover-lift distance to the --move token', () => {
     expect(globals).toMatch(/hover-lift[\s\S]*var\(--move-sm\)/);
   });

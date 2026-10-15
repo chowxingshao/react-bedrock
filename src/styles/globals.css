@@ -97,8 +97,11 @@
 /* ----------------------------------------------------------------------------
  * Motion layer (Phase 4). All timing/easing/distance comes from tokens.css.
  * Reduced motion: the global prefers-reduced-motion block below zeroes
- * animation/transition durations, and tokens.css zeroes --move-*, so these
- * collapse to no motion. Author so the un-animated state is the final state.
+ * animation/transition durations and animation delays, so these presets
+ * resolve immediately to their final state. Translate-based motion will
+ * additionally collapse once --move-* is zeroed under reduced motion (added
+ * by a follow-up task in this phase). Author so the un-animated state is the
+ * final state.
  * Keyframes are named enter-rise/exit-rise because tw-animate-css already
  * defines global `enter`/`exit` keyframes for animate-in/animate-out.
  * -------------------------------------------------------------------------- */
@@ -187,6 +190,7 @@
   ::before,
   ::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
