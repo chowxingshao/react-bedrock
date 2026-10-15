@@ -9,6 +9,15 @@ What changed in the template, newest first. If you started a project from it and
 
 ## [Unreleased]
 
+### Added
+
+- Design tokens for border width (`--border-width`), motion (easing + distance), a
+  semantic type scale (`text-display` … `text-caption`), a density knob
+  (`--density`, `--control-h-*`), focus-ring width/offset, a `--shadow-color`
+  elevation knob, and `chart-*` / `sidebar-*` colour roles. All default to the
+  current appearance; components adopt them in later phases. See
+  `docs/design-system.md`.
+
 ## [0.1.0] - 2026-10-13
 
 First version: the full template described in README.md. React 19, TypeScript 6 and Vite 8; design tokens and shadcn/ui components; TanStack Query with one Axios client, Zod and Orval; cookie-session auth with permissions; English and Spanish translations; MSW mocks; Vitest, Playwright and axe tests; code generators; Docker with nginx and runtime configuration; GitHub Actions (the image publish step can be switched off with the repository variable `DOCKER_PUBLISH=false`) and Dependabot.
