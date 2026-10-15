@@ -94,6 +94,84 @@
   transition-duration: var(--duration-slow);
 }
 
+/* ----------------------------------------------------------------------------
+ * Motion layer (Phase 4). All timing/easing/distance comes from tokens.css.
+ * Reduced motion: the global prefers-reduced-motion block below zeroes
+ * animation/transition durations, and tokens.css zeroes --move-*, so these
+ * collapse to no motion. Author so the un-animated state is the final state.
+ * Keyframes are named enter-rise/exit-rise because tw-animate-css already
+ * defines global `enter`/`exit` keyframes for animate-in/animate-out.
+ * -------------------------------------------------------------------------- */
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--move-sm));
+  }
+}
+@keyframes exit-rise {
+  to {
+    opacity: 0;
+    transform: translateY(var(--move-sm));
+  }
+}
+
+/* Smoothly transition transform/colour/shadow changes (hover, active, …). */
+@utility interactive {
+  transition-property: transform, box-shadow, background-color, border-color, color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--ease-standard);
+}
+
+/* Press feedback: pair with `interactive`. */
+@utility press {
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+/* Hover lift: pair with `interactive`. Travels one --move-sm. */
+@utility hover-lift {
+  &:hover {
+    transform: translateY(calc(-1 * var(--move-sm)));
+  }
+}
+
+/* One-shot entrance / exit presets. */
+@utility enter {
+  animation: enter-rise var(--duration-normal) var(--ease-entrance) both;
+}
+@utility exit {
+  animation: exit-rise var(--duration-fast) var(--ease-exit) both;
+}
+
+/* Staggered children (bounded to 8). Put `enter` on the children; step via --stagger. */
+@utility stagger {
+  & > *:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  & > *:nth-child(2) {
+    animation-delay: calc(1 * var(--stagger, 50ms));
+  }
+  & > *:nth-child(3) {
+    animation-delay: calc(2 * var(--stagger, 50ms));
+  }
+  & > *:nth-child(4) {
+    animation-delay: calc(3 * var(--stagger, 50ms));
+  }
+  & > *:nth-child(5) {
+    animation-delay: calc(4 * var(--stagger, 50ms));
+  }
+  & > *:nth-child(6) {
+    animation-delay: calc(5 * var(--stagger, 50ms));
+  }
+  & > *:nth-child(7) {
+    animation-delay: calc(6 * var(--stagger, 50ms));
+  }
+  & > *:nth-child(8) {
+    animation-delay: calc(7 * var(--stagger, 50ms));
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
