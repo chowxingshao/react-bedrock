@@ -175,6 +175,33 @@
   }
 }
 
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Loading sheen for skeleton surfaces. Token colours; token-derived duration. */
+@utility shimmer {
+  background-image: linear-gradient(90deg, var(--muted) 0%, var(--accent) 50%, var(--muted) 100%);
+  background-size: 200% 100%;
+  animation: shimmer calc(var(--duration-slow) * 4) linear infinite;
+}
+
+/* Fade + rise as the element scrolls into view. Progressive enhancement:
+ * only where scroll-driven animations are supported AND motion is allowed;
+ * everywhere else the element is simply visible (resting state). */
+@utility scroll-fade {
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      opacity: 0;
+      animation: enter-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

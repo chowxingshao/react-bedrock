@@ -37,3 +37,19 @@ export const Stagger: Story = {
     </ul>
   ),
 };
+
+export const Shimmer: Story = {
+  render: () => <div className="h-4 w-48 shimmer rounded-md" />,
+};
+
+export const ScrollFade: Story = {
+  render: () => (
+    <div className="grid h-64 gap-4 overflow-y-auto">
+      {Array.from({ length: 8 }, (_, i) => (
+        <div key={i} className="scroll-fade rounded-md border bg-card p-6 text-card-foreground">
+          Scroll me ({i + 1})
+        </div>
+      ))}
+    </div>
+  ),
+};

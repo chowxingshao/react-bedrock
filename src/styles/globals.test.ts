@@ -40,4 +40,18 @@ describe('globals.css motion utilities (Phase 4)', () => {
   it('wires hover-lift distance to the --move token', () => {
     expect(globals).toMatch(/hover-lift[\s\S]*var\(--move-sm\)/);
   });
+
+  it('defines shimmer + scroll-fade utilities', () => {
+    expect(globals).toMatch(/@utility shimmer\b|\.shimmer\b/);
+    expect(globals).toMatch(/@utility scroll-fade\b|\.scroll-fade\b/);
+  });
+
+  it('gates scroll-fade behind feature support and allowed motion', () => {
+    expect(globals).toMatch(/@supports \(animation-timeline: view\(\)\)/);
+    expect(globals).toMatch(/prefers-reduced-motion: no-preference/);
+  });
+
+  it('wires shimmer duration to a token', () => {
+    expect(globals).toMatch(/shimmer[\s\S]*var\(--duration-slow\)/);
+  });
 });
