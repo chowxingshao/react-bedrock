@@ -61,4 +61,12 @@ describe('tokens.css', () => {
   it('keeps the prefers-color-scheme fallback identical to .dark', () => {
     expect(Object.fromEntries(fallback)).toEqual(Object.fromEntries(dark));
   });
+
+  it('defines the motion tokens Phase 1 adds', () => {
+    const theme = declarations(tokensCss, '@theme');
+    const easings = ['--ease-standard', '--ease-emphasized', '--ease-entrance', '--ease-exit'];
+    expect(easings.filter((name) => !theme.has(name))).toEqual([]);
+    const distances = ['--move-sm', '--move-md', '--move-lg'];
+    expect(distances.filter((name) => !light.has(name))).toEqual([]);
+  });
 });
