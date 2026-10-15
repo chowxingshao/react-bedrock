@@ -6,6 +6,8 @@ import { Spinner } from './spinner';
 
 const VARIANTS = ['default', 'secondary', 'outline', 'ghost', 'destructive', 'link'] as const;
 const TEXT_SIZES = ['sm', 'md', 'lg'] as const;
+const SHAPES = ['default', 'rounded', 'pill', 'square'] as const;
+const TONES = ['solid', 'soft', 'outline'] as const;
 
 const meta = {
   title: 'UI/Button',
@@ -14,6 +16,8 @@ const meta = {
   argTypes: {
     variant: { control: 'select', options: VARIANTS },
     size: { control: 'select', options: [...TEXT_SIZES, 'icon'] },
+    shape: { control: 'select', options: SHAPES },
+    tone: { control: 'select', options: TONES },
   },
 } satisfies Meta<typeof Button>;
 
@@ -35,6 +39,34 @@ export const AllVariants: Story = {
           <Button {...args} variant={variant} size="icon" aria-label={`${variant} icon button`}>
             <PlusIcon />
           </Button>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
+export const Shapes: Story = {
+  render: (args) => (
+    <div className="flex flex-wrap items-center gap-2">
+      {SHAPES.map((shape) => (
+        <Button key={shape} {...args} shape={shape}>
+          {shape}
+        </Button>
+      ))}
+    </div>
+  ),
+};
+
+export const Tones: Story = {
+  render: (args) => (
+    <div className="grid gap-3">
+      {(['default', 'destructive'] as const).map((variant) => (
+        <div key={variant} className="flex items-center gap-2">
+          {TONES.map((tone) => (
+            <Button key={tone} {...args} variant={variant} tone={tone}>
+              {variant} · {tone}
+            </Button>
+          ))}
         </div>
       ))}
     </div>

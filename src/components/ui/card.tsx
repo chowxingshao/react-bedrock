@@ -1,15 +1,31 @@
+import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 
 import { cn } from '@/lib/cn';
 
-function Card({ className, ...props }: React.ComponentProps<'div'>) {
+/** Elevation owns the border + shadow; default = today's border + shadow-sm. */
+const cardVariants = cva('flex flex-col gap-6 rounded-xl bg-card py-6 text-card-foreground', {
+  variants: {
+    elevation: {
+      default: 'border shadow-sm',
+      flat: 'shadow-none',
+      outline: 'border shadow-none',
+      raised: 'border shadow-md',
+    },
+  },
+  defaultVariants: { elevation: 'default' },
+});
+
+function Card({
+  className,
+  elevation = 'default',
+  ...props
+}: React.ComponentProps<'div'> & VariantProps<typeof cardVariants>) {
   return (
     <div
       data-slot="card"
-      className={cn(
-        'flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm',
-        className,
-      )}
+      data-elevation={elevation}
+      className={cn(cardVariants({ elevation }), className)}
       {...props}
     />
   );
@@ -72,4 +88,13 @@ function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
   );
 }
 
-export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent };
+export {
+  Card,
+  cardVariants,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardAction,
+  CardDescription,
+  CardContent,
+};

@@ -79,8 +79,8 @@ export default defineConfig(({ mode }) => {
         // Dates in tests are written in UTC: do not depend on the developer's or CI's time zone.
         TZ: 'UTC',
       },
-      // Vitest blanks every `.css` module by default, `?raw` imports included; tokens.test.ts reads the source.
-      css: { include: [/tokens\.css\?raw/] },
+      // Vitest blanks every `.css` module by default, `?raw` imports included; tokens.test.ts and globals.test.ts read the source.
+      css: { include: [/(tokens|globals)\.css\?raw/] },
       coverage: {
         provider: 'v8',
         include: ['src/**/*.{ts,tsx}'],

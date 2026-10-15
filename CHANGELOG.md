@@ -17,6 +17,28 @@ What changed in the template, newest first. If you started a project from it and
   elevation knob, and `chart-*` / `sidebar-*` colour roles. All default to the
   current appearance; components adopt them in later phases. See
   `docs/design-system.md`.
+- Design System v2, Phase 2: component variant axes. Every axis defaults to the
+  current appearance, so existing usages render unchanged. See "Variant axes" in
+  `docs/design-system.md`.
+  - **Button / Badge:** new `shape` (`default` | `rounded` | `pill` | `square`)
+    and `tone` (`solid` | `soft` | `outline`) props. `tone` is defined for the
+    `default` (primary) and `destructive` intents; on other variants it is a
+    no-op.
+  - **Input:** now `cva`-based with `shape` (same scale) and `size`
+    (`sm` | `md` | `lg`) props; `size` consumes the `--control-h-*` density
+    tokens (`md` is today's height).
+  - **Card:** new `elevation` prop (`default` | `flat` | `outline` | `raised`);
+    `default` is today's border plus `shadow-sm`.
+
+### Changed
+
+- `SelectTrigger`'s `size` scale is now `sm` | `md` | `lg` (default `md`),
+  consuming the density tokens. **Action needed:** replace
+  `SelectTrigger size="default"` with `size="md"` (identical height); `size="sm"`
+  is unchanged.
+- `Input` no longer accepts the native HTML `size` attribute (a character
+  count); its `size` prop is now the sm/md/lg variant. **Action needed:** where
+  you used the native attribute, use a width class instead.
 
 ## [0.1.0] - 2026-10-13
 

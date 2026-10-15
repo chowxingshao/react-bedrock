@@ -60,4 +60,22 @@ export const Small: Story = {
   ),
 };
 
+export const Sizes: Story = {
+  render: () => (
+    <div className="flex items-end gap-3">
+      {(['sm', 'md', 'lg'] as const).map((size) => (
+        <Select key={size}>
+          <SelectTrigger size={size} aria-label={`size ${size}`}>
+            <SelectValue placeholder={size} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="a">Option A</SelectItem>
+            <SelectItem value="b">Option B</SelectItem>
+          </SelectContent>
+        </Select>
+      ))}
+    </div>
+  ),
+};
+
 export const Disabled: Story = { args: { disabled: true }, render: Default.render };
