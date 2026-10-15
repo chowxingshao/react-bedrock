@@ -69,4 +69,18 @@ describe('tokens.css', () => {
     const distances = ['--move-sm', '--move-md', '--move-lg'];
     expect(distances.filter((name) => !light.has(name))).toEqual([]);
   });
+
+  it('defines the semantic type scale Phase 1 adds', () => {
+    const theme = declarations(tokensCss, '@theme');
+    const sizes = [
+      '--text-display',
+      '--text-title',
+      '--text-heading',
+      '--text-body',
+      '--text-label',
+      '--text-caption',
+    ];
+    expect(sizes.filter((name) => !theme.has(name))).toEqual([]);
+    expect(sizes.filter((name) => !theme.has(`${name}--line-height`))).toEqual([]);
+  });
 });
