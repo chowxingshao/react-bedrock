@@ -1,6 +1,6 @@
-import { MonitorIcon, MoonIcon, SunIcon, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { ThemeDark, ThemeLight, ThemeSystem, type IconComponent } from '@/components/ui/icons';
 import {
   isThemeMode,
   THEME_MODES,
@@ -18,9 +18,9 @@ import {
   DropdownMenuTrigger,
 } from './dropdown-menu';
 
-const ICONS = { light: SunIcon, dark: MoonIcon, system: MonitorIcon } satisfies Record<
+const ICONS = { light: ThemeLight, dark: ThemeDark, system: ThemeSystem } satisfies Record<
   ThemeMode,
-  LucideIcon
+  IconComponent
 >;
 
 /** Light / dark / system switcher (spec §5.2). The choice persists via the theme store. */

@@ -1,8 +1,8 @@
-import { ChevronRight, MoreHorizontal } from 'lucide-react';
 import { Slot } from 'radix-ui';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ChevronRight, More } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
 
 function Breadcrumb({ ...props }: React.ComponentProps<'nav'>) {
@@ -88,7 +88,7 @@ function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<'span'
       className={cn('flex size-9 items-center justify-center', className)}
       {...props}
     >
-      <MoreHorizontal className="size-4" />
+      <More className="size-4" />
       <span className="sr-only">{t('actions.more')}</span>
     </span>
   );

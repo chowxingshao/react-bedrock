@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { PlusIcon } from 'lucide-react';
+
+import { Add } from '@/components/ui/icons';
 
 import { Button } from './button';
 import { Spinner } from './spinner';
@@ -37,7 +38,7 @@ export const AllVariants: Story = {
             </Button>
           ))}
           <Button {...args} variant={variant} size="icon" aria-label={`${variant} icon button`}>
-            <PlusIcon />
+            <Add />
           </Button>
         </div>
       ))}

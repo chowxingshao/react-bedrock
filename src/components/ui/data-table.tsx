@@ -8,19 +8,19 @@ import {
   type SortingState,
   useTable,
 } from '@tanstack/react-table';
-import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronsLeftIcon,
-  ChevronsRightIcon,
-  ChevronsUpDownIcon,
-} from 'lucide-react';
 import { type ReactNode, useId, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState, TableSkeleton } from '@/components/feedback';
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  ChevronsUpDown,
+} from '@/components/ui/icons';
 import { PAGE_SIZE_OPTIONS } from '@/config/constants';
 
 import { Button } from './button';
@@ -75,9 +75,9 @@ const EMPTY_ROWS: never[] = [];
 const ARIA_SORT = { asc: 'ascending', desc: 'descending', none: 'none' } as const;
 
 function SortIcon({ direction }: { direction: false | 'asc' | 'desc' }) {
-  if (direction === 'asc') return <ArrowUpIcon aria-hidden="true" />;
-  if (direction === 'desc') return <ArrowDownIcon aria-hidden="true" />;
-  return <ChevronsUpDownIcon aria-hidden="true" className="text-muted-foreground" />;
+  if (direction === 'asc') return <ArrowUp aria-hidden="true" />;
+  if (direction === 'desc') return <ArrowDown aria-hidden="true" />;
+  return <ChevronsUpDown aria-hidden="true" className="text-muted-foreground" />;
 }
 
 /**
@@ -247,7 +247,7 @@ function DataTablePagination<TData extends RowData>({
               if (canPreviousPage) table.firstPage();
             }}
           >
-            <ChevronsLeftIcon aria-hidden="true" />
+            <ChevronsLeft aria-hidden="true" />
           </Button>
           <Button
             type="button"
@@ -260,7 +260,7 @@ function DataTablePagination<TData extends RowData>({
               if (canPreviousPage) table.previousPage();
             }}
           >
-            <ChevronLeftIcon aria-hidden="true" />
+            <ChevronLeft aria-hidden="true" />
           </Button>
           <Button
             type="button"
@@ -273,7 +273,7 @@ function DataTablePagination<TData extends RowData>({
               if (canNextPage) table.nextPage();
             }}
           >
-            <ChevronRightIcon aria-hidden="true" />
+            <ChevronRight aria-hidden="true" />
           </Button>
           <Button
             type="button"
@@ -286,7 +286,7 @@ function DataTablePagination<TData extends RowData>({
               if (canNextPage) table.lastPage();
             }}
           >
-            <ChevronsRightIcon aria-hidden="true" />
+            <ChevronsRight aria-hidden="true" />
           </Button>
         </div>
       </div>
