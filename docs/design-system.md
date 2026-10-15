@@ -14,7 +14,7 @@ All colours, radii, fonts, shadows, z-index layers and animation durations are d
 | Focus     | `--ring-width` (default `3px`, today's `ring-3`) and `--ring-offset` (default `0px`): the width and offset of the visible focus outline                                                                                                                                                                                                                                                                                                                                              | None yet: focus styles adopt these in Phase 2                                                                                                              |
 | Elevation | `--shadow-color` (an OKLCH channel triple, default `0 0 0`) and `--shadow-xs` … `--shadow-lg`, which are all built from it as `oklch(var(--shadow-color) / alpha)`: change `--shadow-color` once to retint every shadow                                                                                                                                                                                                                                                              | `shadow-xs` … `shadow-lg`                                                                                                                                  |
 | Layers    | `--z-sticky`, `--z-dropdown`, `--z-modal`, `--z-toast`                                                                                                                                                                                                                                                                                                                                                                                                                               | `z-sticky`, `z-dropdown`, `z-modal`, `z-toast`                                                                                                             |
-| Motion    | `--duration-fast`, `--duration-normal`, `--duration-slow` (0 ms under reduced motion), `--ease-standard`, `--ease-emphasized`, `--ease-entrance`, `--ease-exit`, `--move-sm`, `--move-md`, `--move-lg` (distances: plain custom properties, no utility yet)                                                                                                                                                                                                                          | `duration-fast`, `duration-normal`, `duration-slow`, `ease-standard` … `ease-exit`                                                                         |
+| Motion    | `--duration-fast`, `--duration-normal`, `--duration-slow` (0 ms under reduced motion), `--ease-standard`, `--ease-emphasized`, `--ease-entrance`, `--ease-exit`, `--move-sm`, `--move-md`, `--move-lg` (distances: plain custom properties, no utility; 0 under reduced motion; the utilities in "Motion" below use them)                                                                                                                                                            | `duration-fast`, `duration-normal`, `duration-slow`, `ease-standard` … `ease-exit`                                                                         |
 
 Colours use **OKLCH** (`oklch(lightness chroma hue)`), so shades with the same lightness look equally bright.
 
@@ -189,6 +189,53 @@ Two notes on aliases:
 **Generators and `pnpm ui:add`.** Both route new icons through the barrel. `pnpm gen feature <plural> <singular> y` writes a sidebar entry that imports a placeholder `Package` icon from `@/components/ui/icons`: replace it with an alias that fits the feature (add one to the barrel if none does). After `pnpm ui:add <name>`, change any `lucide-react` import in the fetched file to a barrel import.
 
 The `UI/Icons` story in Storybook shows every icon in the barrel with its name.
+
+### Motion
+
+Motion is token-driven: every duration, easing and distance comes from the Phase-1 motion tokens (`--duration-*`, `--ease-*`, `--move-*`), and these CSS utilities (in `src/styles/globals.css`) apply them as plain `className`s. They are opt-in: nothing uses them until you add the class.
+
+| Utility       | Use it for                                                                                                                                                                                                       |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `interactive` | A smooth transition of transform, colour and shadow (`--duration-fast`, `--ease-standard`). Put it on an element that also uses `press` or `hover-lift`                                                          |
+| `press`       | Press feedback: `scale(0.97)` while the element is `:active`                                                                                                                                                     |
+| `hover-lift`  | Lifts the element up by `--move-sm` on `:hover`                                                                                                                                                                  |
+| `enter`       | A one-shot entrance (`--duration-normal`, `--ease-entrance`): a fade and a rise                                                                                                                                  |
+| `exit`        | A one-shot exit (`--duration-fast`, `--ease-exit`): a fade and a drop                                                                                                                                            |
+| `stagger`     | Put it on a parent and `enter` on its children: each child starts one step after the previous. The step is `--stagger` (default `50ms`); it covers 8 children                                                    |
+| `shimmer`     | An endless loading sheen for a skeleton surface (a `--muted` to `--accent` gradient)                                                                                                                             |
+| `scroll-fade` | Fades and rises an element as it scrolls into view. A progressive enhancement: it runs only where `animation-timeline: view()` is supported and motion is allowed; everywhere else the element is simply visible |
+
+```tsx
+<Card className="interactive press hover-lift">…</Card>
+<ul className="stagger [--stagger:80ms]">
+  {items.map((item) => (
+    <li key={item.id} className="enter">{item.name}</li>
+  ))}
+</ul>
+```
+
+**Reduced motion.** Under `prefers-reduced-motion: reduce` the global block in `globals.css` sets every animation and transition duration and `animation-delay` to zero, and `tokens.css` sets `--move-sm`, `--move-md` and `--move-lg` to `0px`, so motion based on time and motion based on distance both collapse. Author each effect so the resting (un-animated) DOM is the final, visible state: an element must never depend on an animation to become visible.
+
+**Never hand-roll motion in a component.** A raw `@keyframes` block or a `transition` with a literal duration and easing bypasses the tokens and ignores reduced motion.
+
+Incorrect:
+
+```css
+.card {
+  transition: transform 200ms ease;
+}
+.card:hover {
+  transform: translateY(-4px);
+}
+```
+
+Correct:
+
+```tsx
+<Card className="hover-lift interactive">…</Card>
+```
+
+**`useGsap`** is for orchestration the CSS utilities cannot express (sequenced timelines, animating a value, coordinating several elements). It is optional, reduced-motion-guarded and tree-shaken out of the bundle unless a project imports it; reach for a utility first. See `useGsap` in docs/hooks.md.
 
 ## Storybook: the visual catalogue
 
