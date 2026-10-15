@@ -179,7 +179,7 @@ Two notes on aliases:
 - `icon` takes a component object, never a string key.
 
 ```tsx
-<Icon icon={Warning} size="lg" label={t('errors.warning')} />
+<Icon icon={Warning} size="lg" label={t('errors:generic.title')} />
 ```
 
 **`IconComponent`** (also exported from the barrel) is the prop type for "an icon component", for example `EmptyState`'s `icon` or a nav item's `icon`. It accepts lucide glyphs and custom SVG components alike, so a swapped icon set never leaks into component signatures.
