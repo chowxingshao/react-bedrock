@@ -1,7 +1,7 @@
-import { DownloadIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { Export } from '@/components/ui/icons';
 import { useFeature } from '@/hooks/use-feature';
 import { toCsv } from '@/lib/csv';
 
@@ -35,7 +35,7 @@ export function ExportItemsButton({ items }: { items: readonly Item[] | undefine
 
   return (
     <Button variant="outline" disabled={!items?.length} onClick={download}>
-      <DownloadIcon aria-hidden="true" />
+      <Export aria-hidden="true" />
       {t('actions.export')}
     </Button>
   );

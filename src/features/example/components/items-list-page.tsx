@@ -1,4 +1,3 @@
-import { PlusIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -7,6 +6,7 @@ import { z } from 'zod';
 import { EmptyState, QueryState, TableSkeleton } from '@/components/feedback';
 import { PageHeader } from '@/components/layout';
 import { Button } from '@/components/ui/button';
+import { Add } from '@/components/ui/icons';
 import { SEARCH_DEBOUNCE_MS } from '@/config/constants';
 import { paths } from '@/config/paths';
 import { Can } from '@/core/auth';
@@ -86,7 +86,7 @@ export function ItemsListPage() {
     <Can permission="items.create">
       <Button asChild>
         <Link to={paths.items.create()}>
-          <PlusIcon aria-hidden="true" />
+          <Add aria-hidden="true" />
           {t('actions.create')}
         </Link>
       </Button>

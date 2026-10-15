@@ -1,14 +1,8 @@
-import {
-  CircleCheckIcon,
-  InfoIcon,
-  Loader2Icon,
-  OctagonXIcon,
-  TriangleAlertIcon,
-} from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Toaster as Sonner } from 'sonner';
 
+import { Error, Info, Spinner, Success, Warning } from '@/components/ui/icons';
 import { useThemeMode } from '@/stores/theme-store';
 
 const TOKEN_STYLE = {
@@ -31,11 +25,11 @@ export function Toaster() {
       containerAriaLabel={t('notifications.label')}
       style={TOKEN_STYLE}
       icons={{
-        success: <CircleCheckIcon className="size-4 text-success" />,
-        info: <InfoIcon className="size-4 text-info" />,
-        warning: <TriangleAlertIcon className="size-4 text-warning" />,
-        error: <OctagonXIcon className="size-4 text-destructive" />,
-        loading: <Loader2Icon className="size-4 animate-spin" />,
+        success: <Success className="size-4 text-success" />,
+        info: <Info className="size-4 text-info" />,
+        warning: <Warning className="size-4 text-warning" />,
+        error: <Error className="size-4 text-destructive" />,
+        loading: <Spinner className="size-4 animate-spin" />,
       }}
     />
   );

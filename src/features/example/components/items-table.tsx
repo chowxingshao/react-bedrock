@@ -1,11 +1,11 @@
 import type { OnChangeFn, PaginationState, SortingState } from '@tanstack/react-table';
-import { PencilIcon } from 'lucide-react';
 import { type RefObject, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import { createDataTableColumnHelper, DataTable } from '@/components/ui/data-table';
+import { Edit } from '@/components/ui/icons';
 import { paths } from '@/config/paths';
 import { Can } from '@/core/auth';
 import { formatCurrency, formatNumber, formatRelative } from '@/lib/format';
@@ -95,7 +95,7 @@ export function ItemsTable({
                       to={paths.items.edit(info.row.original.id)}
                       aria-label={t('actions.editItem', { name: info.row.original.name })}
                     >
-                      <PencilIcon aria-hidden="true" />
+                      <Edit aria-hidden="true" />
                     </Link>
                   </Button>
                 </Can>

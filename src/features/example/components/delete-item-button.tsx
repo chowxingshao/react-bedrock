@@ -1,8 +1,8 @@
-import { Trash2Icon } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { Delete } from '@/components/ui/icons';
 import { Spinner } from '@/components/ui/spinner';
 import { notify, useConfirm } from '@/core/notify';
 import { focusIfLost } from '@/lib/focus';
@@ -79,7 +79,7 @@ export function DeleteItemButton({
           void handleClick();
         }}
       >
-        {deleteItem.isPending ? <Spinner aria-hidden="true" /> : <Trash2Icon aria-hidden="true" />}
+        {deleteItem.isPending ? <Spinner aria-hidden="true" /> : <Delete aria-hidden="true" />}
         {t('delete.confirm')}
       </Button>
     );
@@ -95,7 +95,7 @@ export function DeleteItemButton({
         void handleClick();
       }}
     >
-      <Trash2Icon aria-hidden="true" />
+      <Delete aria-hidden="true" />
     </Button>
   );
 }

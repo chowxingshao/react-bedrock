@@ -1,6 +1,6 @@
-import { SearchIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { Search } from '@/components/ui/icons';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -38,7 +38,7 @@ export function ItemsToolbar({
   return (
     <div className="mb-4 flex flex-wrap items-center gap-3">
       <div className="relative w-full max-w-sm">
-        <SearchIcon
+        <Search
           aria-hidden="true"
           className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
         />

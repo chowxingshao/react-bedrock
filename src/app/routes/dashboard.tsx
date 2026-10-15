@@ -1,10 +1,10 @@
-import { LayoutDashboardIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { EmptyState } from '@/components/feedback';
 import { PageHeader } from '@/components/layout';
 import { Button } from '@/components/ui/button';
+import { Dashboard } from '@/components/ui/icons';
 import { paths } from '@/config/paths';
 import { Can, useAuth } from '@/core/auth';
 
@@ -20,7 +20,7 @@ export function Component() {
         description={t('dashboard.welcome', { name: user?.name ?? '' })}
       />
       <EmptyState
-        icon={LayoutDashboardIcon}
+        icon={Dashboard}
         title={t('dashboard.emptyTitle')}
         description={t('dashboard.emptyDescription')}
         action={
