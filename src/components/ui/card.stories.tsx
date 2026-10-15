@@ -37,3 +37,18 @@ export const Default: Story = {
     </Card>
   ),
 };
+
+export const Elevations: Story = {
+  render: () => (
+    <div className="flex flex-wrap gap-4">
+      {(['default', 'flat', 'outline', 'raised'] as const).map((elevation) => (
+        <Card key={elevation} elevation={elevation} className="w-56">
+          <CardHeader>
+            <CardTitle>{elevation}</CardTitle>
+            <CardDescription>elevation={elevation}</CardDescription>
+          </CardHeader>
+        </Card>
+      ))}
+    </div>
+  ),
+};
