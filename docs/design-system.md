@@ -202,7 +202,7 @@ Motion is token-driven: every duration, easing and distance comes from the Phase
 | `enter`       | A one-shot entrance (`--duration-normal`, `--ease-entrance`): a fade and a rise                                                                                                                                  |
 | `exit`        | A one-shot exit (`--duration-fast`, `--ease-exit`): a fade and a drop                                                                                                                                            |
 | `stagger`     | Put it on a parent and `enter` on its children: each child starts one step after the previous. The step is `--stagger` (default `50ms`); it covers 8 children                                                    |
-| `shimmer`     | An endless loading sheen for a skeleton surface (a `--muted` to `--accent` gradient)                                                                                                                             |
+| `shimmer`     | A looping loading sheen for a skeleton surface (a `--muted` to `--accent` gradient; it loops normally, and under reduced motion it runs once, instantly, so there is no loop)                                    |
 | `scroll-fade` | Fades and rises an element as it scrolls into view. A progressive enhancement: it runs only where `animation-timeline: view()` is supported and motion is allowed; everywhere else the element is simply visible |
 
 ```tsx
@@ -214,7 +214,7 @@ Motion is token-driven: every duration, easing and distance comes from the Phase
 </ul>
 ```
 
-**Reduced motion.** Under `prefers-reduced-motion: reduce` the global block in `globals.css` sets every animation and transition duration and `animation-delay` to zero, and `tokens.css` sets `--move-sm`, `--move-md` and `--move-lg` to `0px`, so motion based on time and motion based on distance both collapse. Author each effect so the resting (un-animated) DOM is the final, visible state: an element must never depend on an animation to become visible.
+**Reduced motion.** Under `prefers-reduced-motion: reduce` the global block in `globals.css` sets every animation and transition duration to effectively zero (`0.01ms`) and `animation-delay` to `0s`, and `tokens.css` sets `--move-sm`, `--move-md` and `--move-lg` to `0px`, so motion based on time and motion based on distance both collapse. Author each effect so the resting (un-animated) DOM is the final, visible state: an element must never depend on an animation to become visible.
 
 **Never hand-roll motion in a component.** A raw `@keyframes` block or a `transition` with a literal duration and easing bypasses the tokens and ignores reduced motion.
 
