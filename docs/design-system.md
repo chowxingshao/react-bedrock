@@ -121,6 +121,26 @@ Variants live in the component's `cva()` call, for example `buttonVariants` in `
 
 Button sizes are `sm | md | lg | icon` (default `md`). Button variants are `default | secondary | outline | ghost | destructive | link`. Badge adds `success | warning | info`.
 
+### Variant axes
+
+Beyond `variant`, some primitives expose independent axes. Every axis defaults to the current appearance, so a usage that sets none of them renders exactly as before. Each axis is also emitted as a data attribute on the element (`data-shape`, `data-tone`, `data-size`, `data-elevation`), set to the current value, so tests and CSS can target it.
+
+| Component       | Axis        | Values                                 | Default   | Notes                                                                                |
+| --------------- | ----------- | -------------------------------------- | --------- | ------------------------------------------------------------------------------------ |
+| `Button`        | `shape`     | `default \| rounded \| pill \| square` | `default` | `default` keeps the current corner radius                                            |
+| `Button`        | `tone`      | `solid \| soft \| outline`             | `solid`   | Only for `variant="default"` and `variant="destructive"` (see below)                 |
+| `Badge`         | `shape`     | `default \| rounded \| pill \| square` | `default` | Same scale as Button                                                                 |
+| `Badge`         | `tone`      | `solid \| soft \| outline`             | `solid`   | Only for `variant="default"` and `variant="destructive"` (see below)                 |
+| `Input`         | `shape`     | `default \| rounded \| pill \| square` | `default` | Same scale as Button                                                                 |
+| `Input`         | `size`      | `sm \| md \| lg`                       | `md`      | Uses the `--control-h-*` density tokens; `md` is today's height                      |
+| `Card`          | `elevation` | `default \| flat \| outline \| raised` | `default` | `default` is today's border plus `shadow-sm`                                         |
+| `SelectTrigger` | `size`      | `sm \| md \| lg`                       | `md`      | Uses the `--control-h-*` density tokens (was `default \| sm`; `default` is now `md`) |
+
+- **`tone` scope.** `tone="soft"` and `tone="outline"` are defined only for the primary (`variant="default"`) and `destructive` intents on Button and Badge. On every other variant `tone` is a no-op (and `data-tone` is still emitted as set). Widening it to more intents needs a per-colour contrast check first: text must reach 4.5:1 against the tinted background in light and dark mode.
+- **`Input` `size`.** It is the sm/md/lg variant, not the native HTML `size` attribute (a character count). To set a width, use a width class.
+- Pick a shape with the `shape` prop, not a `rounded-*` class, and a tone with the `tone` prop, so the choice stays in the variant system.
+- Add a new axis the same way as a variant (previous section): a key in the component's `cva()` call built from token utilities, a default in `defaultVariants` that reproduces the current look, and a story that shows every value.
+
 **DatePicker** (`@/components/ui/date-picker`) composes Popover and Calendar (react-day-picker).
 
 - It formats with `formatDate` and localises the calendar through the current UI language.
