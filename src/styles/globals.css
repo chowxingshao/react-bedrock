@@ -50,6 +50,9 @@
   --radius-2xl: calc(var(--radius) * 1.8);
 
   --default-transition-duration: var(--duration-normal);
+
+  /* The bare `border`, `border-x`, `divide-x` … utilities read this theme variable. */
+  --default-border-width: var(--border-width);
 }
 
 /* Tailwind has no z-index or duration theme namespace, so the token layers become utilities here. */

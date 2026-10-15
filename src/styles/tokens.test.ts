@@ -37,6 +37,8 @@ describe('tokens.css', () => {
       '--card',
       '--popover',
       '--radius',
+      '--border-width',
+      '--border-width-strong',
       '--z-dropdown',
       '--z-sticky',
       '--z-modal',

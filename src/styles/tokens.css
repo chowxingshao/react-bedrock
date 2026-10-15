@@ -42,6 +42,10 @@
   /* Shape: every radius (rounded-xs … rounded-2xl) is derived from this. */
   --radius: 0.625rem;
 
+  /* Lines: the default border thickness; raise once to thicken every border. */
+  --border-width: 1px;
+  --border-width-strong: 2px;
+
   /* Motion */
   --duration-fast: 150ms;
   --duration-normal: 200ms;
