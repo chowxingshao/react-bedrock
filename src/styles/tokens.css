@@ -50,10 +50,16 @@
   --text-caption: 0.75rem;
   --text-caption--line-height: 1rem;
 
-  --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 0.05);
-  --shadow-sm: 0 1px 3px 0 oklch(0 0 0 / 0.1), 0 1px 2px -1px oklch(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px oklch(0 0 0 / 0.1), 0 2px 4px -2px oklch(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 0.1), 0 4px 6px -4px oklch(0 0 0 / 0.1);
+  /* Elevation. Change --shadow-color once to retint/soften every shadow. */
+  --shadow-color: 0 0 0;
+  --shadow-xs: 0 1px 2px 0 oklch(var(--shadow-color) / 0.05);
+  --shadow-sm:
+    0 1px 3px 0 oklch(var(--shadow-color) / 0.1), 0 1px 2px -1px oklch(var(--shadow-color) / 0.1);
+  --shadow-md:
+    0 4px 6px -1px oklch(var(--shadow-color) / 0.1), 0 2px 4px -2px oklch(var(--shadow-color) / 0.1);
+  --shadow-lg:
+    0 10px 15px -3px oklch(var(--shadow-color) / 0.1),
+    0 4px 6px -4px oklch(var(--shadow-color) / 0.1);
 
   /* Motion easings. Tailwind generates ease-standard … from these. */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
@@ -77,6 +83,10 @@
   --control-h-sm: calc(2rem * var(--density));
   --control-h-md: calc(2.25rem * var(--density));
   --control-h-lg: calc(2.5rem * var(--density));
+
+  /* Focus ring: width and offset of the visible focus outline. */
+  --ring-width: 3px;
+  --ring-offset: 0px;
 
   /* Motion */
   --duration-fast: 150ms;

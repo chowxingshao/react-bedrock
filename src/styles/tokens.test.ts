@@ -87,4 +87,15 @@ describe('tokens.css', () => {
     expect(sizes.filter((name) => !theme.has(name))).toEqual([]);
     expect(sizes.filter((name) => !theme.has(`${name}--line-height`))).toEqual([]);
   });
+
+  it('defines the focus and elevation knobs Phase 1 adds', () => {
+    const theme = declarations(tokensCss, '@theme');
+    expect(light.has('--ring-width')).toBe(true);
+    expect(light.has('--ring-offset')).toBe(true);
+    expect(theme.has('--shadow-color')).toBe(true);
+    // Every shadow token routes through the --shadow-color knob.
+    for (const name of ['--shadow-xs', '--shadow-sm', '--shadow-md', '--shadow-lg']) {
+      expect(theme.get(name)).toContain('var(--shadow-color');
+    }
+  });
 });
