@@ -50,6 +50,11 @@ describe('tokens.css', () => {
       '--duration-fast',
       '--duration-normal',
       '--duration-slow',
+      '--chart-1',
+      '--chart-5',
+      '--sidebar',
+      '--sidebar-foreground',
+      '--sidebar-border',
     ];
     expect(required.filter((name) => !light.has(name))).toEqual([]);
   });
