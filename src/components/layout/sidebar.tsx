@@ -1,8 +1,8 @@
-import { LayersIcon, PanelLeftCloseIcon, PanelLeftOpenIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
 
 import { Button } from '@/components/ui/button';
+import { Logo, SidebarCollapse, SidebarExpand } from '@/components/ui/icons';
 import { env } from '@/config/env';
 import { useAuth } from '@/core/auth';
 import { cn } from '@/lib/cn';
@@ -29,7 +29,7 @@ export function Sidebar({ items, collapsed, collapsible = false, onNavigate }: S
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-14 items-center gap-2 border-b px-4 font-semibold">
-        <LayersIcon aria-hidden="true" className="size-5 shrink-0" />
+        <Logo aria-hidden="true" className="size-5 shrink-0" />
         {collapsed ? null : <span className="truncate">{env.VITE_APP_NAME}</span>}
       </div>
       <nav aria-label={t('nav.label')} className="flex-1 p-2">
@@ -69,9 +69,9 @@ export function Sidebar({ items, collapsed, collapsible = false, onNavigate }: S
             onClick={toggle}
           >
             {collapsed ? (
-              <PanelLeftOpenIcon aria-hidden="true" />
+              <SidebarExpand aria-hidden="true" />
             ) : (
-              <PanelLeftCloseIcon aria-hidden="true" />
+              <SidebarCollapse aria-hidden="true" />
             )}
             {collapsed ? null : t('nav.collapse')}
           </Button>

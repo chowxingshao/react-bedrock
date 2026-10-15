@@ -113,7 +113,7 @@ Things that are fixed by hand:
 - **Raw layers**: another `z-10` becomes a layer from `tokens.css` (`z-sticky`, `z-dropdown`, `z-modal`, `z-toast`).
 - **Anything else the token guard or ESLint reports.**
 
-The shadcn CLI does not install `lucide-react` (only its `init` command does), so it is a regular dependency of this template.
+The shadcn CLI does not install `lucide-react` (only its `init` command does), so it is a regular dependency of this template. Components the CLI fetches import icons from `lucide-react` directly; route those imports through the icon barrel (see "Icons" below).
 
 ### Adding or changing a variant
 
@@ -148,6 +148,47 @@ Beyond `variant`, some primitives expose independent axes. Every axis defaults t
 - A label names the trigger, so the chosen date (or the placeholder) is exposed as its accessible description, next to any `aria-describedby` the form passes (`FormDescription`, the error message).
 - The value is a `Date` at local midnight. Send it to an API with `formatISODate` (docs/i18n.md), not `toISOString()`.
 - The bare `Calendar` primitive has English labels unless you pass `labels` (see DatePicker). Its `captionLayout="dropdown"` is not localised either (shadcn formats the month in the browser language, and react-day-picker's dropdown labels are English), so it has no story: translate those labels before you use it.
+
+### Icons
+
+`src/components/ui/icons.ts` is the **only file that imports `lucide-react`**. It re-exports every icon the app uses under a semantic name, so swapping the icon set means editing the right-hand sides of that one file. A custom inline-SVG or image-backed icon goes there too, as a plain component with the same `React.SVGProps<SVGSVGElement>` signature.
+
+**Name by role, not by shape.** An icon that stands for an action or a state gets a domain name (`Delete`, `Edit`, `Export`, `Add`, `Retry`, `Empty`, `Forbidden`, `Offline`, `Warning`, `Success`, `Error`, `Info`, `Dashboard`, `Logo`, `ThemeLight`, `ThemeDark`, `ThemeSystem`), so changing what "delete" looks like is a one-line edit. A purely geometric or directional icon keeps its geometric name (`ChevronDown`, `ArrowUp`, `More`, `Dot`).
+
+Incorrect:
+
+```tsx
+import { X } from 'lucide-react';
+```
+
+Correct:
+
+```tsx
+import { Delete } from '@/components/ui/icons';
+```
+
+Two notes on aliases:
+
+- A barrel alias that collides with an identifier already in the file is imported with a `Glyph` suffix: `spinner.tsx` imports `Spinner as SpinnerGlyph`, and `date-picker.tsx` imports `Calendar as CalendarGlyph`.
+- The `Error` alias (the error-toast glyph) shadows the global `Error` inside the file that imports it. That is harmless where it is used (the toaster), but do not import it somewhere that also needs `new Error(...)`.
+
+**`<Icon>` wrapper** (`@/components/ui/icons`, defined in `icon.tsx`). Use it for a standalone icon that needs a uniform size and accessibility defaults; skip it when you drop a glyph into a component that sizes its own icons (Button, DropdownMenuItem and similar), which already apply the right `size-*`.
+
+- `size` is `sm | md | lg | xl`, mapped to `size-3 | size-4 | size-5 | size-6`; the default is `md`.
+- `label` makes the icon meaningful: it sets `role="img"` and `aria-label`. Without `label` the icon is decorative and gets `aria-hidden`.
+- `icon` takes a component object, never a string key.
+
+```tsx
+<Icon icon={Warning} size="lg" label={t('errors:generic.title')} />
+```
+
+**`IconComponent`** (also exported from the barrel) is the prop type for "an icon component", for example `EmptyState`'s `icon` or a nav item's `icon`. It accepts lucide glyphs and custom SVG components alike, so a swapped icon set never leaks into component signatures.
+
+**Enforcement.** ESLint's `no-restricted-imports` rejects `lucide-react` everywhere except `icons.ts`, and the error names the fix. `src/components/ui/icons.guard.test.ts` fails the test run if any other file imports it.
+
+**Generators and `pnpm ui:add`.** Both route new icons through the barrel. `pnpm gen feature <plural> <singular> y` writes a sidebar entry that imports a placeholder `Package` icon from `@/components/ui/icons`: replace it with an alias that fits the feature (add one to the barrel if none does). After `pnpm ui:add <name>`, change any `lucide-react` import in the fetched file to a barrel import.
+
+The `UI/Icons` story in Storybook shows every icon in the barrel with its name.
 
 ## Storybook: the visual catalogue
 

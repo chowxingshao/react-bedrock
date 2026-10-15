@@ -1,7 +1,7 @@
 import userEvent, { type UserEvent } from '@testing-library/user-event';
-import { LayoutDashboardIcon, PackageIcon } from 'lucide-react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { Dashboard, Package } from '@/components/ui/icons';
 import { useUiStore } from '@/stores/ui-store';
 import { act, render, screen, waitFor, within } from '@/test/render';
 
@@ -9,8 +9,8 @@ import { AppShell } from './app-shell';
 import type { NavItem } from './nav-types';
 
 const NAV: NavItem[] = [
-  { labelKey: 'nav.dashboard', icon: LayoutDashboardIcon, to: '/dashboard', end: true },
-  { labelKey: 'nav.items', icon: PackageIcon, to: '/items', permission: 'items.delete' },
+  { labelKey: 'nav.dashboard', icon: Dashboard, to: '/dashboard', end: true },
+  { labelKey: 'nav.items', icon: Package, to: '/items', permission: 'items.delete' },
 ];
 
 const renderShell = (auth: 'admin' | 'viewer') =>

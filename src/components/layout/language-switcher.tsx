@@ -1,4 +1,3 @@
-import { LanguagesIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Language } from '@/components/ui/icons';
 import { isLocale, SUPPORTED_LOCALES } from '@/config/constants';
 import { changeLocale } from '@/core/i18n';
 
@@ -20,7 +20,7 @@ export function LanguageSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" aria-label={t('language.change')}>
-          <LanguagesIcon aria-hidden="true" />
+          <Language aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

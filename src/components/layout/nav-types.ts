@@ -1,13 +1,13 @@
 import type { ParseKeys } from 'i18next';
-import type { LucideIcon } from 'lucide-react';
 
+import type { IconComponent } from '@/components/ui/icons';
 import type { Permission } from '@/config/permissions';
 
 /** One entry of the sidebar, configured in src/app/navigation.ts (spec §5.5). */
 export interface NavItem {
   /** Translation key in the `common` namespace, e.g. 'nav.dashboard'. */
   labelKey: ParseKeys;
-  icon: LucideIcon;
+  icon: IconComponent;
   to: string;
   /** Hidden unless the user has this permission. */
   permission?: Permission;

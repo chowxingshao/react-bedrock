@@ -1,4 +1,3 @@
-import { LogOutIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -12,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { SignOut } from '@/components/ui/icons';
 import { paths } from '@/config/paths';
 import { useAuth } from '@/core/auth';
 
@@ -55,7 +55,7 @@ export function UserMenu() {
             void logout().then(() => navigate(paths.login(), { replace: true }));
           }}
         >
-          <LogOutIcon aria-hidden="true" />
+          <SignOut aria-hidden="true" />
           {t('auth.signOut')}
         </DropdownMenuItem>
       </DropdownMenuContent>

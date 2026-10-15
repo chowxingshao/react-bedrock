@@ -1,8 +1,8 @@
-import { CalendarIcon } from 'lucide-react';
 import { type ComponentProps, useId, useState } from 'react';
 import { labelDayButton } from 'react-day-picker';
 import { useTranslation } from 'react-i18next';
 
+import { Calendar as CalendarGlyph } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
 import { formatDate, getDateFnsLocale } from '@/lib/format';
 
@@ -47,7 +47,7 @@ export function DatePicker({
           // accessible name; the description keeps it, next to whatever the caller already points at.
           aria-describedby={describedBy ? `${valueId} ${describedBy}` : valueId}
         >
-          <CalendarIcon aria-hidden="true" />
+          <CalendarGlyph aria-hidden="true" />
           <span id={valueId}>
             {isEmpty ? (placeholder ?? t('datePicker.placeholder')) : formatted}
           </span>

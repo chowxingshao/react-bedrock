@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { LayoutDashboardIcon, PackageIcon } from 'lucide-react';
 
+import { Dashboard, Package } from '@/components/ui/icons';
 import { AuthProvider, type AuthStrategy } from '@/core/auth';
 import type { SessionUser } from '@/stores/session-store';
 
@@ -41,8 +41,8 @@ const meta = {
   ],
   args: {
     navItems: [
-      { labelKey: 'nav.dashboard', icon: LayoutDashboardIcon, to: '/', end: true },
-      { labelKey: 'nav.items', icon: PackageIcon, to: '/items', permission: 'items.read' },
+      { labelKey: 'nav.dashboard', icon: Dashboard, to: '/', end: true },
+      { labelKey: 'nav.items', icon: Package, to: '/items', permission: 'items.read' },
     ],
     children: <PageHeader title="Dashboard" description="Page content renders here." />,
   },

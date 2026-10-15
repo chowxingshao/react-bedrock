@@ -1,7 +1,7 @@
-import { RotateCwIcon, TriangleAlertIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { Retry, Warning } from '@/components/ui/icons';
 import { env } from '@/config/env';
 import { getErrorMessage } from '@/core/api';
 import { cn } from '@/lib/cn';
@@ -49,7 +49,7 @@ export function ErrorState({
       )}
     >
       <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-        <TriangleAlertIcon aria-hidden="true" className="size-6" />
+        <Warning aria-hidden="true" className="size-6" />
       </div>
       <div className="grid gap-1">
         <Heading className="text-lg font-semibold">{title ?? t('errors:generic.title')}</Heading>
@@ -60,7 +60,7 @@ export function ErrorState({
       </div>
       {onRetry ? (
         <Button type="button" variant="outline" onClick={onRetry}>
-          <RotateCwIcon aria-hidden="true" />
+          <Retry aria-hidden="true" />
           {retryLabel ?? t('actions.retry')}
         </Button>
       ) : null}

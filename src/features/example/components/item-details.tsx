@@ -1,9 +1,9 @@
-import { CheckIcon, CopyIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Check, Copy } from '@/components/ui/icons';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { formatCurrency, formatDateTime, formatNumber, formatRelative } from '@/lib/format';
 
@@ -45,7 +45,7 @@ export function ItemDetails({ item }: { item: Item }) {
                   void copy(item.id);
                 }}
               >
-                {copied ? <CheckIcon aria-hidden="true" /> : <CopyIcon aria-hidden="true" />}
+                {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
                 {copied ? t('actions.copied') : t('actions.copyId')}
               </Button>
             </span>

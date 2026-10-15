@@ -29,6 +29,13 @@ What changed in the template, newest first. If you started a project from it and
     tokens (`md` is today's height).
   - **Card:** new `elevation` prop (`default` | `flat` | `outline` | `raised`);
     `default` is today's border plus `shadow-sm`.
+- Design System v2, Phase 3: a swap-in-one-file icon system. All icons are
+  re-exported under semantic names from `src/components/ui/icons.ts` (the one
+  file allowed to import `lucide-react`); swapping the set means editing that
+  file. A new optional `<Icon icon={…} size label>` wrapper
+  (`src/components/ui/icon.tsx`) gives standalone icons a uniform size scale and
+  a11y defaults, with a set-agnostic `IconComponent` type. See "Icons" in
+  `docs/design-system.md` and the `UI/Icons` Storybook catalogue.
 
 ### Changed
 
@@ -39,6 +46,14 @@ What changed in the template, newest first. If you started a project from it and
 - `Input` no longer accepts the native HTML `size` attribute (a character
   count); its `size` prop is now the sm/md/lg variant. **Action needed:** where
   you used the native attribute, use a width class instead.
+- `lucide-react` may now be imported only in `src/components/ui/icons.ts`; an
+  ESLint rule and a guard test enforce it. The feature generator
+  (`pnpm gen feature`) and `pnpm ui:add` now expect new icons to go through the
+  barrel.
+  **Action needed:** move any direct `lucide-react` imports to
+  `src/components/ui/icons.ts` (add a semantic alias) and import the alias from
+  `@/components/ui/icons`; the lint error names the exact fix. Icon glyphs are
+  unchanged, so nothing renders differently.
 
 ## [0.1.0] - 2026-10-13
 

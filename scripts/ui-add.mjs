@@ -83,4 +83,8 @@ const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 if (pkg.dependencies?.cn || pkg.devDependencies?.cn) runPnpm(['remove', 'cn']);
 
 runPnpm(['exec', 'prettier', '--write', UI_DIR]);
-console.log('ui:add: done. Run `pnpm lint:fix && pnpm test` and fix anything still reported.');
+console.log(
+  'ui:add: done. Run `pnpm lint:fix && pnpm test` and fix anything still reported.\n' +
+    '        New components import icons from `lucide-react` directly — move those imports into\n' +
+    '        src/components/ui/icons.ts (add a semantic alias) and import from @/components/ui/icons.',
+);

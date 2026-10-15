@@ -1,10 +1,10 @@
-import { PencilIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
 
 import { DetailSkeleton, QueryState } from '@/components/feedback';
 import { PageHeader } from '@/components/layout';
 import { Button } from '@/components/ui/button';
+import { Edit } from '@/components/ui/icons';
 import { paths } from '@/config/paths';
 import { Can } from '@/core/auth';
 
@@ -33,7 +33,7 @@ export function ItemDetailPage() {
                 <Can permission="items.update">
                   <Button asChild variant="outline">
                     <Link to={paths.items.edit(item.id)}>
-                      <PencilIcon aria-hidden="true" />
+                      <Edit aria-hidden="true" />
                       {t('actions.edit')}
                     </Link>
                   </Button>

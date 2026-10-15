@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { SearchXIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { NoResults } from '@/components/ui/icons';
 
 import { EmptyState } from './empty-state';
 
@@ -24,7 +24,7 @@ export const WithAction: Story = {
 
 export const NoSearchResults: Story = {
   args: {
-    icon: SearchXIcon,
+    icon: NoResults,
     title: 'No results',
     description: 'Try a different search term or clear the filters.',
   },

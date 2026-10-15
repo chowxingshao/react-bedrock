@@ -315,7 +315,8 @@ export default function (plop) {
             type: 'modify',
             path: 'src/app/navigation.ts',
             ...anchored('// plop:nav-imports'),
-            template: "import { FolderIcon as {{pascalCase name}}Icon } from 'lucide-react';\n$1",
+            template:
+              "import { Package as {{pascalCase name}}Icon } from '@/components/ui/icons';\n$1",
           },
           {
             type: 'modify',
