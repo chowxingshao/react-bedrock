@@ -103,4 +103,21 @@ describe('tokens.css', () => {
       expect(theme.get(name)).toContain('var(--shadow-color');
     }
   });
+
+  it('zeroes motion durations AND distances under reduced motion', () => {
+    const block =
+      /@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?)\n\}/.exec(tokensCss)?.[1] ?? '';
+    for (const name of [
+      '--duration-fast',
+      '--duration-normal',
+      '--duration-slow',
+      '--move-sm',
+      '--move-md',
+      '--move-lg',
+    ]) {
+      expect(block, `${name} must be zeroed under reduced motion`).toMatch(
+        new RegExp(`${name}:\\s*0(ms|px)?;`),
+      );
+    }
+  });
 });

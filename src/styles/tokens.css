@@ -245,11 +245,14 @@
   }
 }
 
-/* Respect reduced-motion preferences everywhere durations are used. */
+/* Respect reduced-motion preferences everywhere durations/distances are used. */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duration-fast: 0ms;
     --duration-normal: 0ms;
     --duration-slow: 0ms;
+    --move-sm: 0px;
+    --move-md: 0px;
+    --move-lg: 0px;
   }
 }
