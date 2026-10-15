@@ -34,6 +34,11 @@ const WRAPPED = [
     patterns: ['date-fns', 'date-fns/*'],
     message: 'Use the formatters in @/lib/format.',
   },
+  {
+    files: ['src/components/ui/icons.ts'],
+    paths: ['lucide-react'],
+    message: 'Import icons from @/components/ui/icons (add a semantic alias there).',
+  },
 ];
 
 /**
