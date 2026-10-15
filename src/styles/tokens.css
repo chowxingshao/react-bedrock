@@ -72,6 +72,12 @@
   --border-width: 1px;
   --border-width-strong: 2px;
 
+  /* Density: raise/lower once to make every control taller or tighter. */
+  --density: 1;
+  --control-h-sm: calc(2rem * var(--density));
+  --control-h-md: calc(2.25rem * var(--density));
+  --control-h-lg: calc(2.5rem * var(--density));
+
   /* Motion */
   --duration-fast: 150ms;
   --duration-normal: 200ms;
