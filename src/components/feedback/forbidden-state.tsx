@@ -1,8 +1,8 @@
-import { ShieldXIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { Button } from '@/components/ui/button';
+import { Forbidden } from '@/components/ui/icons';
 import { paths } from '@/config/paths';
 
 import { EmptyState } from './empty-state';
@@ -17,7 +17,7 @@ export function ForbiddenState({ headingLevel }: ForbiddenStateProps) {
   const { t } = useTranslation();
   return (
     <EmptyState
-      icon={ShieldXIcon}
+      icon={Forbidden}
       headingLevel={headingLevel}
       title={t('states.forbidden.title')}
       description={t('states.forbidden.description')}

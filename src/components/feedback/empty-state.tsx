@@ -1,13 +1,13 @@
-import { InboxIcon, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Empty, type IconComponent } from '@/components/ui/icons';
 import { cn } from '@/lib/cn';
 
 export interface EmptyStateProps {
   title?: string;
   description?: string;
-  icon?: LucideIcon;
+  icon?: IconComponent;
   /** Optional call to action, e.g. <Button>Create item</Button>. */
   action?: ReactNode;
   /**
@@ -22,7 +22,7 @@ export interface EmptyStateProps {
 export function EmptyState({
   title,
   description,
-  icon: Icon = InboxIcon,
+  icon: Icon = Empty,
   action,
   headingLevel = 2,
   className,

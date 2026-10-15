@@ -1,6 +1,6 @@
-import { Loader2Icon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { Spinner } from '@/components/ui/icons';
 import { SKELETON_DELAY_MS } from '@/config/constants';
 import { cn } from '@/lib/cn';
 
@@ -26,7 +26,7 @@ export function PageLoader({ variant = 'section', delayMs = SKELETON_DELAY_MS }:
           variant === 'page' ? 'min-h-svh' : 'min-h-48',
         )}
       >
-        <Loader2Icon aria-hidden="true" className="size-6 animate-spin" />
+        <Spinner aria-hidden="true" className="size-6 animate-spin" />
         <span className="sr-only">{t('status.loading')}</span>
       </div>
     </Delayed>

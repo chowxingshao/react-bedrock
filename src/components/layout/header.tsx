@@ -1,8 +1,8 @@
-import { MenuIcon } from 'lucide-react';
 import type { Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { Menu } from '@/components/ui/icons';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useSetMobileNavOpen } from '@/stores/ui-store';
 
@@ -31,7 +31,7 @@ export function Header({ menuButtonRef }: HeaderProps) {
           setMobileNavOpen(true);
         }}
       >
-        <MenuIcon aria-hidden="true" />
+        <Menu aria-hidden="true" />
       </Button>
       <div className="flex-1" />
       <LanguageSwitcher />

@@ -1,8 +1,8 @@
-import { SearchXIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { Button } from '@/components/ui/button';
+import { NoResults } from '@/components/ui/icons';
 import { paths } from '@/config/paths';
 
 import { EmptyState } from './empty-state';
@@ -19,7 +19,7 @@ export function NotFoundState({ title, description, headingLevel }: NotFoundStat
   const { t } = useTranslation();
   return (
     <EmptyState
-      icon={SearchXIcon}
+      icon={NoResults}
       headingLevel={headingLevel}
       title={title ?? t('states.notFound.title')}
       description={description ?? t('states.notFound.description')}
