@@ -37,6 +37,12 @@ describe('tokens.css', () => {
       '--card',
       '--popover',
       '--radius',
+      '--border-width',
+      '--border-width-strong',
+      '--density',
+      '--control-h-sm',
+      '--control-h-md',
+      '--control-h-lg',
       '--z-dropdown',
       '--z-sticky',
       '--z-modal',
@@ -44,6 +50,11 @@ describe('tokens.css', () => {
       '--duration-fast',
       '--duration-normal',
       '--duration-slow',
+      '--chart-1',
+      '--chart-5',
+      '--sidebar',
+      '--sidebar-foreground',
+      '--sidebar-border',
     ];
     expect(required.filter((name) => !light.has(name))).toEqual([]);
   });
@@ -58,5 +69,38 @@ describe('tokens.css', () => {
 
   it('keeps the prefers-color-scheme fallback identical to .dark', () => {
     expect(Object.fromEntries(fallback)).toEqual(Object.fromEntries(dark));
+  });
+
+  it('defines the motion tokens Phase 1 adds', () => {
+    const theme = declarations(tokensCss, '@theme');
+    const easings = ['--ease-standard', '--ease-emphasized', '--ease-entrance', '--ease-exit'];
+    expect(easings.filter((name) => !theme.has(name))).toEqual([]);
+    const distances = ['--move-sm', '--move-md', '--move-lg'];
+    expect(distances.filter((name) => !light.has(name))).toEqual([]);
+  });
+
+  it('defines the semantic type scale Phase 1 adds', () => {
+    const theme = declarations(tokensCss, '@theme');
+    const sizes = [
+      '--text-display',
+      '--text-title',
+      '--text-heading',
+      '--text-body',
+      '--text-label',
+      '--text-caption',
+    ];
+    expect(sizes.filter((name) => !theme.has(name))).toEqual([]);
+    expect(sizes.filter((name) => !theme.has(`${name}--line-height`))).toEqual([]);
+  });
+
+  it('defines the focus and elevation knobs Phase 1 adds', () => {
+    const theme = declarations(tokensCss, '@theme');
+    expect(light.has('--ring-width')).toBe(true);
+    expect(light.has('--ring-offset')).toBe(true);
+    expect(theme.has('--shadow-color')).toBe(true);
+    // Every shadow token routes through the --shadow-color knob.
+    for (const name of ['--shadow-xs', '--shadow-sm', '--shadow-md', '--shadow-lg']) {
+      expect(theme.get(name)).toContain('var(--shadow-color');
+    }
   });
 });
