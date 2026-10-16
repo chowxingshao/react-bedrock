@@ -37,7 +37,7 @@ export const AllVariants: Story = {
               {variant} · {size}
             </Button>
           ))}
-          <Button {...args} variant={variant} size="icon" aria-label={variant}>
+          <Button {...args} variant={variant} size="icon" aria-label={`Add (${variant})`}>
             <Add />
           </Button>
         </div>

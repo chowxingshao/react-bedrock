@@ -22,9 +22,7 @@ export function StateMatrix({ caption, columns, rows, className }: StateMatrixPr
         <caption className="mb-2 text-caption text-muted-foreground">{caption}</caption>
         <thead>
           <tr>
-            <th className="p-2 text-label text-muted-foreground" scope="col">
-              {/* empty corner */}
-            </th>
+            <td className="p-2" />
             {columns.map((col) => (
               <th key={col} className="p-2 text-label text-muted-foreground" scope="col">
                 {col}
