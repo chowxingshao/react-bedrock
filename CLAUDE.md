@@ -30,6 +30,8 @@ A React 19 + TypeScript 6 (strict) single-page app, built with Vite 8 and pnpm 1
 | `src/test/`, `src/types/`               | Test setup, the provider-aware `render` and the guard tests; ambient type declarations                                                        |
 | `e2e/`, `plop/`                         | Playwright tests (with axe); generator templates (the generators are in `plopfile.js`)                                                        |
 | `docs/`                                 | How each part works. Read the matching doc before changing a module                                                                           |
+| `docs/customization.md`                 | The edit-once customization checklist: tokens, the icon barrel, component `defaultVariants`                                                   |
+| `docs/rules/`                           | The rulebook (Incorrect/Correct examples): styling, composition, forms, icons                                                                 |
 
 ## Rules
 

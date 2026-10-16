@@ -46,6 +46,12 @@ What changed in the template, newest first. If you started a project from it and
   `@gsap/react` are new dependencies, but no action is needed because nothing
   uses them by default. See "Motion" in `docs/design-system.md` and
   `docs/hooks.md`.
+- Design System v2, Phase 5: the rulebook. New pages
+  `docs/rules/{styling,composition,forms,icons}.md` and `docs/customization.md`
+  (a checklist for giving a project its own look), linked from `CLAUDE.md`,
+  `README.md`, `docs/design-system.md` and the new-project guide (step 3). A
+  guard test (`src/test/docs-rulebook.guard.test.ts`) checks that the pages
+  exist and are linked. This part is docs only: no action is needed.
 
 ### Changed
 
@@ -64,6 +70,16 @@ What changed in the template, newest first. If you started a project from it and
   `src/components/ui/icons.ts` (add a semantic alias) and import the alias from
   `@/components/ui/icons`; the lint error names the exact fix. Icon glyphs are
   unchanged, so nothing renders differently.
+- `gsap`, `@gsap/react` and `gsap/<subpath>` may now be imported only in
+  `src/hooks/use-gsap.ts` (and its story and test); an ESLint rule and
+  `src/hooks/use-gsap.guard.test.ts` enforce it, which keeps GSAP out of the
+  default bundle. **Action needed:** if you import GSAP elsewhere, route the
+  animation through the `useGsap` hook (`@/hooks/use-gsap`); the lint error
+  names the fix.
+- An ad-hoc `@keyframes` in a `.ts` or `.tsx` file is now flagged by the
+  design-token guard (`src/test/design-tokens.guard.test.ts`). **Action
+  needed:** move any such keyframes to `src/styles/globals.css` and use them
+  through the motion utilities.
 
 ## [0.1.0] - 2026-10-13
 

@@ -47,6 +47,11 @@ const RULES = [
     pattern: /\bduration-\d+\b/,
     hint: 'Use the durations from tokens.css: duration-fast, duration-normal, duration-slow.',
   },
+  {
+    name: 'ad-hoc @keyframes',
+    pattern: /@keyframes\b/,
+    hint: 'Author keyframes in src/styles/globals.css via the motion utilities; use useGsap for orchestration.',
+  },
 ];
 
 describe('design-token guard (spec Principle 1)', () => {
@@ -64,5 +69,15 @@ describe('design-token guard (spec Principle 1)', () => {
       });
     }
     expect(offences, hint).toEqual([]);
+  });
+});
+
+describe('ad-hoc @keyframes rule', () => {
+  const pattern = /@keyframes\b/;
+  it('matches an inline @keyframes', () => {
+    expect(pattern.test('const css = `@keyframes spin { to { rotate: 360deg } }`;')).toBe(true);
+  });
+  it('ignores prose that merely says keyframes', () => {
+    expect(pattern.test('// author keyframes in globals.css')).toBe(false);
   });
 });

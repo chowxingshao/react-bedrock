@@ -42,6 +42,11 @@ Six semantic sizes sit in the top `@theme` block of `tokens.css`. Each one names
 3. For a brand font: self-host the font files in `public/fonts/`, add an `@font-face` rule to `tokens.css`, and put the family first in `--font-sans`. The template makes no external font requests by default.
 4. Check contrast: text on each `*-foreground` pair needs 4.5:1, and `--ring` needs 3:1 against the background.
 
+## Rules and customization
+
+- docs/customization.md: a checklist for giving a project its own look (which token or file to change for each part of the design).
+- docs/rules/: the rulebook, one page each for [styling](rules/styling.md), [composition](rules/composition.md), [forms](rules/forms.md) and [icons](rules/icons.md).
+
 ## Rules (enforced)
 
 `src/test/design-tokens.guard.test.ts` fails `pnpm test` when source files contain:

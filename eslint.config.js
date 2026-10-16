@@ -39,6 +39,16 @@ const WRAPPED = [
     paths: ['lucide-react'],
     message: 'Import icons from @/components/ui/icons (add a semantic alias there).',
   },
+  {
+    files: [
+      'src/hooks/use-gsap.ts',
+      'src/hooks/use-gsap.stories.tsx',
+      'src/hooks/use-gsap.test.tsx',
+    ],
+    paths: ['gsap'],
+    patterns: ['@gsap/*', 'gsap/*'],
+    message: 'Use the `useGsap` hook from @/hooks/use-gsap (GSAP stays out of the default bundle).',
+  },
 ];
 
 /**

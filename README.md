@@ -107,27 +107,28 @@ ESLint enforces which layer may import which; see [docs/architecture.md](docs/ar
 
 ## Documentation
 
-| Topic                                                 | Read                                                                |
-| ----------------------------------------------------- | ------------------------------------------------------------------- |
-| Layers, folders and import rules                      | [architecture.md](docs/architecture.md)                             |
-| Design tokens, rebranding, components, Storybook      | [design-system.md](docs/design-system.md)                           |
-| HTTP client, TanStack Query, query keys, `QueryState` | [data-fetching.md](docs/data-fetching.md)                           |
-| Generating API clients with Orval                     | [api-codegen.md](docs/api-codegen.md)                               |
-| Where state lives: Query, Zustand, URL or local       | [state-management.md](docs/state-management.md)                     |
-| Shared hooks                                          | [hooks.md](docs/hooks.md)                                           |
-| Routes, guards and the paths helper                   | [routing.md](docs/routing.md)                                       |
-| Authentication and permissions                        | [auth.md](docs/auth.md)                                             |
-| Translations and formatting                           | [i18n.md](docs/i18n.md)                                             |
-| Forms and server errors                               | [forms.md](docs/forms.md)                                           |
-| Errors, logging and notifications                     | [error-handling-and-logging.md](docs/error-handling-and-logging.md) |
-| What to test where; MSW; E2E                          | [testing.md](docs/testing.md)                                       |
-| Code generators                                       | [generators.md](docs/generators.md)                                 |
-| Security decisions                                    | [security.md](docs/security.md)                                     |
-| Docker                                                | [docker.md](docs/docker.md)                                         |
-| CI/CD, images and environments                        | [deployment.md](docs/deployment.md)                                 |
-| Branching, commits and pull requests                  | [contributing.md](docs/contributing.md)                             |
-| Creating a project from this template, and updates    | [starting-a-new-project.md](docs/starting-a-new-project.md)         |
-| What changed in each version of the template          | [CHANGELOG.md](CHANGELOG.md)                                        |
+| Topic                                                         | Read                                                                |
+| ------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Layers, folders and import rules                              | [architecture.md](docs/architecture.md)                             |
+| Design tokens, rebranding, components, Storybook              | [design-system.md](docs/design-system.md)                           |
+| Customizing the look (tokens, icons, variants) + the rulebook | [customization.md](docs/customization.md)                           |
+| HTTP client, TanStack Query, query keys, `QueryState`         | [data-fetching.md](docs/data-fetching.md)                           |
+| Generating API clients with Orval                             | [api-codegen.md](docs/api-codegen.md)                               |
+| Where state lives: Query, Zustand, URL or local               | [state-management.md](docs/state-management.md)                     |
+| Shared hooks                                                  | [hooks.md](docs/hooks.md)                                           |
+| Routes, guards and the paths helper                           | [routing.md](docs/routing.md)                                       |
+| Authentication and permissions                                | [auth.md](docs/auth.md)                                             |
+| Translations and formatting                                   | [i18n.md](docs/i18n.md)                                             |
+| Forms and server errors                                       | [forms.md](docs/forms.md)                                           |
+| Errors, logging and notifications                             | [error-handling-and-logging.md](docs/error-handling-and-logging.md) |
+| What to test where; MSW; E2E                                  | [testing.md](docs/testing.md)                                       |
+| Code generators                                               | [generators.md](docs/generators.md)                                 |
+| Security decisions                                            | [security.md](docs/security.md)                                     |
+| Docker                                                        | [docker.md](docs/docker.md)                                         |
+| CI/CD, images and environments                                | [deployment.md](docs/deployment.md)                                 |
+| Branching, commits and pull requests                          | [contributing.md](docs/contributing.md)                             |
+| Creating a project from this template, and updates            | [starting-a-new-project.md](docs/starting-a-new-project.md)         |
+| What changed in each version of the template                  | [CHANGELOG.md](CHANGELOG.md)                                        |
 
 ## Starting a new project
 

@@ -83,6 +83,8 @@ Edit only `src/styles/tokens.css` (docs/design-system.md → How to rebrand):
 
 Keep text contrast at 4.5:1 or more, and `--ring` at 3:1 or more. Then run `pnpm format`, because the lint step checks the file with Prettier.
 
+To go beyond colour, radius and font (border width, density, shape, shadows, motion, icon set), follow docs/customization.md: it says which token or file to change for each look, and docs/rules/ holds the rules that keep the design consistent as you build.
+
 Check: `pnpm storybook` shows every component in the new look, in light and dark. `pnpm test` passes (it checks that the fallback block matches the dark one), and so does `pnpm test:e2e`, whose axe checks catch contrast problems (the first time, install its browser: `pnpm exec playwright install chromium`).
 
 ## 4. Languages and currency
