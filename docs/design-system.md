@@ -18,6 +18,8 @@ All colours, radii, fonts, shadows, z-index layers and animation durations are d
 
 Colours use **OKLCH** (`oklch(lightness chroma hue)`), so shades with the same lightness look equally bright.
 
+To see every token and variant rendered live, with contrast ratios, open the [Design System showcase](#design-system-showcase-storybook).
+
 Durations reach a component through a `duration-fast`, `duration-normal` or `duration-slow` utility (Dialog, AlertDialog and Sheet use them), or through Tailwind's default transition duration, which `src/styles/globals.css` sets to `--duration-normal`: every plain `transition`, `transition-colors` or `transition-all` utility follows that token (buttons use `transition-all`; inputs use `transition-[color,box-shadow]`, which follows the same default duration). An enter/exit animation with no duration utility, such as the Popover, DropdownMenu, Select and Tooltip fades, uses tw-animate-css's own 150 ms default, which is not a token.
 
 ### Type scale
@@ -241,6 +243,25 @@ Correct:
 ```
 
 **`useGsap`** is for orchestration the CSS utilities cannot express (sequenced timelines, animating a value, coordinating several elements). It is optional, reduced-motion-guarded and tree-shaken out of the bundle unless a project imports it; reach for a utility first. See `useGsap` in docs/hooks.md.
+
+## Design System showcase (Storybook)
+
+The showcase is a living proof that the tokens and components in this file cover the surface of a real product. It sits in Storybook, so it renders with your own `tokens.css` and follows every change you make there. After rebranding, open it to check the new look in one place.
+
+| Storybook section              | What it shows                                                                                                                                                  |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Design System/Overview`       | What the showcase covers and how to read it                                                                                                                    |
+| `Design System/Foundations`    | Colour roles with live WCAG contrast ratios, the chart and sidebar palettes, the type specimen, spacing and density, radius, elevation, motion and an icon row |
+| `Foundations/Tokens`           | The token reference                                                                                                                                            |
+| `Design System/Components`     | Components by tier: every primitive as a variant by state matrix, then composed components, overlays and the async-state components (loading, empty, error)    |
+| `Design System/Do and Don't`   | Side-by-side pairs for the rules that are easiest to break (see docs/rules/)                                                                                   |
+| `Design System/Recipes`        | Short patterns built from tokens and components                                                                                                                |
+| `Design System/Example Screen` | One full screen built only from tokens and components, with no one-off styling                                                                                 |
+| `Design System/Helpers`        | The helpers the showcase pages use (`ColorPair`, `StateMatrix`, `previewState`)                                                                                |
+
+Run it with `pnpm storybook` (dev server at http://localhost:6006) or `pnpm storybook:build` (a static site in `storybook-static/`). The **Theme** toolbar switches light and dark, and the **Locale** toolbar switches en and es, so every page can be checked in both modes and both languages.
+
+The pages are MDX files in `src/stories/*.mdx` with supporting CSF stories next to the components. Their helpers live in `src/components/showcase/`, including a small WCAG contrast function with no dependencies. When you add a token or a variant, add it to the matching page so the showcase stays complete.
 
 ## Storybook: the visual catalogue
 
