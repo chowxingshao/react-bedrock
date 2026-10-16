@@ -1,0 +1,46 @@
+import { Canvas, Meta } from '@storybook/addon-docs/blocks';
+
+import * as Foundations from '../styles/foundations.stories';
+
+<Meta title="Design System/Foundations" />
+
+# Foundations
+
+## Colour roles
+
+Each role is a surface paired with its foreground. The ratio under each swatch is the live
+WCAG contrast; anything below 4.5:1 is flagged.
+
+<Canvas of={Foundations.ColorRoles} />
+
+## Extended palette
+
+Chart series and sidebar roles.
+
+<Canvas of={Foundations.ExtendedPalette} />
+
+## Type scale
+
+<Canvas of={Foundations.Typography} />
+
+## Spacing & density
+
+Control heights derive from `--density`; change it once to tighten or loosen every control.
+
+<Canvas of={Foundations.SpacingDensity} />
+
+## Radius
+
+<Canvas of={Foundations.Radius} />
+
+## Elevation
+
+<Canvas of={Foundations.Elevation} />
+
+## Motion
+
+<Canvas of={Foundations.Motion} />
+
+## Icons
+
+<Canvas of={Foundations.IconRow} />

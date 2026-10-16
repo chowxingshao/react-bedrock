@@ -73,7 +73,11 @@ describe('design-token guard (spec Principle 1)', () => {
 });
 
 describe('ad-hoc @keyframes rule', () => {
-  const pattern = /@keyframes\b/;
+  const rule = RULES.find((r) => r.name === 'ad-hoc @keyframes');
+  const pattern = rule!.pattern;
+  it('is defined in RULES', () => {
+    expect(rule).toBeDefined();
+  });
   it('matches an inline @keyframes', () => {
     expect(pattern.test('const css = `@keyframes spin { to { rotate: 360deg } }`;')).toBe(true);
   });

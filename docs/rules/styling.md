@@ -40,7 +40,7 @@ Correct:
 
 ## Borders via the token, not a raw width
 
-The bare `border` utility reads `--border-width`, so one edit in `tokens.css` thickens every border in the app. `--border-width-strong` is the thicker line. Use `border-2` only for an intentional step up.
+The bare `border` utility reads `--border-width`, so one edit in `tokens.css` thickens every border in the app. For an intentional heavier line, use `border-2` (a fixed 2px step, the same weight as the `--border-width-strong` token). Never hand-write a bracketed width.
 
 Incorrect:
 
@@ -52,6 +52,9 @@ Correct:
 
 ```tsx
 <div className="border border-border">…</div>
+```
+
+```tsx
 <div className="border-2 border-border">…</div>
 ```
 
@@ -71,8 +74,17 @@ Correct:
 
 ```tsx
 <div className="z-modal">…</div>
+```
+
+```tsx
 <div className="z-dropdown">…</div>
+```
+
+```tsx
 <div className="z-toast">…</div>
+```
+
+```tsx
 <header className="z-sticky">…</header>
 ```
 

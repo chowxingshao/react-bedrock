@@ -1,0 +1,25 @@
+import { Canvas, Meta } from '@storybook/addon-docs/blocks';
+
+import * as DoDont from '../components/showcase/do-dont.stories';
+
+<Meta title="Design System/Do and Don't" />
+
+# Do and Don't
+
+The most-breakable rules, paired. The full rulebook lives in `docs/rules/`.
+
+## Shape via the `shape` variant
+
+<Canvas of={DoDont.ShapeVariant} />
+
+## Built-in variants before classNames
+
+<Canvas of={DoDont.BuiltInVariant} />
+
+## Semantic colours, never raw palette or hex
+
+<Canvas of={DoDont.SemanticColour} />
+
+## Import icons from the barrel
+
+<Canvas of={DoDont.IconBarrel} />

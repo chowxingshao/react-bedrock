@@ -52,6 +52,22 @@ What changed in the template, newest first. If you started a project from it and
   `README.md`, `docs/design-system.md` and the new-project guide (step 3). A
   guard test (`src/test/docs-rulebook.guard.test.ts`) checks that the pages
   exist and are linked. This part is docs only: no action is needed.
+- Design System v2, Phase 6: a Storybook design-system showcase. MDX pages
+  (`src/stories/*.mdx`) and supporting stories in the `Design System/*` and
+  `Foundations/Tokens` sections: Foundations (colour roles with live WCAG
+  contrast, chart and sidebar palettes, type, spacing and density, radius,
+  elevation, motion, icons), Components by tier (variant × state matrices,
+  composed, overlay and async-state examples), Do/Don't pairs for the
+  most-breakable rules, recipes and an example screen built only from tokens and
+  components. New showcase helpers in `src/components/showcase/` (`ColorPair`,
+  `StateMatrix`, `previewState`) and a dependency-free WCAG contrast utility.
+  Also folds in the deferred rulebook and guard-test polish from Phases 2-5
+  (border wording, multi-root Correct snippets, the `@keyframes` test reading
+  from `RULES`, a reduced-motion note in the customization Motion section, a
+  shorter aria-label). Purely additive: no action is needed, and there are no
+  new dependencies. The one config change is that the `stories` glob in
+  `.storybook/main.ts` now includes `.mdx`. See "Design System showcase
+  (Storybook)" in `docs/design-system.md`.
 
 ### Changed
 
