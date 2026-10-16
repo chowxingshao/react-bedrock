@@ -16,10 +16,12 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Add } from '@/components/ui/icons';
 import { Input } from '@/components/ui/input';
 
 const meta = {
@@ -42,7 +44,7 @@ const STATES = ['default', 'disabled'] as const;
 export const Buttons: Story = {
   render: () => (
     <StateMatrix
-      caption="Button — variant × state (hover/focus/active are interactive; try them in the canvas)"
+      caption="Button — variant × state (disabled shown; hover/focus/active are live in the canvas)"
       columns={STATES}
       rows={BUTTON_VARIANTS.map((variant) => ({
         label: variant,
@@ -53,6 +55,27 @@ export const Buttons: Story = {
         ),
       }))}
     />
+  ),
+};
+
+const BUTTON_SIZES = ['sm', 'md', 'lg'] as const;
+
+export const ButtonSizes: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-3">
+      {BUTTON_SIZES.map((size) => (
+        <Button key={size} size={size}>
+          Save
+        </Button>
+      ))}
+      <Button size="icon" aria-label="Add project">
+        <Add />
+      </Button>
+      <Button>
+        <Add />
+        New project
+      </Button>
+    </div>
   ),
 };
 
@@ -105,7 +128,7 @@ const ELEVATIONS = ['default', 'flat', 'outline', 'raised'] as const;
 
 export const Cards: Story = {
   render: () => (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {ELEVATIONS.map((elevation) => (
         <Card key={elevation} elevation={elevation}>
           <CardHeader>
@@ -135,24 +158,72 @@ export const Overlays: Story = {
           <DialogTitle>Delete project</DialogTitle>
           <DialogDescription>This cannot be undone.</DialogDescription>
         </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline">Cancel</Button>
+          <Button variant="destructive">Delete</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   ),
 };
 
-const errorQuery: QueryLike<string[], Error> = {
-  status: 'error',
+const loadingQuery: QueryLike<string[], Error> = {
+  status: 'pending',
   data: undefined,
-  error: new Error('Request failed'),
+  error: null,
+  refetch: () => Promise.resolve(),
+};
+const successQuery: QueryLike<string[], Error> = {
+  status: 'success',
+  data: ['Apollo', 'Borealis', 'Cedar'],
+  error: null,
   refetch: () => Promise.resolve(),
 };
 
 export const AsyncStates: Story = {
   render: () => (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-      <EmptyState title="No results" description="Try a different search." />
-      <ErrorState error={new Error('Boom')} onRetry={() => undefined} />
-      <QueryState query={errorQuery}>{() => null}</QueryState>
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <QueryState query={loadingQuery}>{() => null}</QueryState>
+      <QueryState query={successQuery}>
+        {(names) => (
+          <ul className="flex flex-col gap-1">
+            {names.map((name) => (
+              <li key={name} className="text-body">
+                {name}
+              </li>
+            ))}
+          </ul>
+        )}
+      </QueryState>
+      <EmptyState title="No projects yet" description="Create your first project to get started." />
+      <ErrorState error={new Error('The server did not respond')} onRetry={() => undefined} />
+    </div>
+  ),
+};
+
+export const EdgeCases: Story = {
+  render: () => (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            A project with an unusually long name that should wrap gracefully across several lines
+          </CardTitle>
+          <CardDescription>
+            This description is intentionally verbose to show how the card handles long-form copy
+            without breaking its layout or overflowing its container.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Badge variant="warning">needs review</Badge>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Short</CardTitle>
+        </CardHeader>
+        <CardContent>Minimal card.</CardContent>
+      </Card>
     </div>
   ),
 };
