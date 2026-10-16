@@ -12,7 +12,7 @@ const sources = import.meta.glob<string>(
 );
 
 const importers = Object.entries(sources)
-  .filter(([, source]) => /from ['"](?:gsap|@gsap\/react)['"]/.test(source))
+  .filter(([, source]) => /from ['"](?:gsap(?:\/[^'"]*)?|@gsap\/[^'"]+)['"]/.test(source))
   .map(([file]) => file);
 
 describe('gsap confinement (spec §5 Phase 5)', () => {

@@ -46,7 +46,7 @@ const WRAPPED = [
       'src/hooks/use-gsap.test.tsx',
     ],
     paths: ['gsap'],
-    patterns: ['@gsap/*'],
+    patterns: ['@gsap/*', 'gsap/*'],
     message: 'Use the `useGsap` hook from @/hooks/use-gsap (GSAP stays out of the default bundle).',
   },
 ];
