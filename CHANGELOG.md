@@ -36,6 +36,16 @@ What changed in the template, newest first. If you started a project from it and
   (`src/components/ui/icon.tsx`) gives standalone icons a uniform size scale and
   a11y defaults, with a set-agnostic `IconComponent` type. See "Icons" in
   `docs/design-system.md` and the `UI/Icons` Storybook catalogue.
+- Design System v2, Phase 4: a token-driven motion layer. New CSS utilities —
+  `interactive`, `press`, `hover-lift`, `enter`/`exit`, `stagger`, `shimmer`, and
+  `scroll-fade` — all built on the Phase-1 motion tokens and reduced-motion-safe
+  (`--move-*` now collapses under `prefers-reduced-motion`; `scroll-fade` is a
+  progressive enhancement). An optional, reduced-motion-guarded `useGsap` hook
+  (`@/hooks/use-gsap`) for orchestration, backed by `gsap` + `@gsap/react`; it is
+  tree-shaken out of the bundle unless a project uses it. `gsap` and
+  `@gsap/react` are new dependencies, but no action is needed because nothing
+  uses them by default. See "Motion" in `docs/design-system.md` and
+  `docs/hooks.md`.
 
 ### Changed
 

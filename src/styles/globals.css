@@ -94,6 +94,114 @@
   transition-duration: var(--duration-slow);
 }
 
+/* ----------------------------------------------------------------------------
+ * Motion layer (Phase 4). All timing/easing/distance comes from tokens.css.
+ * Reduced motion: the global prefers-reduced-motion block below zeroes
+ * animation/transition durations and animation delays, so these presets
+ * resolve immediately to their final state. Translate-based motion will
+ * additionally collapse once --move-* is zeroed under reduced motion (added
+ * by a follow-up task in this phase). Author so the un-animated state is the
+ * final state.
+ * Keyframes are named enter-rise/exit-rise because tw-animate-css already
+ * defines global `enter`/`exit` keyframes for animate-in/animate-out.
+ * -------------------------------------------------------------------------- */
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--move-sm));
+  }
+}
+@keyframes exit-rise {
+  to {
+    opacity: 0;
+    transform: translateY(var(--move-sm));
+  }
+}
+
+/* Smoothly transition transform/colour/shadow changes (hover, active, …). */
+@utility interactive {
+  transition-property: transform, box-shadow, background-color, border-color, color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--ease-standard);
+}
+
+/* Press feedback: pair with `interactive`. */
+@utility press {
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+/* Hover lift: pair with `interactive`. Travels one --move-sm. */
+@utility hover-lift {
+  &:hover {
+    transform: translateY(calc(-1 * var(--move-sm)));
+  }
+}
+
+/* One-shot entrance / exit presets. */
+@utility enter {
+  animation: enter-rise var(--duration-normal) var(--ease-entrance) both;
+}
+@utility exit {
+  animation: exit-rise var(--duration-fast) var(--ease-exit) both;
+}
+
+/* Staggered children (bounded to 8). Put `enter` on the children; step via --stagger. */
+@utility stagger {
+  & > *:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  & > *:nth-child(2) {
+    animation-delay: calc(1 * var(--stagger, 50ms));
+  }
+  & > *:nth-child(3) {
+    animation-delay: calc(2 * var(--stagger, 50ms));
+  }
+  & > *:nth-child(4) {
+    animation-delay: calc(3 * var(--stagger, 50ms));
+  }
+  & > *:nth-child(5) {
+    animation-delay: calc(4 * var(--stagger, 50ms));
+  }
+  & > *:nth-child(6) {
+    animation-delay: calc(5 * var(--stagger, 50ms));
+  }
+  & > *:nth-child(7) {
+    animation-delay: calc(6 * var(--stagger, 50ms));
+  }
+  & > *:nth-child(8) {
+    animation-delay: calc(7 * var(--stagger, 50ms));
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Loading sheen for skeleton surfaces. Token colours; token-derived duration. */
+@utility shimmer {
+  background-image: linear-gradient(90deg, var(--muted) 0%, var(--accent) 50%, var(--muted) 100%);
+  background-size: 200% 100%;
+  animation: shimmer calc(var(--duration-slow) * 4) linear infinite;
+}
+
+/* Fade + rise as the element scrolls into view. Progressive enhancement:
+ * only where scroll-driven animations are supported AND motion is allowed;
+ * everywhere else the element is simply visible (resting state). */
+@utility scroll-fade {
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      opacity: 0;
+      animation: enter-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -109,6 +217,7 @@
   ::before,
   ::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
