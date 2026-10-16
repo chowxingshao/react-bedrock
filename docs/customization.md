@@ -14,17 +14,17 @@ Work top to bottom: reach for a token first, then the icon barrel, then a defaul
 
 This file is the single source of truth for the look. Edit the values; never add a hex colour or a pixel value to a component (see [styling rules](rules/styling.md)). The full token tables live in [docs/design-system.md](design-system.md); these are the knobs most projects turn.
 
-| Knob       | Tokens                                                                                                            |
-| ---------- | ----------------------------------------------------------------------------------------------------------------- |
-| Colour     | `--primary`, `--background`, `--foreground`, `--destructive`, `--border`, `--ring`, … (OKLCH)                     |
-| Shape      | `--radius` (every `rounded-*` derives from it)                                                                    |
-| Lines      | `--border-width`, `--border-width-strong`                                                                         |
-| Density    | `--density`, `--control-h-sm`, `--control-h-md`, `--control-h-lg`                                                 |
-| Focus ring | `--ring-width`, `--ring-offset`                                                                                   |
-| Elevation  | `--shadow-color`, `--shadow-xs` … `--shadow-lg`                                                                   |
-| Motion     | `--duration-fast`/`-normal`/`-slow`, `--ease-standard`/`-emphasized`/`-entrance`/`-exit`, `--move-sm`/`-md`/`-lg` |
-| Type scale | `--text-display`, `--text-title`, `--text-heading`, `--text-body`, `--text-label`, `--text-caption`               |
-| Extended   | `--chart-1` … `--chart-5`, `--sidebar`, `--sidebar-primary`, `--sidebar-accent`, `--sidebar-border`, …            |
+| Knob       | Tokens                                                                                                                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Colour     | `--primary`, `--background`, `--foreground`, `--destructive`, `--border`, `--ring`, … (OKLCH)                                                                                                                       |
+| Shape      | `--radius` (every `rounded-*` derives from it)                                                                                                                                                                      |
+| Lines      | `--border-width`, `--border-width-strong`                                                                                                                                                                           |
+| Density    | `--density`, `--control-h-sm`, `--control-h-md`, `--control-h-lg`                                                                                                                                                   |
+| Focus ring | `--ring-width`, `--ring-offset`                                                                                                                                                                                     |
+| Elevation  | `--shadow-color`, `--shadow-xs` … `--shadow-lg`                                                                                                                                                                     |
+| Motion     | `--duration-fast`/`-normal`/`-slow`, `--ease-standard`/`-emphasized`/`-entrance`/`-exit`, `--move-sm`/`-md`/`-lg` — under `prefers-reduced-motion`, the duration and move tokens drop to zero, so all motion stops. |
+| Type scale | `--text-display`, `--text-title`, `--text-heading`, `--text-body`, `--text-label`, `--text-caption`                                                                                                                 |
+| Extended   | `--chart-1` … `--chart-5`, `--sidebar`, `--sidebar-primary`, `--sidebar-accent`, `--sidebar-border`, …                                                                                                              |
 
 **Colour tokens live in three blocks.** Edit a colour in `:root` (light), in `.dark`, and in the `@media (prefers-color-scheme: dark)` fallback, and keep the fallback identical to `.dark` (`src/styles/tokens.test.ts` checks this). Non-colour knobs (radius, border width, density, motion) live once, in `:root` or `@theme`.
 
